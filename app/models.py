@@ -11,11 +11,16 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)  # Store hashed passwords
     date_of_birth = db.Column(db.Date, nullable=False)  # Stores user's date of birth
+    is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
 
     rides = db.relationship('publish_ride', backref='driver', lazy=True)  # A driver can post multiple rides
 
     def __repr__(self):
         return f"<User {self.username}>"
+    
+    # Flask-Login requires this method to return True if the user is active
+    def is_active(self):
+        return self.is_active
 
 # Journey Table for viewing available journeys (user)
 class view_ride(db.Model):
