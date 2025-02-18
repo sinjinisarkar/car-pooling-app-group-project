@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #E3E2DD;
+}
+
+/* Logo Size */
+.navbar-brand img {
+    max-height: 50px;
+    width: auto;
+}
+
+.hero-image {
+    height: 400px;
+    object-fit: cover;
+}
+
+/* Change the dropdown active background color */
+.dropdown-item:active, 
+.dropdown-item:focus, 
+.dropdown-item:hover {
+    background-color: #2E2E2E !important;  
+    color: white !important;  
+}
+
+.btn-container {
+    display: flex;
+    justify-content: center;
+    gap: 60px; /* Adds space between the buttons */
+}
+
+
+/* Style for Find a Ride button */
+.btn-find {
+    color: white;
+    background-color: #5D91C0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+}
+
+.btn-find:hover {
+    color: white;
+    background-color: #4A7CA8
+}
+
+/* Style for Post a Ride button */
+.btn-post {
+    color: white;
+    background-color: #5D91C0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+}
+
+.btn-post:hover {
+    color: white;
+    background-color: #4A7CA8
+}
