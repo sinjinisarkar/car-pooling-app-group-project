@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Publish a Ride{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center">Publish a Ride</h2>
+    
+    <form method="POST" action="{{ url_for('publish_ride') }}">
+        <!-- CSRF Token (important to protect against CSRF attacks) -->
+        {{ csrf_token() }}
+
+        <div class="form-group">
+            <label for="from_location">From Location</label>
+            <input type="text" name="from_location" id="from_location" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="to_location">To Location</label>
+            <input type="text" name="to_location" id="to_location" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="date_time">Date and Time</label>
+            <input type="datetime-local" name="date_time" id="date_time" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="available_seats">Available Seats</label>
+            <input type="number" name="available_seats" id="available_seats" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="price_per_seat">Price per Seat</label>
+            <input type="number" name="price_per_seat" id="price_per_seat" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select name="category" id="category" class="form-control" required>
+                <option value="Standard">Standard</option>
+                <option value="Luxury">Luxury</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Publish Ride</button>
+    </form>
+</div>
+{% endblock %}
