@@ -7,8 +7,6 @@
     <h2 class="text-center">Publish a Ride</h2>
     
     <form method="POST" action="{{ url_for('publish_ride') }}">
-        <!-- CSRF Token (important to protect against CSRF attacks) -->
-        {{ csrf_token() }}
 
         <div class="form-group">
             <label for="from_location">From Location</label>
@@ -38,8 +36,8 @@
         <div class="form-group">
             <label for="category">Category</label>
             <select name="category" id="category" class="form-control" required>
-                <option value="Standard">Standard</option>
-                <option value="Luxury">Luxury</option>
+                <option value="One-time">One-time</option>
+                <option value="Commuting">Commuting</option>
             </select>
         </div>
 

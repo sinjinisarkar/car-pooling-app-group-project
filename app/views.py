@@ -3,8 +3,11 @@ from app import app, db
 from app.models import User, publish_ride
 from flask_login import current_user, login_required
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/publish_ride', methods=['GET', 'POST'])
-@login_required
 def publish_ride():
     if request.method == 'POST':
         # Get form data from the request
