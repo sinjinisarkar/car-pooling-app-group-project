@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}View Available Journeys{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center">Available Journeys</h2>
+    
+    {% if journeys %}
+        <table class="table table-striped mt-4">
+            <thead class="thead-dark">
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Date & Time</th>
+                    <th>Available Seats</th>
+                    <th>Price per Seat (£)</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for journey in journeys %}
+                <tr>
+                    <td>{{ journey.from_location }}</td>
+                    <td>{{ journey.to_location }}</td>
+                    <td>{{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ journey.available_seats }}</td>
+                    <td>£{{ journey.price_per_seat }}</td>
+                    <td>{{ journey.category }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-center mt-4">No journeys available at the moment.</p>
+    {% endif %}
+</div>
+{% endblock %}
