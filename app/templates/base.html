@@ -29,6 +29,14 @@
     
             <!-- Profile Dropdown -->
             <div class="dropdown">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown">
+                        {{ user.username }} <!-- Show username if logged in -->
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                    </div>
+                {% else %}
                 <button class="btn btn-light dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa-solid fa-user-circle fa-lg"></i>
                 </button>
@@ -36,6 +44,7 @@
                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#loginModal"><i class="fa-solid fa-sign-in-alt"></i> Log in</a>
                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#signupModal"><i class="fa-solid fa-user-plus"></i> Sign up</a>
                 </div>
+                {% endif %}
             </div>
 
         </div>
@@ -58,7 +67,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="loginForm">
                         <div class="form-group">
                             <label for="login-email">Email address</label>
                             <input type="email" class="form-control" id="login-email" placeholder="Enter email" required>
@@ -69,6 +78,9 @@
                         </div>
                         <button type="submit" class="btn btn-secondary btn-block">Log In</button>
                     </form>
+                    <div class="text-center mt-3">
+                        <span id="login-error-message" style="color: red; display: none;"></span>
+                    </div>
                     <div class="text-center mt-3">
                         Not a member yet? 
                         <a href="#" id="switchToSignup">Sign up</a>
@@ -89,7 +101,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="signupForm">
                         <div class="form-group">
                             <label for="signup-username">Username</label>
                             <input type="text" class="form-control" id="signup-name" placeholder="Create an username">
@@ -108,6 +120,9 @@
                         </div>
                         <button type="submit" class="btn btn-secondary btn-block">Sign Up</button>
                     </form>
+                    <div class="text-center mt-3">
+                        <span id="signup-error-message" style="color: red; display: none;"></span>
+                    </div>
                     <div class="text-center mt-3">
                         Already have an account? 
                         <a href="#" id="switchToLogin">Log in</a>
@@ -135,7 +150,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='homepage.js') }}"></script>
 
 
 </body>

@@ -10,18 +10,24 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)  # Store hashed passwords
+    password_hash = db.Column(db.String(200), nullable=False)  # Stores hashed passwords
     date_of_birth = db.Column(db.Date, nullable=False)  # Stores user's date of birth
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
+
+    role = db.Column(db.String(10), nullable=False, default="passenger")  # "passenger", "driver", or "both"
 
     rides = db.relationship('publish_ride', backref='driver', lazy=True)  # A driver can post multiple rides
 
     def __repr__(self):
         return f"<User {self.username}>"
     
-    # Flask-Login requires this method to return True if the user is active
-    def is_active(self):
-        return self.is_active
+     # Method to set hashed password
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    # Method to check hashed password
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 # Publish ride Table for driver to publish their rides
 class publish_ride(db.Model):
