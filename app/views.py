@@ -7,6 +7,11 @@ from flask_login import current_user, login_required
 def home():
     return render_template('index.html')
 
+@app.route('/view_journeys')
+def view_journeys():
+    journeys = view_ride.query.all()  # Fetch all available journeys
+    return render_template('view_journeys.html', journeys=journeys)
+
 @app.route('/publish_ride', methods=['GET', 'POST'])
 def publish_ride():
     if request.method == 'POST':
