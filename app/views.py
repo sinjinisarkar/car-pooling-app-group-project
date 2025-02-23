@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from app import app, db
-from app.models import User
+from app.models import User, publish_ride, view_ride, book_ride
 
 @app.route('/')
 def home():
@@ -59,9 +59,13 @@ def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully!"}), 200
 
-
 # Load User for Flask-Login
 from app import login_manager
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.route('/view_journeys')
+def view_journeys():
+    journeys = view_ride.query.all()  # Fetch all available journeys
+    return render_template('view_journeys.html', journeys=journeys)

@@ -3,7 +3,6 @@ from flask_login import UserMixin
 from app import db
 from datetime import date, datetime
 
-db = SQLAlchemy()
 
 # User Table for Login and Accounts 
 class User(db.Model, UserMixin):
@@ -61,5 +60,3 @@ class book_ride(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ride_id = db.Column(db.Integer, db.ForeignKey('view_ride.id'), nullable=False)
     status = db.Column(db.String(20), default="Pending")  # Pending, Confirmed, Canceled
-
-
