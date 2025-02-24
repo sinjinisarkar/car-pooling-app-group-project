@@ -22,7 +22,6 @@ class User(db.Model, UserMixin):
     def is_active(self):
         return self.is_active
 
-# Publish ride Table for driver to publish their rides
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -32,10 +31,15 @@ class publish_ride(db.Model):
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(20), nullable=False)  # "commuting" or "one-time"
-    is_available = db.Column(db.Boolean, default=True)  # New field to track availability
+    is_available = db.Column(db.Boolean, default=True)
+
+    # New Fields
+    driver_name = db.Column(db.String(100), nullable=False)
+    car_type = db.Column(db.String(50), nullable=False)  # Dropdown selection
+    car_image = db.Column(db.String(300), nullable=True)  # Store image file path
 
     def __repr__(self):
-        return f"<Published Ride {self.from_location} to {self.to_location} ({self.category}) Available: {self.is_available}>"
+        return f"<Published Ride {self.from_location} to {self.to_location}>"
 
 # Journey Table for viewing available journeys (user)
 class view_ride(db.Model):

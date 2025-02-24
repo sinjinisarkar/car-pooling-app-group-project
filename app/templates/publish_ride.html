@@ -1,47 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Publish a Ride{% endblock %}
+{% block title %} Publish a Ride {% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h2 class="text-center">Publish a Ride</h2>
-    
-    <form method="POST" action="{{ url_for('publish_ride') }}">
+<form method="POST" enctype="multipart/form-data">
+    <label for="from_location">From:</label>
+    <input type="text" id="from_location" name="from_location" required>
 
-        <div class="form-group">
-            <label for="from_location">From Location</label>
-            <input type="text" name="from_location" id="from_location" class="form-control" required>
-        </div>
+    <label for="to_location">To:</label>
+    <input type="text" id="to_location" name="to_location" required>
 
-        <div class="form-group">
-            <label for="to_location">To Location</label>
-            <input type="text" name="to_location" id="to_location" class="form-control" required>
-        </div>
+    <label for="date_time">Date & Time:</label>
+    <input type="datetime-local" id="date_time" name="date_time" required>
 
-        <div class="form-group">
-            <label for="date_time">Date and Time</label>
-            <input type="datetime-local" name="date_time" id="date_time" class="form-control" required>
-        </div>
+    <label for="available_seats">Available Seats:</label>
+    <input type="number" id="available_seats" name="available_seats" min="1" required>
 
-        <div class="form-group">
-            <label for="available_seats">Available Seats</label>
-            <input type="number" name="available_seats" id="available_seats" class="form-control" required>
-        </div>
+    <label for="price_per_seat">Price per Seat:(£)</label>
+    <input type="number" id="price_per_seat" name="price_per_seat" step="0.01" required>
 
-        <div class="form-group">
-            <label for="price_per_seat">Price per Seat</label>
-            <input type="number" name="price_per_seat" id="price_per_seat" class="form-control" required>
-        </div>
+    <label for="category">Category:</label>
+    <select id="category" name="category">
+        <option value="commuting">Commuting</option>
+        <option value="one-time">One-time</option>
+    </select>
 
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select name="category" id="category" class="form-control" required>
-                <option value="One-time">One-time</option>
-                <option value="Commuting">Commuting</option>
-            </select>
-        </div>
+    <!-- New Fields for Car -->
+    <label for="car_type">Car Type:</label>
+    <select id="car_type" name="car_type">
+        <option value="Sedan">Sedan</option>
+        <option value="SUV">SUV</option>
+        <option value="Hatchback">Hatchback</option>
+        <option value="Convertible">Convertible</option>
+        <option value="Truck">Truck</option>
+    </select>
 
-        <button type="submit" class="btn btn-primary btn-block">Publish Ride</button>
-    </form>
-</div>
+    <label for="car_image">Car Image:</label>
+    <input type="file" id="car_image" name="car_image" accept="image/*" required>
+
+    <label for="driver_name">Driver Name:</label>
+    <input type="text" id="driver_name" name="driver_name" value="{{ current_user.username }}" readonly required>
+
+    <button type="submit">Publish Ride</button>
+</form>
 {% endblock %}
