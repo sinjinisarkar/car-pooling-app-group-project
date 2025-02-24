@@ -3,24 +3,38 @@ from flask_login import UserMixin
 from app import db
 from datetime import date, datetime
 
+# Association table to track which passengers booked which rides
+passenger_rides = db.Table(
+    'passenger_rides',
+    db.Column('passenger_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('ride_id', db.Integer, db.ForeignKey('publish_ride.id'), primary_key=True)
+)
 
 # User Table for Login and Accounts 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)  # Store hashed passwords
-    date_of_birth = db.Column(db.Date, nullable=False)  # Stores user's date of birth
+    password_hash = db.Column(db.String(200), nullable=False)  # Stores hashed passwords
+    date_of_birth = db.Column(db.String(10), nullable=True)  # Store DOB
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
 
-    rides = db.relationship('publish_ride', backref='driver', lazy=True)  # A driver can post multiple rides
+     # Relationship: A driver can publish multiple rides
+    published_rides = db.relationship('publish_ride', backref='driver', lazy=True)
 
+    # Relationship: A passenger can book multiple rides
+    booked_rides = db.relationship('publish_ride', secondary=passenger_rides, backref='passengers')
+    
     def __repr__(self):
         return f"<User {self.username}>"
     
-    # Flask-Login requires this method to return True if the user is active
-    def is_active(self):
-        return self.is_active
+     # Method to set hashed password
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    # Method to check hashed password
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
