@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db
 from app.models import User, publish_ride, view_ride, book_ride
 
@@ -57,7 +57,8 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return jsonify({"message": "Logged out successfully!"}), 200
+    return jsonify({"message": "Logged out successfully!"}), 200 
+
 
 # Load User for Flask-Login
 from app import login_manager

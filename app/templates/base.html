@@ -34,7 +34,10 @@
                         {{ user.username }} <!-- Show username if logged in -->
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                        <!-- Logout Form -->
+                        <form id="logout-form" action="{{ url_for('logout') }}" method="POST">
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
                     </div>
                 {% else %}
                 <button class="btn btn-light dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

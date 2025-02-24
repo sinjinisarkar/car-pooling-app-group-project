@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // ✅ AJAX: Handle User Logout
-    $("#logout-btn").click(function (event) {
+    $("#logout-form").click(function (event) {
         event.preventDefault();
 
         $.ajax({
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
             url: "/logout",
             success: function (response) {
                 alert(response.message);
-                location.reload(); // Refresh page after logout
+                window.location.href = "/"; // Redirect to home after logout
             },
             error: function (xhr) {
                 alert("Logout failed.");
