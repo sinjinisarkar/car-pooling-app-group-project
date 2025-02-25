@@ -44,13 +44,8 @@ class publish_ride(db.Model):
     date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(20), nullable=False)  # "commuting" or "one-time"
+    category = db.Column(db.String(50), nullable=False)
     is_available = db.Column(db.Boolean, default=True)
-
-    # New Fields
-    driver_name = db.Column(db.String(100), nullable=False)
-    car_type = db.Column(db.String(50), nullable=False)  # Dropdown selection
-    car_image = db.Column(db.String(300), nullable=True)  # Store image file path
 
     def __repr__(self):
         return f"<Published Ride {self.from_location} to {self.to_location}>"
@@ -59,12 +54,14 @@ class publish_ride(db.Model):
 class view_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    from_location = db.Column(db.String(200), nullable=False)
-    to_location = db.Column(db.String(200), nullable=False)
+    from_location = db.Column(db.String(100), nullable=False)
+    to_location = db.Column(db.String(100), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
-    bookings = db.relationship('book_ride', backref='ride', lazy=True)  # One ride can have multiple bookings
+    category = db.Column(db.String(50), nullable=False)  # Ensure this line exists
+
+    driver = db.relationship('User', backref='rides')
 
 # Booking Table for selecting and booking a journey (user)
 class book_ride(db.Model):
