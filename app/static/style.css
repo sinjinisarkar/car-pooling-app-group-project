@@ -1,52 +1,94 @@
+/* Global Styles */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #E3E2DD;
+    background-color: #fff;
 }
 
-/* Logo Size */
+/* Navbar */
+.navbar {
+    background-color: #e6d6fc !important;
+    padding: 10px 0; /* Add padding for better spacing */
+}
+
+/* Navbar logo */
 .navbar-brand img {
-    max-height: 50px;
+    max-height: 75px; /* Increased size */
     width: auto;
 }
 
+/* Centered Search Bar */
+.search-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Search Bar Styling */
+.navbar .form-inline input {
+    height: 50px;
+    width: 300px;
+    border: 2px solid #855bbe;
+    box-shadow: 3px 4px 0px #855bbe;
+    border-radius: 20px;
+    transition: all 0.3s ease-in-out;
+    padding: 8px 15px;
+}
+
+/* Search Bar Focus Effect */
+.navbar .form-inline input:focus {
+    border-color: #855bbe;
+    box-shadow: 3px 4px 0px #855bbe;
+}
+
+/* Navbar Container Alignment */
+.navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Account Button Styling */
+#profileDropdown {
+    color: #1f1d21;
+    font-size: 1.2rem;
+    padding: 10px 15px;
+    border-radius: 20px;
+    background-color: #fff;
+    border: 2px solid #855bbe;
+    box-shadow: 3px 4px 0px #855bbe;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Account Button Hover Effect */
+#profileDropdown:hover {
+    background-color: #f8f9fa;
+    border-color: #855bbe;
+    box-shadow: 4px 4px 10px rgba(31, 29, 33, 0.3);
+}
+
+/* Account Button Click Effect */
+#profileDropdown:active {
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(2px);
+}
+
+/* Hero Image */
 .hero-image {
     height: 400px;
     object-fit: cover;
 }
 
-/* Change the dropdown active background color */
-.dropdown-item:active, 
-.dropdown-item:focus, 
-.dropdown-item:hover {
-    background-color: #2E2E2E !important;  
-    color: white !important;  
-}
-
+/* Centering Buttons */
 .btn-container {
     display: flex;
     justify-content: center;
-    gap: 60px; /* Adds space between the buttons */
+    gap: 60px;
 }
 
-
-/* Style for Find a Ride button */
-.btn-find {
-    color: white;
-    background-color: #5D91C0;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    transition: background 0.3s ease-in-out;
-}
-
-.btn-find:hover {
-    color: white;
-    background-color: #4A7CA8
-}
-
-/* Style for Post a Ride button */
+/* Button Styling - Common */
+.btn-find,
 .btn-post {
     color: white;
     background-color: #5D91C0;
@@ -57,7 +99,8 @@ body {
     transition: background 0.3s ease-in-out;
 }
 
+/* Button Hover Effect */
+.btn-find:hover,
 .btn-post:hover {
-    color: white;
-    background-color: #4A7CA8
+    background-color: #4A7CA8;
 }
