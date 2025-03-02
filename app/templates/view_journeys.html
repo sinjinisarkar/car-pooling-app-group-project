@@ -16,6 +16,8 @@
                     <th>Available Seats</th>
                     <th>Price per Seat (£)</th>
                     <th>Category</th>
+                    <th>Driver Name</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,6 +29,26 @@
                     <td>{{ journey.available_seats }}</td>
                     <td>£{{ journey.price_per_seat }}</td>
                     <td>{{ journey.category }}</td>
+                    <td>{{ journey.driver_name }}</td>
+                    <td>
+                        {% set booked = journey.id in user.booked_rides %}
+                        {% if booked %}
+                            {% if journey.category == 'commuting' %}
+                                <!-- Rebook button for commuting rides -->
+                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <button type="submit" class="btn btn-warning">Rebook</button>
+                                </form>
+                            {% else %}
+                                <!-- Disabled button for one-time booked rides -->
+                                <button class="btn btn-secondary" disabled>Booked</button>
+                            {% endif %}
+                        {% else %}
+                            <!-- Book button for available journeys -->
+                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                <button type="submit" class="btn btn-primary">Book</button>
+                            </form>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
