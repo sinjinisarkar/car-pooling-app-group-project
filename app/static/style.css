@@ -1,8 +1,28 @@
 /* Global Styles */
+
+.abril-fatface-regular {
+    font-family: "Poiret One", serif;
+    font-weight: 400;
+    font-style: normal;
+} 
+
+
+.oxanium {
+    font-family: "Oxanium", serif;
+    font-optical-sizing: auto;
+    /* font-weight: 200; */
+    font-style: normal;
+}
+  
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
     background-color: #fff;
+    font-family: "Oxanium", serif;
+    font-weight: 300;
+}
+
+h2 {
+    font-family: 'Abril Fatface', serif;
 }
 
 /* Navbar */
