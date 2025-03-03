@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Auth.js loaded!");
 
-    // AJAX: Handle User Signup
+    // Handle User Signup
     $("#signupForm").submit(function (event) {
         event.preventDefault(); // Prevent normal form submission
 
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // AJAX: Handle User Login
+    // Handle User Login
     $("#loginForm").submit(function (event) {
         event.preventDefault(); // Prevent normal form submission
 
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ✅ AJAX: Handle User Logout
+    // Handle User Logout
     $("#logout-form").click(function (event) {
         event.preventDefault();
 
@@ -66,6 +66,27 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             error: function (xhr) {
                 alert("Logout failed.");
+            },
+        });
+    });
+    // Handle "Publish a Ride" Click
+    $("#publish-ride-btn").click(function (event) {
+        event.preventDefault(); // Prevent default link behavior
+
+        $.ajax({
+            type: "GET",
+            url: "/publish_ride",
+            success: function (response) {
+                // If user is logged in, redirect to publish page
+                window.location.href = "/publish_ride";
+            },
+            error: function (xhr) {
+                if (xhr.status === 401) {
+                    // If user is not logged in, show signup modal
+                    $("#signupModal").modal("show");
+                } else {
+                    alert(xhr.responseJSON?.message || "An unexpected error occurred. Please try again.");
+                }
             },
         });
     });

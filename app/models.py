@@ -36,9 +36,6 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
-
-# Publish ride Table for driver to publish their rides
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -47,22 +44,24 @@ class publish_ride(db.Model):
     date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(20), nullable=False)  # "commuting" or "one-time"
-    is_available = db.Column(db.Boolean, default=True)  # New field to track availability
+    category = db.Column(db.String(50), nullable=False)
+    is_available = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
-        return f"<Published Ride {self.from_location} to {self.to_location} ({self.category}) Available: {self.is_available}>"
+        return f"<Published Ride {self.from_location} to {self.to_location}>"
 
 # Journey Table for viewing available journeys (user)
 class view_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    from_location = db.Column(db.String(200), nullable=False)
-    to_location = db.Column(db.String(200), nullable=False)
+    from_location = db.Column(db.String(100), nullable=False)
+    to_location = db.Column(db.String(100), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
-    bookings = db.relationship('book_ride', backref='ride', lazy=True)  # One ride can have multiple bookings
+    category = db.Column(db.String(50), nullable=False)  # Ensure this line exists
+
+    driver = db.relationship('User', backref='rides')
 
 # Booking Table for selecting and booking a journey (user)
 class book_ride(db.Model):

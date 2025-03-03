@@ -14,8 +14,18 @@
 <!-- Ride Options -->
 <div class="container text-center my-4 btn-container">
     <a href="{{ url_for('view_journeys') }}" class="btn btn-find btn-lg mx-2">Find a Ride</a>
-    <button class="btn btn-post btn-lg mx-2">Publish a Ride</button>
+
+    {% if current_user.is_authenticated %}
+        <!-- If user is logged in, go to publish ride page -->
+        <a href="{{ url_for('publish_ride_view') }}" class="btn btn-post btn-lg mx-2">Publish a Ride</a>
+    {% else %}
+        <!-- If user is NOT logged in, open the login modal -->
+        <button id="publish-ride-btn" class="btn btn-post btn-lg mx-2" data-toggle="modal" data-target="#signupModal">
+            Publish a Ride
+        </button>
+    {% endif %}
 </div>
+
 
 
 <!-- Featured Rides -->
