@@ -39,6 +39,7 @@ class User(db.Model, UserMixin):
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    driver_name = db.Column(db.String(100), nullable=False)  # Added Driver Name
     from_location = db.Column(db.String(200), nullable=False)
     to_location = db.Column(db.String(200), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -54,6 +55,7 @@ class publish_ride(db.Model):
 class view_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    driver_name = db.Column(db.String(100), nullable=False)  # Add this line
     from_location = db.Column(db.String(100), nullable=False)
     to_location = db.Column(db.String(100), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
@@ -63,9 +65,19 @@ class view_ride(db.Model):
 
     driver = db.relationship('User', backref='rides')
 
-# Booking Table for selecting and booking a journey (user)
+# Table for user/passenger to book a ride  
 class book_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    ride_id = db.Column(db.Integer, db.ForeignKey('view_ride.id'), nullable=False)
-    status = db.Column(db.String(20), default="Pending")  # Pending, Confirmed, Canceled
+    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
+    status = db.Column(db.String(20), default="Booked")
+    total_price = db.Column(db.Float, nullable=False)  # Stores the total price of the booking
+    seats_selected = db.Column(db.Integer, nullable=False)  # Stores the number of seats selected
+    confirmation_email = db.Column(db.String(150), nullable=False)  # Stores the email address for confirmation
+    ride_date = db.Column(db.DateTime, nullable=False)  # Stores the date and time of the booked ride
+    
+    # Define the relationship to the publish_ride model
+    ride = db.relationship('publish_ride', backref='bookings')
+
+    def __repr__(self):
+        return f"<Booking for {self.ride.from_location} to {self.ride.to_location}>"

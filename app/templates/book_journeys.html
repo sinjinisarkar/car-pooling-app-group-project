@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Book Ride{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Book Your Ride</h2>
+
+    <!-- Display the From and To locations -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5><strong>From:</strong> {{ ride.from_location }}</h5>
+        </div>
+        <div class="col-md-6">
+            <h5><strong>To:</strong> {{ ride.to_location }}</h5>
+        </div>
+    </div>
+    
+    <!-- Booking form -->
+    <form method="POST" action="{{ url_for('book_journey', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="seats" class="form-label">Number of Seats:</label>
+                <input type="number" class="form-control" id="seats" name="seats" 
+                    min="1" max="{{ ride.available_seats }}" required>
+                <small>Available Seats: {{ ride.available_seats }}</small>
+            </div>
+            <div class="col-md-6">
+                <label for="total_price" class="form-label">Total Price (£):</label>
+                <input type="text" class="form-control" id="total_price" name="total_price" readonly>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="card_details" class="form-label">Card Details:</label>
+                <input type="text" class="form-control" id="card_details" name="card_details" required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email for Confirmation:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success btn-lg">Book Now</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Calculate total price whenever the number of seats is changed
+    document.getElementById('seats').addEventListener('input', function() {
+        const seats = parseInt(this.value);
+        const pricePerSeat = {{ ride.price_per_seat }};
+        const totalPrice = seats * pricePerSeat;
+        document.getElementById('total_price').value = totalPrice.toFixed(2);
+    });
+</script>
+
+{% endblock %}

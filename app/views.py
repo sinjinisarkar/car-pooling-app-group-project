@@ -68,6 +68,7 @@ from app import login_manager
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Publishing a ride by the driver
 @app.route('/publish_ride', methods=['GET', 'POST'])
 @login_required
 def publish_ride_view():
@@ -78,6 +79,7 @@ def publish_ride_view():
         available_seats = request.form['available_seats']
         price_per_seat = request.form['price_per_seat']
         category = request.form['category']
+        driver_name = current_user.username  # Store driver name
 
         try:
             date_time = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M")
@@ -87,6 +89,7 @@ def publish_ride_view():
         # Save to publish_ride
         new_ride = publish_ride(
             driver_id=current_user.id,
+            driver_name=driver_name,
             from_location=from_location,
             to_location=to_location,
             date_time=date_time,
@@ -100,6 +103,7 @@ def publish_ride_view():
         # Save to view_ride (ensure it's also stored here)
         new_view_ride = view_ride(
             driver_id=current_user.id,
+            driver_name=driver_name,
             from_location=from_location,
             to_location=to_location,
             date_time=date_time,
@@ -121,3 +125,84 @@ def publish_ride_view():
 def view_journeys():
     journeys = view_ride.query.all()  # Fetch all available journeys
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
+
+# Booking a ride by the user/passenger
+@app.route('/book_journey/<int:ride_id>', methods=['GET', 'POST'])
+@login_required
+def book_journey(ride_id):
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    # Handle POST request when the user submits the form
+    if request.method == 'POST':
+        # Get the number of seats from the form
+        num_seats = int(request.form['seats'])
+        
+        # Get the confirmation email from the form
+        confirmation_email = request.form['email']
+
+        # Check if there are enough available seats
+        if num_seats > ride.available_seats:
+            flash("Not enough available seats", "danger")
+            return redirect(url_for('view_journeys'))
+
+        # Calculate the total price
+        total_price = num_seats * ride.price_per_seat
+
+        # Create the booking entry
+        new_booking = book_ride(
+            user_id=current_user.id, 
+            ride_id=ride.id, 
+            status="Booked", 
+            total_price=total_price, 
+            seats_selected=num_seats, 
+            confirmation_email=confirmation_email,
+            ride_date=ride.date_time
+        )
+
+        # Update the ride's available seats
+        ride.available_seats -= num_seats  
+        
+        # Commit the new booking to the database
+        db.session.add(new_booking)
+        db.session.commit()
+
+        flash(f"Ride booked successfully! Total Price: £{total_price:.2f}", "success")
+        return redirect(url_for('dashboard'))  # Redirect to the dashboard or wherever you need
+    return render_template('book_journeys.html', ride=ride, user=current_user)
+
+
+# Cancelling a booking by user/passenger once booked on their user dashboard page
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+@login_required
+def cancel_booking(booking_id):
+    booking = book_ride.query.get_or_404(booking_id)
+
+    # Ensure the current user is the one who booked the ride
+    if booking.user_id != current_user.id:
+        flash("You cannot cancel someone else's booking.", "danger")
+        return redirect(url_for('dashboard'))
+
+    # Increase the available seats in the ride
+    ride = publish_ride.query.get_or_404(booking.ride_id)
+    ride.available_seats += booking.seats
+    
+    # Delete the booking from the book_ride table
+    db.session.delete(booking)
+    db.session.commit()
+
+    flash("Booking canceled successfully!", "success")
+    return redirect(url_for('dashboard'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Query the booked rides for the current user
+    booked_rides = book_ride.query.filter_by(user_id=current_user.id).all()
+    
+    # Pass both the booked rides and their details to the template
+    return render_template('dashboard.html', booked_rides=booked_rides)
+
+
+@app.context_processor
+def inject_user():
+    return dict(user=current_user)

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Welcome, {{ current_user.username }}</h1> <br>
+    <h2 class="text-center mb-4">Your Booked Rides</h2>
+    
+    {% if booked_rides %}
+        <ul class="list-group">
+            {% for ride in booked_rides %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ ride.ride.from_location }}</strong> to <strong>{{ ride.ride.to_location }}</strong> <br>
+                        Date: {{ ride.ride.date_time }} <br>
+                        Seats: {{ ride.seats_selected }} <br>  <!-- Display the number of seats -->
+                        Total Price: £{{ ride.total_price }} <br>  <!-- Display the total price -->
+                        Confirmation Email: {{ ride.confirmation_email }}  <!-- Display the email -->
+                    </div>
+                    <form method="POST" action="{{ url_for('cancel_booking', booking_id=ride.id) }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no booked rides.</p>
+    {% endif %}
+</div>
+{% endblock %}
