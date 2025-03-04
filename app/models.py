@@ -42,10 +42,11 @@ class publish_ride(db.Model):
     driver_name = db.Column(db.String(100), nullable=False)  # Added Driver Name
     from_location = db.Column(db.String(200), nullable=False)
     to_location = db.Column(db.String(200), nullable=False)
-    date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_time = db.Column(db.DateTime, nullable=True)  # Now optional
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=False)
+    recurrence_days = db.Column(db.String(100), nullable=True)  # Commuting days (e.g., "Monday, Wednesday, Friday")
     is_available = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
@@ -55,13 +56,14 @@ class publish_ride(db.Model):
 class view_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    driver_name = db.Column(db.String(100), nullable=False)  # Add this line
+    driver_name = db.Column(db.String(100), nullable=False)
     from_location = db.Column(db.String(100), nullable=False)
     to_location = db.Column(db.String(100), nullable=False)
-    date_time = db.Column(db.DateTime, nullable=False)
+    date_time = db.Column(db.DateTime, nullable=True)  # ✅ ALLOW NULL FOR COMMUTING
     available_seats = db.Column(db.Integer, nullable=False)
     price_per_seat = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=False)  # Ensure this line exists
+    category = db.Column(db.String(50), nullable=False) 
+    recurrence_days = db.Column(db.String(100), nullable=True)  # ✅ Add this field to store commuting days
 
     driver = db.relationship('User', backref='rides')
 
@@ -74,10 +76,20 @@ class book_ride(db.Model):
     total_price = db.Column(db.Float, nullable=False)  # Stores the total price of the booking
     seats_selected = db.Column(db.Integer, nullable=False)  # Stores the number of seats selected
     confirmation_email = db.Column(db.String(150), nullable=False)  # Stores the email address for confirmation
-    ride_date = db.Column(db.DateTime, nullable=False)  # Stores the date and time of the booked ride
+    ride_date = db.Column(db.DateTime, nullable=True)  # ✅ Make this nullable for commuting rides
     
-    # Define the relationship to the publish_ride model
     ride = db.relationship('publish_ride', backref='bookings')
 
     def __repr__(self):
         return f"<Booking for {self.ride.from_location} to {self.ride.to_location}>"
+
+# Table for saved journey for easy rebooking for a commuting ride
+class SavedRide(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
+    recurrence_days = db.Column(db.String(100), nullable=True)  # Stored as "Monday, Wednesday"
+    
+    # Define relationships
+    user = db.relationship('User', backref='saved_rides')
+    ride = db.relationship('publish_ride', backref='saved_rides')

@@ -20,9 +20,37 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="date_time" class="form-label">Date & Time:</label>
-                <input type="datetime-local" id="date_time" name="date_time" class="form-control" required>
+                <label for="category" class="form-label">Category:</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="one-time">One-time</option>
+                    <option value="commuting">Commuting</option>
+                </select>
             </div>
+        </div>
+
+        <!-- Date & Time Picker (Shown only for One-time rides) -->
+        <div class="row mb-3" id="date_time_div">
+            <div class="col-md-6">
+                <label for="date_time" class="form-label">Date & Time:</label>
+                <input type="datetime-local" id="date_time" name="date_time" class="form-control">
+            </div>
+        </div>
+
+        <!-- Recurrence days selection (Visible only for commuting rides) -->
+        <div class="row mb-3" id="recurrence_days" style="display: none;">
+            <div class="col-md-12">
+                <label>Select Recurring Days:</label><br>
+                <input type="checkbox" name="recurrence_days" value="Monday"> Monday
+                <input type="checkbox" name="recurrence_days" value="Tuesday"> Tuesday
+                <input type="checkbox" name="recurrence_days" value="Wednesday"> Wednesday
+                <input type="checkbox" name="recurrence_days" value="Thursday"> Thursday
+                <input type="checkbox" name="recurrence_days" value="Friday"> Friday
+                <input type="checkbox" name="recurrence_days" value="Saturday"> Saturday
+                <input type="checkbox" name="recurrence_days" value="Sunday"> Sunday
+            </div>
+        </div>
+
+        <div class="row mb-3">
             <div class="col-md-3">
                 <label for="available_seats" class="form-label">Available Seats:</label>
                 <input type="number" id="available_seats" name="available_seats" min="1" class="form-control" required>
@@ -30,16 +58,6 @@
             <div class="col-md-3">
                 <label for="price_per_seat" class="form-label">Price per Seat (£):</label>
                 <input type="number" id="price_per_seat" name="price_per_seat" step="0.01" class="form-control" required>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="category" class="form-label">Category:</label>
-                <select id="category" name="category" class="form-select">
-                    <option value="commuting">Commuting</option>
-                    <option value="one-time">One-time</option>
-                </select>
             </div>
         </div>
 
