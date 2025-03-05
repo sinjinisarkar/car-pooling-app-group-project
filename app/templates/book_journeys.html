@@ -14,9 +14,11 @@
             <h5><strong>To:</strong> {{ ride.to_location }}</h5>
         </div>
     </div>
-    
+
     <!-- Booking form -->
     <form method="POST" action="{{ url_for('book_journey', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
+        
+        <!-- Number of Seats -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="seats" class="form-label">Number of Seats:</label>
@@ -30,6 +32,37 @@
             </div>
         </div>
 
+        <!-- Date Selection for One-time Rides -->
+        {% if ride.category == "one-time" %}
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="ride_date" class="form-label">Journey Date & Time:</label>
+                <input type="text" class="form-control" value="{{ ride.date_time.strftime('%Y-%m-%d %H:%M') }}" readonly>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recurrence Days Selection for Commuting Rides -->
+        {% if ride.category == "commuting" %}
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label>Select Days You Want to Book:</label><br>
+                {% for day in ride.recurrence_days.split(',') %}
+                    <input type="checkbox" name="booking_days" value="{{ day.strip() }}"> {{ day.strip() }}<br>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Save for Future Rebooking -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <input type="checkbox" name="save_ride" value="yes">
+                <label>Save this ride for easy rebooking</label>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Card & Email -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="card_details" class="form-label">Card Details:</label>
@@ -46,15 +79,5 @@
         </div>
     </form>
 </div>
-
-<script>
-    // Calculate total price whenever the number of seats is changed
-    document.getElementById('seats').addEventListener('input', function() {
-        const seats = parseInt(this.value);
-        const pricePerSeat = {{ ride.price_per_seat }};
-        const totalPrice = seats * pricePerSeat;
-        document.getElementById('total_price').value = totalPrice.toFixed(2);
-    });
-</script>
 
 {% endblock %}
