@@ -3,28 +3,46 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Welcome, {{ current_user.username }}</h1> <br>
+    <h1 class="text-center mb-4">Welcome, {{ current_user.username }}</h1> 
+    <br>
     <h2 class="text-center mb-4">Your Booked Rides</h2>
-    
-    {% if booked_rides %}
-        <ul class="list-group">
-            {% for ride in booked_rides %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>{{ ride.ride.from_location }}</strong> to <strong>{{ ride.ride.to_location }}</strong> <br>
-                        Date: {{ ride.ride.date_time }} <br>
-                        Seats: {{ ride.seats_selected }} <br>  <!-- Display the number of seats -->
-                        Total Price: £{{ ride.total_price }} <br>  <!-- Display the total price -->
-                        Confirmation Email: {{ ride.confirmation_email }}  <!-- Display the email -->
-                    </div>
-                    <form method="POST" action="{{ url_for('cancel_booking', booking_id=ride.id) }}">
-                        <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>You have no booked rides.</p>
-    {% endif %}
+
+    <button class="btn btn-info mb-3" id="toggleBookings">Show/Hide Booked Rides</button>
+
+    <div id="bookingsContainer">
+        {% if booked_rides %}
+            <ul class="list-group">
+                {% for ride in booked_rides %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ ride.ride.from_location }}</strong> to <strong>{{ ride.ride.to_location }}</strong> <br>
+                            Date:
+                            {% if ride.ride.date_time %}
+                                {{ ride.ride.date_time.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                <span>N/A (Commuting)</span>
+                            {% endif %}
+                            <br>
+                            Seats: {{ ride.seats_selected }} <br>  
+                            Total Price: £{{ ride.total_price }} <br>  
+                            Confirmation Email: {{ ride.confirmation_email }}  
+                        </div>
+                        <div>
+                            {% if ride.ride.category == 'commuting' %}
+                                <form method="GET" action="{{ url_for('book_journey', ride_id=ride.ride.id) }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">Rebook</button>
+                                </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('cancel_booking', booking_id=ride.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center">You have no booked rides.</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

@@ -17,6 +17,7 @@
                     <th>Price per Seat (£)</th>
                     <th>Category</th>
                     <th>Driver Name</th>
+                    <th>Commuting Days</th>  <!-- ✅ New column for commuting rides -->
                     <th>Status</th>
                 </tr>
             </thead>
@@ -25,11 +26,24 @@
                 <tr>
                     <td>{{ journey.from_location }}</td>
                     <td>{{ journey.to_location }}</td>
-                    <td>{{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if journey.date_time %}
+                            {{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            <span>N/A (Commuting)</span>
+                        {% endif %}
+                    </td>
                     <td>{{ journey.available_seats }}</td>
                     <td>£{{ journey.price_per_seat }}</td>
                     <td>{{ journey.category }}</td>
                     <td>{{ journey.driver_name }}</td>
+                    <td>
+                        {% if journey.category == "commuting" and journey.recurrence_days %}
+                            {{ journey.recurrence_days }}
+                        {% else %}
+                            <span>N/A</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% set booked = journey.id in user.booked_rides %}
                         {% if booked %}
@@ -43,10 +57,15 @@
                                 <button class="btn btn-secondary" disabled>Booked</button>
                             {% endif %}
                         {% else %}
-                            <!-- Book button for available journeys -->
-                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                <button type="submit" class="btn btn-primary">Book</button>
-                            </form>
+                            {% if journey.available_seats > 0 %}
+                                <!-- Book button for available journeys -->
+                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <button type="submit" class="btn btn-primary">Book</button>
+                                </form>
+                            {% else %}
+                                <!-- Fully Booked message -->
+                                <button class="btn btn-danger" disabled>Fully Booked</button>
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>
