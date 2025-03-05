@@ -11,7 +11,7 @@
     /* font-weight: 200; */
     font-style: normal;
 }
-  
+
 body {
     margin: 0;
     background-color: #fff;
@@ -38,7 +38,8 @@ h2 {
     padding: 10px 0;
 }
 
-.navbar-logo {
+.navbar-logo,
+.navbar-logo:hover {
     color: #1f1d21;
     font-family: "Shrikhand", serif;
     font-size: 2rem;
@@ -50,6 +51,7 @@ h2 {
     max-width: 300px;
     text-align: center;
 }
+
 @media (min-width: 992px) { 
     .search-container {
         position: absolute;
@@ -58,7 +60,6 @@ h2 {
         transform: translate(-50%, -50%);
     }
 }
-
 
 .navbar .form-inline input {
     height: 50px;
@@ -72,7 +73,7 @@ h2 {
 
 .navbar .form-inline input:focus {
     border-color: #855bbe;
-    box-shadow: 3px 4px 0px #855bbe;
+    box-shadow: 1px 1px 0px #855bbe;
 }
 
 
@@ -105,7 +106,6 @@ h2 {
 #profileDropdown:active,
 .btn-find:active,
 .btn-post:active {
-    box-shadow: inset 2px 2px 4px #855bbe;
     box-shadow: 1px 1px 0px #855bbe;
     transform: translateY(2px);
 }
