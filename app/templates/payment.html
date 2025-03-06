@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Payment</h2>
+
+    <!-- Ride Summary -->
+    <div class="border rounded p-3 mb-4 bg-light">
+        <h5>Ride Summary</h5>
+        <p><strong>From:</strong> {{ ride.from_location }}</p>
+        <p><strong>To:</strong> {{ ride.to_location }}</p>
+        <p><strong>Driver:</strong> {{ ride.driver_name }}</p>
+        <p><strong>Seats:</strong> <span id="seatsDisplay">{{ seats }}</span></p>
+        <p><strong>Price per Seat:</strong> £{{ ride.price_per_seat }}</p>
+        <p><strong>Total Price:</strong> £<span id="totalPriceDisplay">{{ total_price }}</span></p>
+    </div>
+
+    <!-- Payment Form -->
+    <form id="paymentForm">
+        <!-- Hidden Inputs for Ride Data -->
+        <input type="hidden" id="ride_id" name="ride_id" value="{{ ride.id }}">
+        <input type="hidden" id="seats" name="seats" value="{{ seats }}">
+        <input type="hidden" id="total_price" name="total_price" value="{{ total_price }}">
+
+        <!-- Card Details -->
+        <label for="card_number">Card Number:</label>
+        <input type="text" id="card_number" class="form-control" required placeholder="1234 5678 1234 5678">
+
+        <label for="expiry">Expiry Date (MM/YY):</label>
+        <input type="text" id="expiry" class="form-control" required placeholder="MM/YY">
+
+        <label for="cvv">CVV:</label>
+        <input type="text" id="cvv" class="form-control" required placeholder="123">
+
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Pay Now</button>
+    </form>
+</div>
+
+{% endblock %}

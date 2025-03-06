@@ -5,9 +5,11 @@
 {% block content %}
 <div class="container my-5">
     <h2 class="text-center">Available Journeys</h2>
-    
+
     {% if journeys %}
-        <table class="table table-striped mt-4">
+        <!-- ✅ Table for One-Time Rides -->
+        <h3 class="text-center mt-4">One-Time Rides</h3>
+        <table class="table table-striped mt-3">
             <thead class="thead-dark">
                 <tr>
                     <th>From</th>
@@ -15,55 +17,37 @@
                     <th>Date & Time</th>
                     <th>Available Seats</th>
                     <th>Price per Seat (£)</th>
-                    <th>Category</th>
                     <th>Driver Name</th>
-                    <th>Commuting Days</th>  <!-- ✅ New column for commuting rides -->
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                {% for journey in journeys %}
+                {% for journey in journeys if journey.category == "one-time" %}
                 <tr>
                     <td>{{ journey.from_location }}</td>
                     <td>{{ journey.to_location }}</td>
+                    <td>{{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                        {% if journey.date_time %}
-                            {{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}
-                        {% else %}
-                            <span>N/A (Commuting)</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ journey.available_seats }}</td>
+                        {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
+                        {{ max_seats }}
+                    </td>                    
                     <td>£{{ journey.price_per_seat }}</td>
-                    <td>{{ journey.category }}</td>
                     <td>{{ journey.driver_name }}</td>
                     <td>
-                        {% if journey.category == "commuting" and journey.recurrence_days %}
-                            {{ journey.recurrence_days }}
+                        {% if user and journey.user_has_booked %}
+                            <!-- ✅ Show "Rebook" button if the user has booked before -->
+                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                <button type="submit" class="btn btn-warning">Rebook</button>
+                            </form>
                         {% else %}
-                            <span>N/A</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% set booked = journey.id in user.booked_rides %}
-                        {% if booked %}
-                            {% if journey.category == 'commuting' %}
-                                <!-- Rebook button for commuting rides -->
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                    <button type="submit" class="btn btn-warning">Rebook</button>
-                                </form>
-                            {% else %}
-                                <!-- Disabled button for one-time booked rides -->
-                                <button class="btn btn-secondary" disabled>Booked</button>
-                            {% endif %}
-                        {% else %}
-                            {% if journey.available_seats > 0 %}
-                                <!-- Book button for available journeys -->
+                            {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
+                            {% if max_seats > 0 %}
+                                <!-- ✅ Show "Book" if seats are available -->
                                 <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
                                     <button type="submit" class="btn btn-primary">Book</button>
                                 </form>
                             {% else %}
-                                <!-- Fully Booked message -->
+                                <!-- ✅ Show "Fully Booked" if no seats left -->
                                 <button class="btn btn-danger" disabled>Fully Booked</button>
                             {% endif %}
                         {% endif %}
@@ -71,6 +55,79 @@
                 </tr>
                 {% endfor %}
             </tbody>
+        </table>
+
+        <!-- Table for Commuting Rides -->
+        <h3 class="text-center mt-5">Commuting Rides</h3>
+        <table class="table table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Available Seats</th>
+                    <th>Price per Seat (£)</th>
+                    <th>Driver Name</th>
+                    <th>Commuting Days</th>
+                    <th>Available Time Slots</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for journey in journeys if journey.category == "commuting" %}
+                <tr>
+                    <td>{{ journey.from_location }}</td>
+                    <td>{{ journey.to_location }}</td>
+                    <td>
+                        <ul>
+                            {% for date in journey.recurrence_dates.split(',') %}
+                                {% set seats_left = journey.seat_tracking.get(date.strip(), 'N/A') %}
+                                <li>{{ date.strip() }} - {{ seats_left }} seats left</li>
+                            {% endfor %}
+                        </ul>
+                    </td>                                   
+                    <td>£{{ journey.price_per_seat }}</td>
+                    <td>{{ journey.driver_name }}</td>
+                    <td>
+                        {% if journey.recurrence_dates %}
+                            <ul>
+                                {% for date in journey.recurrence_dates.split(',') %}
+                                    <li>{{ date.strip() }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span>N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if journey.commute_times %}
+                            {{ journey.commute_times | replace(',', ' ') }}
+                        {% else %}
+                            <span>N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user and journey.user_has_booked %}
+                            <!-- ✅ Show "Rebook" button if the user has booked before -->
+                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                <button type="submit" class="btn btn-warning">Rebook</button>
+                            </form>
+                        {% else %}
+                            {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
+                            {% if max_seats > 0 %}
+                                <!-- ✅ Show "Book" if seats are available -->
+                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <button type="submit" class="btn btn-primary">Book</button>
+                                </form>
+                            {% else %}
+                                <!-- ✅ Show "Fully Booked" if no seats left -->
+                                <button class="btn btn-danger" disabled>Fully Booked</button>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    
+                </tr>
+                {% endfor %}
+            </tbody>            
         </table>
     {% else %}
         <p class="text-center mt-4">No journeys available at the moment.</p>
