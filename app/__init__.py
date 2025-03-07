@@ -24,4 +24,3 @@ login_manager.login_view = "login"  # Redirects to login page if user isn't logg
 with app.app_context():
     from app import models, views
     db.create_all()  # Ensure tables exist
-
