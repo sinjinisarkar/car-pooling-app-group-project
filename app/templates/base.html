@@ -102,7 +102,12 @@
                         </div>
                         <div class="form-group">
                             <label for="login-password">Password</label>
-                            <input type="password" class="form-control" id="login-password" placeholder="Password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="login-password" placeholder="Enter Password" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text toggle-password" id="toggle-login-password" onclick="togglePassword('login-password', 'toggle-login-password')">👁️</span>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-one btn-block">Log In</button>
                     </form>
@@ -140,11 +145,21 @@
                         </div>
                         <div class="form-group">
                             <label for="signup-password">Password</label>
-                            <input type="password" class="form-control" id="signup-password" placeholder="Password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="signup-password" placeholder="Password" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text toggle-password" id="toggle-signup-password" onclick="togglePassword('signup-password', 'toggle-signup-password')">👁️</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="signupConfirmPassword">Confirm Password</label>
-                            <input type="password" class="form-control" id="signupConfirmPassword" placeholder="Confirm password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="signupConfirmPassword" placeholder="Confirm password" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text toggle-password" id="toggle-confirm-password" onclick="togglePassword('signupConfirmPassword', 'toggle-confirm-password')">👁️</span>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-one btn-block">Sign Up</button>
                     </form>
