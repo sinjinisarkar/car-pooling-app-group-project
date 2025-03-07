@@ -185,7 +185,6 @@ def view_journeys():
 
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
 
-# Route to book the journey by passenger/user
 @app.route('/book_journey/<int:ride_id>', methods=['GET', 'POST'])
 @login_required
 def book_journey(ride_id):
@@ -193,7 +192,7 @@ def book_journey(ride_id):
 
     view_ride_entry = view_ride.query.filter_by(id=ride_id).first()
     ride = view_ride_entry if view_ride_entry else publish_ride.query.get_or_404(ride_id)
-    
+
     print(f"✅ Retrieved ride: {ride.id} - {ride.from_location} to {ride.to_location}")
 
     # ✅ Get available dates from recurrence_dates (for commuting rides)
@@ -210,14 +209,14 @@ def book_journey(ride_id):
             seat_tracking = {}
 
     # ✅ Get selected date from request or set default
-    selected_dates = request.args.get("selected_date") or (available_dates[0] if available_dates else "")
+    selected_date = request.args.get("selected_date") or (available_dates[0] if available_dates else "")
 
     # ✅ Ensure the selected date is in seat_tracking
-    current_available_seats = seat_tracking.get(selected_dates, 0) if selected_dates else 0
-
+    current_available_seats = seat_tracking.get(selected_date, 0) if selected_date else 0
 
     if request.method == 'POST':
         print("🚀 Received POST request.")
+        
         num_seats = request.form.get('seats')
         confirmation_email = request.form.get('email')
 
@@ -231,20 +230,26 @@ def book_journey(ride_id):
             flash("Invalid seat number!", "danger")
             return redirect(url_for('book_journey', ride_id=ride_id))
 
-        # ✅ Handle one-time ride bookings
+        total_price = num_seats * ride.price_per_seat
+
+        ### 🟢 **One-Time Ride Seat Deduction**
         if ride.category == "one-time":
-            seat_data = json.loads(ride.available_seats_per_date)  # Extract available seats
-            available_seats = seat_data.get("seats", 0)  # Extract numeric value
+            ride_date = ride.date_time.strftime("%Y-%m-%d")  # Convert ride date to string format
 
-            if num_seats > available_seats:
-                return jsonify({"success": False, "message": f"Not enough available seats! Only {available_seats} left."}), 400
+            if num_seats > current_available_seats:
+                flash(f"Not enough seats available! Only {current_available_seats} left.", "danger")
+                return redirect(url_for('book_journey', ride_id=ride_id))
 
-            ride_date = ride.date_time
-            ride_time = ride.date_time.strftime("%H:%M")  # Extract time from timestamp
+            # ✅ Deduct seats for one-time rides
+            seat_tracking[ride_date] = max(0, seat_tracking.get(ride_date, 0) - num_seats)
 
-            # ✅ Calculate total price for one-time rides
-            total_price = num_seats * ride.price_per_seat
+            # ✅ Update seat data in the ride entry
+            ride.available_seats_per_date = json.dumps(seat_tracking)
 
+            if view_ride_entry:
+                view_ride_entry.available_seats_per_date = json.dumps(seat_tracking)
+
+            # ✅ Store the booking in the database
             new_booking = book_ride(
                 user_id=current_user.id,
                 ride_id=ride.id,
@@ -256,15 +261,10 @@ def book_journey(ride_id):
             )
             db.session.add(new_booking)
 
-            # Store pending seat update but do NOT apply it yet
-            new_seat_count = max(0, seat_tracking.get(ride_date.strftime("%Y-%m-%d"), 0) - num_seats)
-            pending_seat_update = json.dumps({ride_date.strftime("%Y-%m-%d"): new_seat_count})
-
-            db.session.commit()
-
-        else:  # Handle commuting rides
-            selected_dates = request.form.get('selected_dates', "").split(",")
-            selected_times = request.form.get('selected_time', "").split(",")
+        ### 🔵 **Commuting Ride Seat Deduction**
+        else:
+            selected_dates = request.form.getlist('selected_dates')
+            selected_times = request.form.getlist('selected_time')
 
             if not selected_dates or not selected_times:
                 flash("Please select at least one date and time.", "danger")
@@ -272,43 +272,40 @@ def book_journey(ride_id):
 
             for date in selected_dates:
                 date = date.strip()
-                if date in seat_tracking:
-                    if seat_tracking[date] >= num_seats:
-                        seat_tracking[date] -= num_seats  # ✅ Deduct seats for this date
-                    else:
-                        flash(f"Not enough seats available on {date}", "danger")
-                        return redirect(url_for('book_journey', ride_id=ride_id))
-                else:
-                    flash(f"Invalid date selection: {date}", "danger")
+
+                if seat_tracking.get(date, 0) < num_seats:
+                    flash(f"Not enough seats available on {date}.", "danger")
                     return redirect(url_for('book_journey', ride_id=ride_id))
+
+                # ✅ Deduct seats for commuting rides
+                seat_tracking[date] -= num_seats
 
                 for time in selected_times:
                     new_booking = book_ride(
                         user_id=current_user.id,
                         ride_id=ride.id,
                         status="Booked",
-                        total_price=num_seats * ride.price_per_seat,
+                        total_price=total_price,
                         seats_selected=num_seats,
                         confirmation_email=confirmation_email,
                         ride_date=date,
                     )
                     db.session.add(new_booking)
 
+            # ✅ Save updated seat tracking
             ride.available_seats_per_date = json.dumps(seat_tracking)
 
-            if all(seats == 0 for seats in seat_tracking.values()):
-                if view_ride_entry:
-                    db.session.delete(view_ride_entry)
+            if view_ride_entry:
+                view_ride_entry.available_seats_per_date = json.dumps(seat_tracking)
 
-            db.session.commit()
+        db.session.commit()  # ✅ Save all changes
 
-            # 🚀 Debugging Redirection
-            print(f"✅ Redirecting to Payment Page")
-            print(f"Ride ID: {ride.id}, Seats: {num_seats}, Total Price: {total_price}")
+        print(f"✅ Booking stored in DB: {new_booking}")
+        print(f"🚀 Updated available seats: {ride.available_seats_per_date}")  # Debugging
 
-                
-            flash("Ride booked successfully!", "success")
-            return redirect(url_for('payment_page', ride_id=ride.id, seats=int(num_seats), total_price=float(total_price)), pending_seat_update=pending_seat_update)
+        flash("Ride booked successfully!", "success")
+        return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price))
+
 
     # ✅ Convert `available_seats_per_date` from JSON before sending it to Jinja
     seat_data = {}
@@ -318,14 +315,17 @@ def book_journey(ride_id):
         except json.JSONDecodeError:
             seat_data = {}  # Handle invalid JSON safely
 
-    return render_template('book_journeys.html', 
+    return render_template(
+        'book_journeys.html', 
         ride=ride, 
         available_dates=available_dates, 
         seat_tracking=seat_tracking, 
         seat_data=seat_data,  # ✅ Pass parsed seat data to template
         current_available_seats=current_available_seats, 
         user=current_user
-    )
+)
+
+
 
 
 # ✅ Route to get available dates
