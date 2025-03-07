@@ -1,4 +1,4 @@
-/* Fonts from Google Fonts */
+/* ---------------------------------------- Fonts from Google Fonts ---------------------------------------- */
 .shrikhand-regular {
     font-family: "Shrikhand", serif;
     font-weight: 400;
@@ -12,7 +12,7 @@
     font-style: normal;
 }
 
-/* General */
+/* ---------------------------------------- General ---------------------------------------- */
 body {
     margin: 0;
     background-color: #fff;
@@ -22,6 +22,7 @@ body {
 
 h2 {
     font-family: 'Shrikhand', serif;
+    color: #1f1d21;
 }
 
 hr {
@@ -33,7 +34,7 @@ hr {
 }
 
 
-/* Navbar */
+/* ---------------------------------------- Navbar ---------------------------------------- */
 .navbar .container {
     display: flex;
     flex-direction: row;
@@ -55,7 +56,7 @@ hr {
 }
 
 
-/* Search Bar */
+/* ---------------------------------------- Search Bar ---------------------------------------- */
 .search-container {
     max-width: 300px;
     text-align: center;
@@ -81,12 +82,61 @@ hr {
 }
 
 .navbar .form-inline input:focus {
-    border-color: #855bbe;
     box-shadow: 1px 1px 0px #855bbe;
 }
 
 
-/* Buttons styling */
+/* ---------------------------------------- Modal styling ---------------------------------------- */
+.modal-content {
+    border-radius: 23px;
+    border: 2px solid #e6d6fc;
+    box-shadow: 5px 6px 0px #e6d6fc;
+}
+
+.modal-header {
+    background-color: #e6d6fc;
+    color: #1f1d21;
+    font-weight: 700;
+    border-top-left-radius: 23px;
+    border-top-right-radius: 23px;
+}
+
+.modal-header .close,
+.modal-header .close:active,
+.modal-header .close:focus {
+    color: #1f1d21;
+    font-size: 1.5rem;
+    outline: none;
+    box-shadow: none;
+    border: none;
+}
+
+.modal-title {
+    font-size: 1.4rem;
+    font-family: "Shrikhand", serif;
+}
+
+.modal-body input:focus {
+    transition: border-color 0.3s ease-in-out;
+    border-color: #855bbe;
+    box-shadow: 1px 2px 0px #855bbe;
+}
+
+.modal-body a,
+.modal-footer a {
+    color: #855bbe;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+.modal-body a:hover,
+.modal-footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* ---------------------------------------- Buttons styling ---------------------------------------- */
 #profileDropdown {
     color: #1f1d21;
     font-size: 1.2rem;
@@ -133,7 +183,7 @@ hr {
 }
 
 
-/* Dropdown Menu Styling */
+/* ---------------------------------------- Dropdown Menu Styling ---------------------------------------- */
 .dropdown-menu {
     border: none;
     border-radius: 10px;
@@ -152,7 +202,7 @@ hr {
 }
 
 
-/* Banner Styling */
+/* ---------------------------------------- Banner Styling ---------------------------------------- */
 .banner {
     width: 100%;
     height: 250px;
@@ -169,10 +219,10 @@ hr {
 }
 
 
-/* Card Styling */
+/* ---------------------------------------- Card Styling ---------------------------------------- */
 .card {
-    border-radius: 22px; /* Rounded corners */
-    box-shadow: 5px 6px 0px #855bbe; /* Soft shadow */
+    border-radius: 22px;
+    box-shadow: 5px 6px 0px #855bbe;
     transition: transform 0.2s ease-in-out;
 }
 
