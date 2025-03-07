@@ -90,13 +90,6 @@
                                 </span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-heading">Available Seats:</span>
-                                <span>
-                                    {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
-                                    {{ max_seats }}
-                                </span>
-                            </div>
-                            <div class="detail-item">
                                 <span class="detail-heading">Price per Seat:</span>
                                 <span>£{{ journey.price_per_seat }}</span>
                             </div>

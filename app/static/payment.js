@@ -28,6 +28,14 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    // ✅ Extract selected_date from URL query parameters
+    let urlParams = new URLSearchParams(window.location.search);
+    let selectedDate = urlParams.get("selected_date"); // Retrieve selected_date
+    let confirmationEmail = urlParams.get("email"); // Retrieve email
+
+    console.log(" Selected Date:", selectedDate);
+    console.log(" Confirmation Email:", confirmationEmail);
+
     // Handle Payment Form Submission
     document.getElementById("paymentForm").addEventListener("submit", function (event) {
         event.preventDefault(); // Prevent normal form submission
@@ -38,7 +46,9 @@ document.addEventListener("DOMContentLoaded", function () {
             total_price: totalPrice,
             card_number: document.getElementById("card_number").value,
             expiry: document.getElementById("expiry").value,
-            cvv: document.getElementById("cvv").value
+            cvv: document.getElementById("cvv").value,
+            selected_date: selectedDate,  // ✅ Send selected_date
+            email: confirmationEmail  // ✅ Send email if needed
         };
 
         fetch("/process_payment", {
