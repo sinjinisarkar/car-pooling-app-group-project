@@ -11,7 +11,7 @@
 
     <div id="bookingsContainer">
         
-        <!-- 🟢 One-Time Rides -->
+        <!-- One-Time Rides -->
         <h3 class="text-primary mt-4">One-Time Rides</h3>
         {% if one_time_rides %}
             <div class="row">
@@ -38,7 +38,7 @@
             <p class="text-center">You have no one-time booked rides.</p>
         {% endif %}
 
-        <!-- 🔵 Commuting Rides -->
+        <!-- Commuting Rides -->
         <h3 class="text-success mt-5">Commuting Rides</h3>
         {% if commuting_rides %}
             {% for ride_id, ride in commuting_rides.items() %}

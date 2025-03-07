@@ -1,4 +1,3 @@
-// ✅ Efficient UI Update Function
 function updateUI() {
     const elements = {
         categorySelect: document.getElementById("category"),
@@ -26,20 +25,20 @@ function fetchAvailableSeats(selectedDates) {
     let rideId = rideIdElement ? rideIdElement.value : null;
 
     if (!rideId) {
-        console.error("🚨 Ride ID not found!");
+        console.error(" Ride ID not found!");
         return;
     }
 
     if (!selectedDates || selectedDates.length === 0) {
-        console.warn("⚠️ No dates selected for fetching available seats.");
+        console.warn(" No dates selected for fetching available seats.");
         availableSeatsElement.textContent = "N/A";
         return;
     }
 
     let formattedDates = selectedDates.map(date => new Date(date).toISOString().split('T')[0]);
-    console.log("🚀 Fetching available seats for:", formattedDates);
+    console.log("Fetching available seats for:", formattedDates);
 
-    // ✅ Use GET instead of POST
+    // Use GET instead of POST
     fetch(`/api/get_available_seats/${rideId}?selected_dates=${formattedDates.join(",")}`)
     .then(response => {
         if (!response.ok) {
@@ -48,9 +47,9 @@ function fetchAvailableSeats(selectedDates) {
         return response.json();
     })
     .then(data => {
-        console.log("✅ API Response:", data);
+        console.log("API Response:", data);
         if (!data.available_seats || Object.keys(data.available_seats).length === 0) {
-            console.warn("⚠️ No available seats data received from API.");
+            console.warn(" No available seats data received from API.");
             availableSeatsElement.textContent = "0";
             return;
         }
@@ -59,20 +58,20 @@ function fetchAvailableSeats(selectedDates) {
         availableSeatsElement.textContent = minSeats || 0;
     })
     .catch(error => {
-        console.error("❌ Error fetching available seats:", error);
+        console.error("Error fetching available seats:", error);
         availableSeatsElement.textContent = "Error";
     });
 }
 
 
-// ✅ Fetch Available Dates Function
+// Fetch Available Dates Function
 function fetchAvailableDates() {
     let selectedDatesInput = document.querySelector("#selected_dates");
     let rideIdElement = document.getElementById("ride_id");
     let rideId = rideIdElement ? rideIdElement.value : null;
 
     if (!selectedDatesInput || !rideId) {
-        console.error("🚨 Missing selectedDatesInput or rideId");
+        console.error("Missing selectedDatesInput or rideId");
         return;
     }
 
@@ -82,9 +81,9 @@ function fetchAvailableDates() {
             return response.json();
         })
         .then(data => {
-            console.log("✅ API Response (Available Dates):", data);
+            console.log(" API Response (Available Dates):", data);
             if (!data.available_dates || data.available_dates.length === 0) {
-                console.warn("⚠️ No available dates returned from API.");
+                console.warn("No available dates returned from API.");
                 return;
             }
 
@@ -92,21 +91,21 @@ function fetchAvailableDates() {
                 mode: "multiple",
                 dateFormat: "Y-m-d",
                 disableMobile: true,
-                enable: data.available_dates,  // ✅ Only allow valid dates
-                clickOpens: true,  // ✅ Ensures calendar only opens on click
-                allowInput: false,  // ✅ Prevents manual typing
+                enable: data.available_dates,  // Only allow valid dates
+                clickOpens: true,  // Ensures calendar only opens on click
+                allowInput: false,  // Prevents manual typing
                 onChange: function (selectedDates, dateStr, instance) {
-                    console.log("🚀 Selected Dates:", selectedDates);
+                    console.log("Selected Dates:", selectedDates);
                     if (selectedDates.length > 0) {
                         fetchAvailableSeats(selectedDates);
                     }
                 }
             });
         })
-        .catch(error => console.error("❌ Error fetching available dates:", error));
+        .catch(error => console.error("Error fetching available dates:", error));
 }
 
-// ✅ Event Listener for UI & Initialization
+// Event Listener for UI & Initialization
 document.addEventListener("DOMContentLoaded", function () {
     updateUI(); // Initialize UI
 
@@ -117,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     fetchAvailableDates(); // Fetch available dates on page load
 
-    // ✅ Initialize Flatpickr for Date & Time Selection
+    // Initialize Flatpickr for Date & Time Selection
     if (document.querySelector("#date_time")) {
         flatpickr("#date_time", { enableTime: true, dateFormat: "Y-m-d H:i", disableMobile: true });
     }
@@ -128,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
         flatpickr("#commute_times", { enableTime: true, noCalendar: true, mode: "multiple", dateFormat: "H:i", disableMobile: true });
     }
 
-    // ✅ Calculate Total Price When Selecting Seats
+    // Calculate Total Price When Selecting Seats
     let seatsInput = document.getElementById("seats");
     let totalPriceInput = document.getElementById("total_price");
     let pricePerSeatElement = document.getElementById("price_per_seat");
@@ -162,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
     }
 
-    // ✅ Toggle Bookings Section
+    // Toggle Bookings Section
     let toggleBookingsBtn = document.getElementById("toggleBookings");
     let bookingsContainer = document.getElementById("bookingsContainer");
 
@@ -172,26 +171,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Handle Proceed to Payment Button Click
-    let proceedToPaymentBtn = document.getElementById("proceedToPayment");
-    if (proceedToPaymentBtn) {
-        proceedToPaymentBtn.addEventListener("click", function () {
-            console.log("🚀 Proceeding to Payment...");
+    // // Handle Proceed to Payment Button Click
+    // let proceedToPaymentBtn = document.getElementById("proceedToPayment");
+    // if (proceedToPaymentBtn) {
+    //     proceedToPaymentBtn.addEventListener("click", function () {
+    //         console.log(" Proceeding to Payment...");
 
-            const rideId = document.getElementById("ride_id").value;
-            const seats = document.getElementById("seats").value;
-            const totalPrice = document.getElementById("total_price").value;
+    //         const rideId = document.getElementById("ride_id").value;
+    //         const seats = document.getElementById("seats").value;
+    //         const totalPrice = document.getElementById("total_price").value;
 
-            if (!rideId || !seats || seats <= 0 || !totalPrice || totalPrice <= 0) {
-                alert("❌ Please select valid seats before proceeding!");
-                return;
-            }
+    //         if (!rideId || !seats || seats <= 0 || !totalPrice || totalPrice <= 0) {
+    //             alert(" Please select valid seats before proceeding!");
+    //             return;
+    //         }
 
-            // Redirect to the payment page
-            const paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}`;
-            console.log(`🔗 Redirecting to: ${paymentUrl}`);
-            window.location.href = paymentUrl;
-        });
-    }
+    //         // Redirect to the payment page
+    //         const paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}`;
+    //         console.log(` Redirecting to: ${paymentUrl}`);
+    //         window.location.href = paymentUrl;
+    //     });
+    // }
 
 });

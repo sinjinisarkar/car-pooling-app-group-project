@@ -22,6 +22,7 @@
          <input type="hidden" id="ride_id" value="{{ ride.id }}">
          <input type="hidden" id="price_per_seat" data-price="{{ ride.price_per_seat }}">
          <input type="hidden" id="category" value="{{ ride.category }}">
+         <input type="hidden" id="selected_date_input" name="selected_date" value="{{ selected_date }}">
 
         
         <!-- Number of Seats -->
@@ -33,9 +34,10 @@
                     <small>Current Available Seats: 
                         <span id="availableSeats">
                             {% if ride.category == "one-time" %}
-                                {{ seat_data.get("seats", 0) }}  {# ✅ Extract "seats" key for one-time rides #}
-                            {% elif selected_date and selected_date in seat_data %}
-                                {{ seat_data[selected_date] }}  {# ✅ Extract seat count for commuting rides #}
+                                {{ seat_data.get(ride.date_time.strftime('%Y-%m-%d'), 0) }}
+                            {% elif ride.category == "commuting" %}
+                                {{ seat_data.get(selected_date, 0) }}
+                                
                             {% else %}
                                 0
                             {% endif %}
@@ -64,7 +66,7 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="selected_dates" class="form-label">Select Commute Dates:</label>
-                <input type="text" id="selected_dates" class="form-control" placeholder="Choose available dates" required>
+                <input type="text" id="selected_dates" class="form-control" placeholder="Choose available dates" id="selected_date_input" name="selected_date" value="" required>
             </div>            
             
             <div class="col-md-6">
@@ -84,7 +86,7 @@
         </div>
 
         <div class="text-center">
-            <button type="button" id="proceedToPayment" class="btn btn-success btn-lg">
+            <button type="submit" id="proceedToPayment" class="btn btn-success btn-lg">
                 Proceed to Payment
             </button>
             
