@@ -269,3 +269,22 @@ hr {
 .detail-heading {
     font-weight: 600;
 }
+
+
+/* ---------------------------------------- Form styling ---------------------------------------- */
+/* ---------------------------------------- Publish Ride Form Styling ---------------------------------------- */
+.custom-form {
+    border-radius: 22px;
+    box-shadow: 5px 6px 0px #855bbe;
+    padding: 25px;
+}
+
+.custom-form input:focus,
+.custom-form select:focus,
+.custom-form input:active,
+.custom-form select:active {
+    transition: border-color 0.3s ease-in-out;
+    border-color: #855bbe;
+    box-shadow: 1px 2px 0px #855bbe;
+}
+
