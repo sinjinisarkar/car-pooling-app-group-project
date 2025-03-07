@@ -194,7 +194,14 @@ hr {
 
 .dropdown-item {
     display: flex;
+    align-items: center;
     gap: 5px;
+}
+
+.dropdown-item i {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
 }
 
 .dropdown-item:hover {
