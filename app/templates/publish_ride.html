@@ -18,35 +18,35 @@
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="category" class="form-label">Category:</label>
-                <select id="category" name="category" class="form-select">
-                    <option value="one-time">One-time</option>
-                    <option value="commuting">Commuting</option>
-                </select>
-            </div>
-        </div>
+        <!-- Category Dropdown (Detect Change) -->
+        <label for="category">Category:</label>
+        <select id="category" name="category" class="form-control">
+            <option value="one-time">One-Time</option>
+            <option value="commuting">Commuting</option>
+        </select>
 
-        <!-- Date & Time Picker (Shown only for One-time rides) -->
+        <!-- One-Time Ride: Show Date & Time Picker -->
         <div class="row mb-3" id="date_time_div">
-            <div class="col-md-6">
-                <label for="date_time" class="form-label">Date & Time:</label>
-                <input type="datetime-local" id="date_time" name="date_time" class="form-control">
+            <div class="col-md-12">
+                <label for="date_time">Date & Time:</label>
+                <input type="text" id="date_time" name="date_time" class="form-control" placeholder="Select a date and time">
             </div>
         </div>
 
-        <!-- Recurrence days selection (Visible only for commuting rides) -->
-        <div class="row mb-3" id="recurrence_days" style="display: none;">
+        <!-- Commuting Ride: Show Recurrence Dates & Time Slots -->
+        <div class="row mb-3" id="recurrence_section" style="display: none;">
             <div class="col-md-12">
-                <label>Select Recurring Days:</label><br>
-                <input type="checkbox" name="recurrence_days" value="Monday"> Monday
-                <input type="checkbox" name="recurrence_days" value="Tuesday"> Tuesday
-                <input type="checkbox" name="recurrence_days" value="Wednesday"> Wednesday
-                <input type="checkbox" name="recurrence_days" value="Thursday"> Thursday
-                <input type="checkbox" name="recurrence_days" value="Friday"> Friday
-                <input type="checkbox" name="recurrence_days" value="Saturday"> Saturday
-                <input type="checkbox" name="recurrence_days" value="Sunday"> Sunday
+                <label for="recurrence_dates">Select Recurring Commute Dates:</label>
+                <input type="text" id="recurrence_dates" name="recurrence_dates" class="form-control" placeholder="Select commute dates">
+                <small>Select multiple dates the ride will be available.</small>
+            </div>
+        </div>
+
+        <div class="row mb-3" id="commute_times_section" style="display: none;">
+            <div class="col-md-12">
+                <label for="commute_times">Select Available Commute Time Slots:</label>
+                <input type="text" id="commute_times" name="commute_times" class="form-control" placeholder="Select time slots">
+                <small>Select multiple time slots (e.g., 08:00, 17:30).</small>
             </div>
         </div>
 

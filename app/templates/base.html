@@ -25,6 +25,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@200..800&display=swap" rel="stylesheet">
+
+    <!-- Include flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         
 </head>
 <body>
@@ -172,14 +175,18 @@
     </footer>
     
 
-    <!-- jQuery, Popper.js, Bootstrap JS -->
+    <!-- jQuery, Popper.js, Bootstrap JS and Flatpickr-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Local js -->
     <script src="{{ url_for('static', filename='auth.js') }}"></script>
     <script src="{{ url_for('static', filename='homepage.js') }}"></script>
     <script src="{{ url_for('static', filename='book.js') }}"></script>
+    <script src="{{ url_for('static', filename='payment.js') }}"></script>
+
 
 </body>
 </html>
