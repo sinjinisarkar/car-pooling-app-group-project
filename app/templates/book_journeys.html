@@ -33,9 +33,9 @@
                     <small>Current Available Seats: 
                         <span id="availableSeats">
                             {% if ride.category == "one-time" %}
-                                {{ seat_data.get("seats", 0) }}  {# ✅ Extract "seats" key for one-time rides #}
+                                {{ seat_data.get("seats", 0) }}  {# Extract "seats" key for one-time rides #}
                             {% elif selected_date and selected_date in seat_data %}
-                                {{ seat_data[selected_date] }}  {# ✅ Extract seat count for commuting rides #}
+                                {{ seat_data[selected_date] }}  {# Extract seat count for commuting rides #}
                             {% else %}
                                 0
                             {% endif %}

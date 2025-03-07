@@ -10,7 +10,7 @@ passenger_rides = db.Table(
     db.Column('ride_id', db.Integer, db.ForeignKey('publish_ride.id'), primary_key=True)
 )
 
-# User Table for Login and Accounts 
+# Table for user Login and Accounts 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -36,6 +36,7 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+# Table for driver to publish ride
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -53,7 +54,7 @@ class publish_ride(db.Model):
     def __repr__(self):
         return f"<Published Ride {self.from_location} to {self.to_location}>"
 
-# Journey Table for viewing available journeys (user)
+# Table for viewing available journeys (user/passenger)
 class view_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -69,7 +70,7 @@ class view_ride(db.Model):
 
     driver = db.relationship('User', backref='rides')
 
-# Table for user/passenger to book a ride  
+# Table booking a journey from avaliable journeys (user/passenger)
 class book_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -96,6 +97,7 @@ class SavedRide(db.Model):
     user = db.relationship('User', backref='saved_rides')
     ride = db.relationship('publish_ride', backref='saved_rides')
 
+# Table for payment of the booked journeys
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
