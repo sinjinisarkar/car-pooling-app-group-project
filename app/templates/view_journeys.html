@@ -5,75 +5,93 @@
 {% block content %}
 <div class="container my-5">
     <h2 class="text-center">Available Journeys</h2>
-    
+    <br>
+
     {% if journeys %}
-        <table class="table table-striped mt-4">
-            <thead class="thead-dark">
-                <tr>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Date & Time</th>
-                    <th>Available Seats</th>
-                    <th>Price per Seat (£)</th>
-                    <th>Category</th>
-                    <th>Driver Name</th>
-                    <th>Commuting Days</th>  <!-- ✅ New column for commuting rides -->
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for journey in journeys %}
-                <tr>
-                    <td>{{ journey.from_location }}</td>
-                    <td>{{ journey.to_location }}</td>
-                    <td>
-                        {% if journey.date_time %}
-                            {{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}
-                        {% else %}
-                            <span>N/A (Commuting)</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ journey.available_seats }}</td>
-                    <td>£{{ journey.price_per_seat }}</td>
-                    <td>{{ journey.category }}</td>
-                    <td>{{ journey.driver_name }}</td>
-                    <td>
-                        {% if journey.category == "commuting" and journey.recurrence_days %}
-                            {{ journey.recurrence_days }}
-                        {% else %}
-                            <span>N/A</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% set booked = journey.id in user.booked_rides %}
-                        {% if booked %}
-                            {% if journey.category == 'commuting' %}
-                                <!-- Rebook button for commuting rides -->
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                    <button type="submit" class="btn btn-warning">Rebook</button>
-                                </form>
+        <div class="row">
+            {% for journey in journeys %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ journey.from_location }} → {{ journey.to_location }}</h5>
+
+                        <div class="journey-details">
+                            <div class="detail-item">
+                                <span class="detail-heading">Date:</span>
+                                <span class="detail-info">
+                                    {% if journey.date_time %}
+                                        {{ journey.date_time.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        <span>N/A (Commuting)</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Time:</span>
+                                <span class="detail-info">
+                                    {% if journey.date_time %}
+                                        {{ journey.date_time.strftime('%H:%M') }}
+                                    {% else %}
+                                        <span>N/A</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Available Seats:</span>
+                                <span class="detail-info">{{ journey.available_seats }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Price per Seat:</span>
+                                <span class="detail-info">£{{ journey.price_per_seat }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Category:</span>
+                                <span class="detail-info">{{ journey.category }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Driver:</span>
+                                <span class="detail-info">{{ journey.driver_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Commuting Days:</span>
+                                <span class="detail-info">
+                                    {% if journey.category == "commuting" and journey.recurrence_days %}
+                                        {{ journey.recurrence_days }}
+                                    {% else %}
+                                        <span>N/A</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            {% set booked = journey.id in user.booked_rides %}
+                            {% if booked %}
+                                {% if journey.category == 'commuting' %}
+                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                        <button type="submit" class="btn btn-one">Rebook</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>Booked</button>
+                                {% endif %}
                             {% else %}
-                                <!-- Disabled button for one-time booked rides -->
-                                <button class="btn btn-secondary" disabled>Booked</button>
+                                {% if journey.available_seats > 0 %}
+                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                        <button type="submit" class="btn btn-one">Book</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-danger" disabled>Fully Booked</button>
+                                {% endif %}
                             {% endif %}
-                        {% else %}
-                            {% if journey.available_seats > 0 %}
-                                <!-- Book button for available journeys -->
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                    <button type="submit" class="btn btn-primary">Book</button>
-                                </form>
-                            {% else %}
-                                <!-- Fully Booked message -->
-                                <button class="btn btn-danger" disabled>Fully Booked</button>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     {% else %}
         <p class="text-center mt-4">No journeys available at the moment.</p>
     {% endif %}
 </div>
+
 {% endblock %}
