@@ -4,131 +4,128 @@
 
 {% block content %}
 <div class="container my-5">
-    <h2 class="text-center">Available Journeys</h2>
 
     {% if journeys %}
-        <!-- ✅ Table for One-Time Rides -->
-        <h3 class="text-center mt-4">One-Time Rides</h3>
-        <table class="table table-striped mt-3">
-            <thead class="thead-dark">
-                <tr>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Date & Time</th>
-                    <th>Available Seats</th>
-                    <th>Price per Seat (£)</th>
-                    <th>Driver Name</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for journey in journeys if journey.category == "one-time" %}
-                <tr>
-                    <td>{{ journey.from_location }}</td>
-                    <td>{{ journey.to_location }}</td>
-                    <td>{{ journey.date_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
-                        {{ max_seats }}
-                    </td>                    
-                    <td>£{{ journey.price_per_seat }}</td>
-                    <td>{{ journey.driver_name }}</td>
-                    <td>
-                        {% if user and journey.user_has_booked %}
-                            <!-- ✅ Show "Rebook" button if the user has booked before -->
-                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                <button type="submit" class="btn btn-warning">Rebook</button>
-                            </form>
-                        {% else %}
-                            {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
-                            {% if max_seats > 0 %}
-                                <!-- ✅ Show "Book" if seats are available -->
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                    <button type="submit" class="btn btn-primary">Book</button>
-                                </form>
-                            {% else %}
-                                <!-- ✅ Show "Fully Booked" if no seats left -->
-                                <button class="btn btn-danger" disabled>Fully Booked</button>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <!-- One-Time Rides -->
+        <h2 class="text-center">One Time Rides</h2>
+        <div class="row">
+            {% for journey in journeys if journey.category == "one-time" %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ journey.from_location }} → {{ journey.to_location }}</h5>
 
-        <!-- Table for Commuting Rides -->
-        <h3 class="text-center mt-5">Commuting Rides</h3>
-        <table class="table table-striped mt-3">
-            <thead class="thead-dark">
-                <tr>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Available Seats</th>
-                    <th>Price per Seat (£)</th>
-                    <th>Driver Name</th>
-                    <th>Commuting Days</th>
-                    <th>Available Time Slots</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for journey in journeys if journey.category == "commuting" %}
-                <tr>
-                    <td>{{ journey.from_location }}</td>
-                    <td>{{ journey.to_location }}</td>
-                    <td>
-                        <ul>
-                            {% for date in journey.recurrence_dates.split(',') %}
-                                {% set seats_left = journey.seat_tracking.get(date.strip(), 'N/A') %}
-                                <li>{{ date.strip() }} - {{ seats_left }} seats left</li>
-                            {% endfor %}
-                        </ul>
-                    </td>                                   
-                    <td>£{{ journey.price_per_seat }}</td>
-                    <td>{{ journey.driver_name }}</td>
-                    <td>
-                        {% if journey.recurrence_dates %}
-                            <ul>
-                                {% for date in journey.recurrence_dates.split(',') %}
-                                    <li>{{ date.strip() }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <span>N/A</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if journey.commute_times %}
-                            {{ journey.commute_times | replace(',', ' ') }}
-                        {% else %}
-                            <span>N/A</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if user and journey.user_has_booked %}
-                            <!-- ✅ Show "Rebook" button if the user has booked before -->
-                            <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                <button type="submit" class="btn btn-warning">Rebook</button>
-                            </form>
-                        {% else %}
-                            {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
-                            {% if max_seats > 0 %}
-                                <!-- ✅ Show "Book" if seats are available -->
+                        <div class="journey-details">
+                            <div class="detail-item">
+                                <span class="detail-heading">Date:</span>
+                                <span>{{ journey.date_time.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Time:</span>
+                                <span>{{ journey.date_time.strftime('%H:%M') }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Available Seats:</span>
+                                <span>{{ journey.seat_tracking.values() | max if journey.seat_tracking else 0 }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Price per Seat:</span>
+                                <span>£{{ journey.price_per_seat }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Driver:</span>
+                                <span>{{ journey.driver_name }}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            {% if user and journey.user_has_booked %}
                                 <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
-                                    <button type="submit" class="btn btn-primary">Book</button>
+                                    <button type="submit" class="btn btn-warning">Rebook</button>
                                 </form>
                             {% else %}
-                                <!-- ✅ Show "Fully Booked" if no seats left -->
-                                <button class="btn btn-danger" disabled>Fully Booked</button>
+                                {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
+                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                        <button type="submit" class="btn btn-one">Book</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-danger" disabled>Fully Booked</button>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    </td>
-                    
-                </tr>
-                {% endfor %}
-            </tbody>            
-        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <br><hr>
+
+        <!-- Commuting Rides -->
+        <h2 class="text-center">Commuting Rides</h2>
+        <div class="row">
+            {% for journey in journeys if journey.category == "commuting" %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ journey.from_location }} → {{ journey.to_location }}</h5>
+
+                        <div class="journey-details">
+                            <div class="detail-item">
+                                <span class="detail-heading">Commuting Days:</span>
+                                <ul class="date-list">
+                                    {% for date in journey.recurrence_dates.split(',') %}
+                                        <li>{{ date.strip() }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>                                                   
+                            <div class="detail-item">
+                                <span class="detail-heading">Available Time Slots:</span>
+                                <span>
+                                    {% if journey.commute_times %}
+                                        {{ journey.commute_times | replace(',', ', ') }}
+                                    {% else %}
+                                        <span>N/A</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Available Seats:</span>
+                                <span>
+                                    {% set max_seats = journey.seat_tracking.values() | max if journey.seat_tracking else 0 %}
+                                    {{ max_seats }}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Price per Seat:</span>
+                                <span>£{{ journey.price_per_seat }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-heading">Driver:</span>
+                                <span>{{ journey.driver_name }}</span>
+                            </div>
+                            
+                        </div>
+                        <div class="text-center mt-3">
+                            {% if user and journey.user_has_booked %}
+                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <button type="submit" class="btn btn-warning">Rebook</button>
+                                </form>
+                            {% else %}
+                                {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
+                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                        <button type="submit" class="btn btn-one">Book</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-danger" disabled>Fully Booked</button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
 
     {% else %}
         <p class="text-center mt-4">No journeys available at the moment.</p>

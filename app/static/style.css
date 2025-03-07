@@ -251,6 +251,14 @@ hr {
     padding-bottom: 5px;
 }
 
+.date-list {
+    margin: 0;
+}
+
+.date-list li {
+    display: block;
+}
+
 .detail-heading {
     font-weight: 600;
 }
