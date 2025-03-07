@@ -171,4 +171,27 @@ document.addEventListener("DOMContentLoaded", function () {
             bookingsContainer.style.display = (bookingsContainer.style.display === "none") ? "block" : "none";
         });
     }
+
+    // Handle Proceed to Payment Button Click
+    let proceedToPaymentBtn = document.getElementById("proceedToPayment");
+    if (proceedToPaymentBtn) {
+        proceedToPaymentBtn.addEventListener("click", function () {
+            console.log("🚀 Proceeding to Payment...");
+
+            const rideId = document.getElementById("ride_id").value;
+            const seats = document.getElementById("seats").value;
+            const totalPrice = document.getElementById("total_price").value;
+
+            if (!rideId || !seats || seats <= 0 || !totalPrice || totalPrice <= 0) {
+                alert("❌ Please select valid seats before proceeding!");
+                return;
+            }
+
+            // Redirect to the payment page
+            const paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}`;
+            console.log(`🔗 Redirecting to: ${paymentUrl}`);
+            window.location.href = paymentUrl;
+        });
+    }
+
 });

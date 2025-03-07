@@ -17,11 +17,10 @@
     </div>
 
     <!-- Payment Form -->
-    <form id="paymentForm">
-        <!-- Hidden Inputs for Ride Data -->
-        <input type="hidden" id="ride_id" name="ride_id" value="{{ ride.id }}">
-        <input type="hidden" id="seats" name="seats" value="{{ seats }}">
-        <input type="hidden" id="total_price" name="total_price" value="{{ total_price }}">
+    <form id="paymentForm" method = "POST">
+        <input type="hidden" id="ride_id" name="ride_id" value="{{ ride.id if ride else '0' }}">
+        <input type="hidden" class="form-control" id="seats" name="seats" min="1" max required value="{{ seats if seats else '0' }}">
+        <input type="hidden" class="form-control" id="total_price" name="total_price" readonly value="{{ total_price if total_price else '0.00' }}">
 
         <!-- Card Details -->
         <label for="card_number">Card Number:</label>

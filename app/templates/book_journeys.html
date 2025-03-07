@@ -33,13 +33,13 @@
                     <small>Current Available Seats: 
                         <span id="availableSeats">
                             {% if ride.category == "one-time" %}
-                                {{ ride.available_seats_per_date | default(0) }}
-                            {% elif selected_dates and selected_dates in seat_tracking %}
-                                {{ seat_tracking[selected_dates] }}
+                                {{ seat_data.get("seats", 0) }}  {# ✅ Extract "seats" key for one-time rides #}
+                            {% elif selected_date and selected_date in seat_data %}
+                                {{ seat_data[selected_date] }}  {# ✅ Extract seat count for commuting rides #}
                             {% else %}
                                 0
                             {% endif %}
-                        </span>
+                        </span>                        
                     </small>
                                       
             </div>
@@ -84,7 +84,10 @@
         </div>
 
         <div class="text-center">
-            <button type="button" id="proceedToPayment" class="btn btn-success btn-lg">Proceed to Payment</button>
+            <button type="button" id="proceedToPayment" class="btn btn-success btn-lg">
+                Proceed to Payment
+            </button>
+            
         </div>      
     </form>
 </div>
