@@ -105,6 +105,22 @@ function fetchAvailableDates() {
         .catch(error => console.error("Error fetching available dates:", error));
 }
 
+function getSelectedDates() {
+    let selectedDatesInput = document.querySelector("#selected_dates");
+    if (!selectedDatesInput) {
+        console.error("Selected dates input field not found!");
+        return [];
+    }
+
+    let selectedDates = selectedDatesInput._flatpickr.selectedDates.map(date => 
+        date.toISOString().split('T')[0] // Convert to "YYYY-MM-DD" format
+    );
+
+    console.log("Collected Selected Dates:", selectedDates);
+    return selectedDates;
+}
+
+
 // Event Listener for UI & Initialization
 document.addEventListener("DOMContentLoaded", function () {
     updateUI(); // Initialize UI
@@ -170,27 +186,36 @@ document.addEventListener("DOMContentLoaded", function () {
             bookingsContainer.style.display = (bookingsContainer.style.display === "none") ? "block" : "none";
         });
     }
-
-    // // Handle Proceed to Payment Button Click
-    // let proceedToPaymentBtn = document.getElementById("proceedToPayment");
-    // if (proceedToPaymentBtn) {
-    //     proceedToPaymentBtn.addEventListener("click", function () {
-    //         console.log(" Proceeding to Payment...");
-
-    //         const rideId = document.getElementById("ride_id").value;
-    //         const seats = document.getElementById("seats").value;
-    //         const totalPrice = document.getElementById("total_price").value;
-
-    //         if (!rideId || !seats || seats <= 0 || !totalPrice || totalPrice <= 0) {
-    //             alert(" Please select valid seats before proceeding!");
-    //             return;
-    //         }
-
-    //         // Redirect to the payment page
-    //         const paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}`;
-    //         console.log(` Redirecting to: ${paymentUrl}`);
-    //         window.location.href = paymentUrl;
-    //     });
-    // }
-
 });
+
+document.addEventListener("submit", function (event) {
+    if (event.target.id === "bookingForm") {  // Ensure it's the correct form
+        event.preventDefault(); // Prevent normal form submission
+
+        let selectedDates = getSelectedDates();
+        if (selectedDates.length === 0) {
+            alert("Please select at least one date before proceeding.");
+            return;
+        }
+
+        let rideId = document.getElementById("ride_id").value;
+        let seats = document.getElementById("seats").value;
+        let totalPrice = document.getElementById("total_price").value;
+        let confirmationEmail = document.getElementById("email").value;
+
+
+        let queryParams = new URLSearchParams({
+            ride_id: rideId,
+            seats: seats,
+            total_price: totalPrice,
+            email: confirmationEmail
+        });
+
+        // ✅ Append multiple selected dates as repeated parameters
+        selectedDates.forEach(date => queryParams.append("selected_dates", date));
+
+        // Redirect to the payment page with selected dates included
+        window.location.href = `/payment?${queryParams.toString()}`;
+    }
+});
+

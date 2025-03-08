@@ -54,21 +54,6 @@ class publish_ride(db.Model):
     def __repr__(self):
         return f"<Published Ride {self.from_location} to {self.to_location}>"
 
-# Table for viewing available journeys (user/passenger)
-class view_ride(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    driver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    driver_name = db.Column(db.String(100), nullable=False)
-    from_location = db.Column(db.String(100), nullable=False)
-    to_location = db.Column(db.String(100), nullable=False)
-    date_time = db.Column(db.DateTime, nullable=True)
-    available_seats_per_date = db.Column(db.JSON, nullable=True)
-    price_per_seat = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=False) 
-    recurrence_dates = db.Column(db.String(255), nullable=True)  
-    commute_times = db.Column(db.String(255), nullable=True) 
-
-    driver = db.relationship('User', backref='rides')
 
 # Table booking a journey from avaliable journeys (user/passenger)
 class book_ride(db.Model):
@@ -101,7 +86,7 @@ class SavedRide(db.Model):
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    ride_id = db.Column(db.Integer, db.ForeignKey('view_ride.id'), nullable=False)
+    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Success")  # Simulated Payment Success
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)

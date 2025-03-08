@@ -40,12 +40,12 @@
 
                         <div class="text-center mt-3">
                             {% if user and journey.user_has_booked %}
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
                                     <button type="submit" class="btn btn-warning">Rebook</button>
                                 </form>
                             {% else %}
                                 {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
-                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
                                         <button type="submit" class="btn btn-one">Book</button>
                                     </form>
                                 {% else %}
@@ -101,12 +101,12 @@
                         </div>
                         <div class="text-center mt-3">
                             {% if user and journey.user_has_booked %}
-                                <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
                                     <button type="submit" class="btn btn-warning">Rebook</button>
                                 </form>
                             {% else %}
                                 {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
-                                    <form action="{{ url_for('book_journey', ride_id=journey.id) }}" method="get">
+                                    <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
                                         <button type="submit" class="btn btn-one">Book</button>
                                     </form>
                                 {% else %}

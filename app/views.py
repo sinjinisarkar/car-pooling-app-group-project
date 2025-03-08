@@ -1,9 +1,9 @@
-import os, json, sys, re
+import os, json, sys
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db
-from app.models import User, publish_ride, view_ride, book_ride, SavedRide
+from app.models import User, publish_ride, book_ride, SavedRide
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
@@ -26,38 +26,12 @@ def register():
     email = data.get("email")
     password = data.get("password")
     confirm_password = data.get("confirm_password")
-
-    # Email converted to lower case 
-    email = email.lower() if email else None
-
-    # Validate email format
-    if not email or not email.endswith("@gmail.com"):
-        return jsonify({"error": "Invalid email format. Email must be a valid '@gmail.com' address."}), 400
-    
-    # Check if user already exists (case insensitive)
-    if User.query.filter_by(email=email).first():
-        return jsonify({"message": "Email already registered"}), 400
-    
-     # Check if 'email' is empty
-    if not data.get('email'):
-        return jsonify({"error": "Email is required"}), 400
-    
-    # Check if the 'username' is empty
-    if not data.get('username'):
-        return jsonify({"error": "Username is required"}), 400
-
-    # Strong password Validation
-    if len(password) < 8 or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        return jsonify({"error": "Password must be at least 8 characters long and contain at least one special character."}), 400
-
-    # Check if passwords match
-    if password != confirm_password:
-        return jsonify({"message": "Passwords do not match"}), 400
-   
     # Check if user already exists
     if User.query.filter_by(email=email).first():
         return jsonify({"message": "Email already registered"}), 400
-
+    # Check if passwords match
+    if password != confirm_password:
+        return jsonify({"message": "Passwords do not match"}), 400
     # Hash password and create new user
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     new_user = User(username=username, email=email, password_hash=hashed_password)
@@ -72,15 +46,6 @@ def login():
     data = request.json
     email = data.get("email")
     password = data.get("password")
-
-    # Email is converted to lowercase for case insensitivity
-    email = email.lower() if email else None
-    
-    # Validate email
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
-
-    # Find the user by email (case insensitive)
     user = User.query.filter_by(email=email).first()
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"message": "Invalid email or password"}), 401
@@ -162,19 +127,6 @@ def publish_ride_view():
             is_available=True
         )
         db.session.add(new_ride)
-        new_view_ride = view_ride(
-            driver_id=current_user.id,
-            driver_name=driver_name,
-            from_location=from_location,
-            to_location=to_location,
-            date_time=date_time,
-            available_seats_per_date=available_seats_per_date,  # Only for commuting rides
-            price_per_seat=price_per_seat,
-            category=category,
-            recurrence_dates=recurrence_dates,
-            commute_times=commute_times
-        )
-        db.session.add(new_view_ride)
         db.session.commit()
         flash("Your ride has been published successfully!", "success")
         return redirect(url_for('view_journeys'))
@@ -187,7 +139,7 @@ def view_journeys():
     db.session.commit()  
     db.session.expire_all()  
     # Get all rides that still have available seats on any date
-    journeys = view_ride.query.all()
+    journeys = publish_ride.query.all()
     booked_journey_ids = set()
     if current_user.is_authenticated:
         booked_journey_ids = {booking.ride_id for booking in book_ride.query.filter_by(user_id=current_user.id).all()}
@@ -201,30 +153,15 @@ def view_journeys():
 
 
 # Route for booking a joureny by teh user/passenger
-@app.route('/book_journey/<int:ride_id>', methods=['GET', 'POST'])
+@app.route('/book_onetime/<int:ride_id>', methods=['GET', 'POST'])
 @login_required
-def book_journey(ride_id):
-    print(f"Booking journey for Ride ID: {ride_id}")
-    ride = view_ride.query.filter_by(id=ride_id).first()
-    if not ride:
-        ride = publish_ride.query.get_or_404(ride_id)
-
+def book_onetime(ride_id):
+    ride = publish_ride.query.filter_by(id=ride_id).first()
     # Load latest seat tracking data
     db.session.refresh(ride)  
-    seat_tracking = {}
-    if ride.available_seats_per_date:
-        try:
-            seat_tracking = json.loads(ride.available_seats_per_date)
-            print(f"Loaded seat tracking: {seat_tracking}")
-        except json.JSONDecodeError:
-            print("Error decoding seat tracking JSON")
-            seat_tracking = {}
-
+    seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
     # Get available commuting dates
     available_dates = []
-    if ride.recurrence_dates:
-        available_dates = [date.strip() for date in ride.recurrence_dates.split(",")]
-
     # Ensure selected_date is always valid
     selected_date = request.args.get("selected_date") or request.form.get("selected_date")
     if not selected_date:
@@ -235,48 +172,76 @@ def book_journey(ride_id):
         else:
             selected_date = ""
     selected_date = selected_date.strip()
-    print(f"Checking seats for date: {selected_date}")
-
     # Get available seats
     current_available_seats = seat_tracking.get(selected_date, 0)
-    print(f"Retrieved Available Seats for {selected_date}: {current_available_seats}")
-
     if request.method == 'POST':
         num_seats = request.form.get('seats')
         confirmation_email = request.form.get('email')
-        print(f"Requested Seats: {num_seats}, Confirmation Email: {confirmation_email}")
-
         if not num_seats:
             flash("Please enter the number of seats.", "danger")
-            return redirect(url_for('book_journey', ride_id=ride_id))
-
+            return redirect(url_for('book_onetime', ride_id=ride_id))
         try:
             num_seats = int(num_seats)
         except ValueError:
             flash("Invalid seat number!", "danger")
-            return redirect(url_for('book_journey', ride_id=ride_id))
-
+            return redirect(url_for('book_onetime', ride_id=ride_id))
         total_price = num_seats * ride.price_per_seat
-        print(f"Total Price: {total_price}")
-
         if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
             flash(f"Not enough seats available on {selected_date}.", "danger")
-            return redirect(url_for('book_journey', ride_id=ride_id))
-
+            return redirect(url_for('book_onetime', ride_id=ride_id))
         # Redirect to Payment Page with selected_date included
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=selected_date, email=confirmation_email))
-
     return render_template(
-        'book_journeys.html', 
+        'book_onetime.html', 
         ride=ride, 
         available_dates=available_dates, 
         seat_tracking=seat_tracking,
         current_available_seats=current_available_seats, 
-        seat_data=seat_tracking,  # Pass latest seat tracking data
+        seat_data=seat_tracking,
         selected_date=selected_date,
         user=current_user
     )
 
+
+# Route for booking a commuting journey
+@app.route('/book_commuting/<int:ride_id>', methods=['GET', 'POST'])
+@login_required
+def book_commuting(ride_id):
+    ride = publish_ride.query.get_or_404(ride_id)
+    # Load latest seat tracking data
+    db.session.refresh(ride)
+    seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+    # Get available commuting dates
+    available_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
+    selected_dates = request.args.getlist("selected_dates")
+    seat_data = seat_tracking
+    if request.method == 'POST':
+        num_seats = request.form.get('seats')
+        selected_dates = request.form.getlist("selected_dates")
+        confirmation_email = request.form.get('email')
+        if not num_seats or not selected_dates:
+            flash("Please enter all required fields.", "danger")
+            return redirect(url_for('book_commuting', ride_id=ride_id))
+        try:
+            num_seats = int(num_seats)
+        except ValueError:
+            flash("Invalid seat number!", "danger")
+            return redirect(url_for('book_commuting', ride_id=ride_id))
+        total_price = num_seats * ride.price_per_seat
+        # if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
+        #     flash(f"Not enough seats available on {selected_date}.", "danger")
+        #     return redirect(url_for('book_commuting', ride_id=ride_id))
+        # Redirect to payment page
+        return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=",".join(selected_dates), email=confirmation_email))
+    return render_template(
+        'book_commuting.html', 
+        ride=ride, 
+        available_dates=available_dates, 
+        seat_data=seat_data,
+        seat_tracking=seat_tracking,
+        selected_date=selected_dates,
+        user=current_user
+    )
 
 
 # Route to get available dates
@@ -325,24 +290,18 @@ def get_available_seats(ride_id):
 @app.route('/payment/<int:ride_id>/<int:seats>/<float:total_price>', methods=['GET'])
 @login_required
 def payment_page(ride_id, seats, total_price):
-    selected_date = request.args.get("selected_date", None)
+
+    selected_dates = request.args.getlist("selected_dates")
     email = request.args.get("email", None)
-    
-    if not selected_date:
-        flash("Error: No selected date provided!", "danger")
-        return redirect(url_for('view_journeys'))
-
     ride = publish_ride.query.get_or_404(ride_id)
-
     return render_template(
         "payment.html",
         ride=ride,
         seats=seats,
         total_price=total_price,
-        selected_date=selected_date,
+        selected_date=selected_dates,
         email=email
     )
-
 
 
 @app.route("/process_payment", methods=["POST"])
@@ -353,83 +312,56 @@ def process_payment():
         if not data:
             return jsonify({"success": False, "message": "Invalid request: No data received"}), 400
 
-        # Extract payment details
         ride_id = data.get("ride_id")
         seats = data.get("seats")
         total_price = data.get("total_price")
-        selected_date = data.get("selected_date")  # Get date from request
+        selected_dates = data.get("selected_dates")  # Should be a list
         confirmation_email = data.get("email")
 
-        if None in [ride_id, seats, total_price, selected_date]:
-            return jsonify({"success": False, "message": "Missing required fields"}), 400
+        print(f"🔍 Received selected dates: {selected_dates}")
 
-        print(f"Processing payment for Ride ID: {ride_id}, Selected Date: {selected_date}, Seats: {seats}")
+        # ✅ Fix: Ensure selected_dates is always a list
+        if not selected_dates or not isinstance(selected_dates, list):
+            return jsonify({"success": False, "message": "No valid selected dates provided"}), 400
 
-        # try:
-        #     seats = int(seats)
-        #     total_price = float(total_price)
-        # except ValueError:
-        #     return jsonify({"success": False, "message": "Invalid data format"}), 400
-
-        # Fetch the ride
         ride = publish_ride.query.get(ride_id)
-        view_ride_entry = view_ride.query.filter_by(id=ride_id).first()
-        if not view_ride_entry:
-            print(f"⚠️ Warning: No matching ride found in view_ride, but continuing...")
         if not ride:
             return jsonify({"success": False, "message": "Ride not found"}), 404
 
-        # Load the latest seat tracking data
+        # Load seat tracking data
         seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+
         seats = int(seats)
+        for selected_date in selected_dates:
+            if selected_date in seat_tracking:
+                seat_tracking[selected_date] -= seats
+                seat_tracking[selected_date] = max(0, seat_tracking[selected_date])
+            else:
+                print(f"❌ Warning: Ride date {selected_date} not found in seat tracking")
+                return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
 
-        if selected_date in seat_tracking:
-            seat_tracking[selected_date] -= seats
-            seat_tracking[selected_date] = max(0, seat_tracking[selected_date])  # Prevent negative values
-        else:
-            print(f"Warning: Ride date {selected_date} not found in seat tracking")
-            return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
-
-        # ✅ FORCE UPDATE available_seats_per_date in the database
+        # Update available seats in DB
         ride.available_seats_per_date = json.dumps(seat_tracking)
-        view_ride_entry.available_seats_per_date = json.dumps(seat_tracking)
+        db.session.commit()
 
-        db.session.add(ride)  # Ensure publish_ride updates
-        db.session.add(view_ride_entry)  # Ensure view_ride updates
-        db.session.flush()  # 🚨 Push changes to the database
-        db.session.commit()  # ✅ Persist changes
-
-        # ✅ Retrieve ride again after commit
-        updated_ride = publish_ride.query.get(ride_id)
-        updated_view_ride = view_ride.query.get(ride_id)
-        updated_seat_tracking = json.loads(updated_ride.available_seats_per_date) if updated_ride.available_seats_per_date else {}
-        updated_view_seat_tracking = json.loads(updated_view_ride.available_seats_per_date) if updated_view_ride.available_seats_per_date else {}
-
-        print(f"🟢 Seat Tracking AFTER COMMIT (publish_ride): {updated_seat_tracking}")
-        print(f"🟢 Seat Tracking AFTER COMMIT (view_ride): {updated_view_seat_tracking}")
-
-        # Now save the booking in the database
+        # Save the booking
         new_booking = book_ride(
             user_id=current_user.id,
             ride_id=ride.id,
-            status="Booked",  # Booking is now confirmed
+            status="Booked",
             total_price=total_price,
             seats_selected=seats,
             confirmation_email=confirmation_email,
-            ride_date=datetime.strptime(selected_date, "%Y-%m-%d").date(),
+            ride_date=datetime.strptime(selected_dates[0], "%Y-%m-%d").date(),
         )
         db.session.add(new_booking)
         db.session.commit()
 
-        print(f"Payment successful! Booking ID: {new_booking.id}, Seats Deducted: {seats}")
-
-        # Redirect to dashboard after successful booking
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
-
+    
     except Exception as e:
         db.session.rollback()
-        print(f"Error processing payment: {str(e)}")
-        return jsonify({"success": False, "message": "Internal server error"}), 500
+        return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
 
 
 
@@ -484,113 +416,3 @@ def dashboard():
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
-
-
-# Cancelling a booking by user/passenger once booked on their user dashboard page
-@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
-@login_required
-def cancel_booking(booking_id):
-    booking = book_ride.query.get_or_404(booking_id)
-    # Ensure the current user is the one who booked the ride
-    if booking.user_id != current_user.id:
-        flash("You cannot cancel someone else's booking.", "danger")
-        return redirect(url_for('dashboard'))
-    # Fetch ride details
-    ride = view_ride.query.get(booking.ride_id)
-    if not ride:
-        flash("Ride not found.", "danger")
-        return redirect(url_for('dashboard'))
-    # Load seat availability from JSON
-    seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-    # Ensure the booked date exists in seat tracking
-    booked_date = booking.ride_date
-    if booked_date in seat_tracking:
-        seat_tracking[booked_date] += booking.seats_selected  # Restore seats for that date
-    # Save updated seat availability back to the database
-    ride.available_seats_per_date = json.dumps(seat_tracking)
-    # Sync with `publish_ride`
-    publish_ride_entry = publish_ride.query.filter_by(id=ride.id).first()
-    if publish_ride_entry:
-        publish_ride_entry.available_seats_per_date = json.dumps(seat_tracking)
-    # Delete the booking
-    db.session.delete(booking)
-    # Restore ride if any date has available seats again
-    if any(seats > 0 for seats in seat_tracking.values()):
-        db.session.add(ride)
-    # Remove ride if all dates are now empty
-    else:
-        db.session.delete(ride)  
-    db.session.commit()
-    flash("Booking canceled successfully!", "success")
-    return redirect(url_for('dashboard'))
-
-
-# Route for searching journeys using a calendar view 
-@app.route('/search_journeys', methods=['GET'])
-def search_journeys():
-    from_location = request.args.get("from")
-    to_location = request.args.get("to")
-    date = request.args.get("date")
-    passengers = int(request.args.get("passengers", 1))
-
-    # Query One-Time Rides 
-    one_time_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        func.date(publish_ride.date_time) == date,
-        publish_ride.category == "one-time",
-        publish_ride.is_available == True
-    ).all()
-
-    # Query Commuting Rides 
-    commuting_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        publish_ride.category == "commuting",
-        publish_ride.is_available == True,
-        func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
-    ).all()
-
-    # 
-    journey_list = []
-
-    # One-Time Rides 
-    for ride in one_time_rides:
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, seat_data.get("seats", 0))  # ✅ Fetch correct seat count
-
-        if available_seats >= passengers:  # 🚨 **STRICT SEAT CHECK FIX**
-            journey_list.append({
-                "id": ride.id,
-                "from": ride.from_location,
-                "to": ride.to_location,
-                "date": ride.date_time.strftime('%Y-%m-%d'),
-                "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
-                "seats_available": available_seats,
-                "price_per_seat": ride.price_per_seat
-            })
-
-    # Commuting Rides 
-    for ride in commuting_rides:
-        recurrence_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-
-        for commute_date in recurrence_dates:
-            commute_date = commute_date.strip()
-
-            if commute_date == date:  
-                available_seats = seat_data.get(commute_date, 0)  
-
-                if available_seats >= passengers: 
-                    journey_list.append({
-                        "id": ride.id,
-                        "from": ride.from_location,
-                        "to": ride.to_location,
-                        "date": commute_date,
-                        "time": "Flexible (Multiple Times)",
-                        "seats_available": available_seats,
-                        "price_per_seat": ride.price_per_seat
-                    })
-
-    return jsonify({"journeys": journey_list})
-

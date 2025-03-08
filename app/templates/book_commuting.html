@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Book Ride{% endblock %}
+{% block title %}Book Commuting Ride{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Book Your Ride</h2>
+    <h2 class="text-center mb-4">Book Your Commuting Ride</h2>
 
     <!-- Display the From and To locations -->
     <div class="row mb-4">
@@ -17,7 +17,7 @@
     
 
     <!-- Booking form -->
-    <form method="POST" action="{{ url_for('book_journey', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
+    <form method="POST" action="{{ url_for('book_commuting', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
          <!-- (A) HIDDEN INPUTS FOR RIDE & PRICE -->
          <input type="hidden" id="ride_id" value="{{ ride.id }}">
          <input type="hidden" id="price_per_seat" data-price="{{ ride.price_per_seat }}">
@@ -33,16 +33,16 @@
                     min="1" max="{{ ride.available_seats }}" required>
                     <small>Current Available Seats: 
                         <span id="availableSeats">
-                            {% if ride.category == "one-time" %}
-                                {{ seat_data.get(ride.date_time.strftime('%Y-%m-%d'), 0) }}
-                            {% elif ride.category == "commuting" %}
-                                {{ seat_data.get(selected_date, 0) }}
-                                
+                            {% if ride.category == "commuting" %}
+                                {% for date in available_dates %}
+                                    Date: {{ date }} - Seats: {{ seat_data.get(date, 0) }}<br>
+                                {% endfor %}
                             {% else %}
                                 0
                             {% endif %}
                         </span>                        
                     </small>
+                    
                                       
             </div>
             <div class="col-md-6">
@@ -51,18 +51,6 @@
             </div>
         </div>
 
-        <!-- Date Selection for One-time Rides -->
-        {% if ride.category == "one-time" %}
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="ride_date" class="form-label">Journey Date & Time:</label>
-                <input type="text" class="form-control" value="{{ ride.date_time.strftime('%Y-%m-%d %H:%M') }}" readonly>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Recurrence Dates Selection for Commuting Rides -->
-        {% if ride.category == "commuting" %}
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="selected_dates" class="form-label">Select Commute Dates:</label>
@@ -74,7 +62,6 @@
                 <input type="text" class="form-control" id="selected_time" value="{{ ride.commute_times }}" readonly>
             </div>
         </div>
-        {% endif %}
 
 
         <!-- Email -->
