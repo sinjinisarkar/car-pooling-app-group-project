@@ -2,11 +2,9 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from config import UPLOAD_FOLDER  # Import UPLOAD_FOLDER from config
 
 app = Flask(__name__)
 app.config.from_object('config')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Set the upload folder path
 
 # Initialize extensions (without tying to app immediately)
 db = SQLAlchemy()
