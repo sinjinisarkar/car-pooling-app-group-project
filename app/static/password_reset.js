@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("password_reset.js loaded!");
 
-    // ✅ Function to show popup messages
+    // Function to show popup messages
     function showPopup(message) {
-        alert(message); // Uses the popup style from your screenshot
+        alert(message); 
     }
 
-    // ✅ Handle Forgot Password Form Submission
+    // Handle Forgot Password Form Submission
     $("#forgotPasswordForm").submit(function (event) {
         event.preventDefault();
 
@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $.ajax({
             type: "POST",
             url: "/forgot-password",
-            contentType: "application/json",  // ✅ Ensure JSON is sent
-            data: JSON.stringify({ email: email }),  // ✅ Convert to JSON
+            contentType: "application/json",  
+            data: JSON.stringify({ email: email }),  
             success: function (response) {
                 showPopup(response.message);
             },
@@ -31,13 +31,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ✅ Handle Reset Password Form Submission
+    // Handle Reset Password Form Submission
     $("#resetPasswordForm").submit(function (event) {
         event.preventDefault();
 
         let newPassword = $("#newPassword").val();
         let confirmPassword = $("#confirmPassword").val();
-        let resetToken = $("#resetToken").val();  // ✅ Ensure hidden token is used
+        let resetToken = $("#resetToken").val();  
         let userId = $("#resetUserId").val();
 
         if (!newPassword || !confirmPassword) {
@@ -53,22 +53,22 @@ document.addEventListener("DOMContentLoaded", function () {
         $.ajax({
             type: "POST",
             url: `/reset-password/${resetToken}/${userId}`, 
-            contentType: "application/json",  // ✅ Ensure JSON is sent
-            data: JSON.stringify({ token: resetToken, user_id: userId, password: newPassword }),  // ✅ Convert to JSON
+            contentType: "application/json",  
+            data: JSON.stringify({ token: resetToken, user_id: userId, password: newPassword }),  
             success: function (response) {
                 showPopup(response.message);
 
-                // ✅ Store a sessionStorage flag to open login modal
+                // Store a sessionStorage flag to open login modal
                 sessionStorage.setItem("openLoginModal", "true");
 
-                // ✅ Check if the tab was opened from an email link
+                // Check if the tab was opened from an email link
                 if (window.opener) {
-                    // ✅ Close the reset password tab
+                    // Close the reset password tab
                     window.close();
-                    // ✅ Redirect the original tab to the homepage
+                    // Redirect the original tab to the homepage
                     window.opener.location.href = "/";
                 } else {
-                    // ✅ If no parent tab, just redirect normally
+                    // If no parent tab, just redirect normally
                     window.location.href = "/";
                 }
             },

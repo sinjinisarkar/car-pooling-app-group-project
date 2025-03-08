@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const resultsContainer = document.getElementById("searchResults");
     
 
-    // ✅ Open Modal When Search Bar is Clicked
+    // Open Modal When Search Bar is Clicked
     if (searchInput) {
         searchInput.addEventListener("click", function () {
             const searchModal = new bootstrap.Modal(document.getElementById("searchModal"));
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ✅ Perform Search When Clicking "Search"
+    // Perform Search When Clicking "Search"
     if (searchButton) {
         searchButton.addEventListener("click", function () {
             const fromLocation = document.getElementById("searchFrom").value.trim();
@@ -21,22 +21,22 @@ document.addEventListener("DOMContentLoaded", function () {
             const passengers = document.getElementById("searchPassengers").value;
 
             if (!fromLocation || !toLocation || !date || passengers <= 0) {
-                alert("❌ Please fill in all search fields correctly!");
+                alert("Please fill in all search fields correctly!");
                 return;
             }
 
-            // 🚀 Send Search Request to Backend
+            // Send Search Request to Backend
             fetch(`/search_journeys?from=${fromLocation}&to=${toLocation}&date=${date}&passengers=${passengers}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("🚀 Search Results:", data);
+                    console.log("Search Results:", data);
                     displaySearchResults(data.journeys);
                 })
-                .catch(error => console.error("❌ Error fetching search results:", error));
+                .catch(error => console.error(" Error fetching search results:", error));
         });
     }
 
-    // ✅ Function to Display Search Results in the Modal
+    // Function to Display Search Results in the Modal
     function displaySearchResults(journeys) {
         resultsContainer.innerHTML = "";
 
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-// ✅ Function to Redirect to Booking Page
+// Function to Redirect to Booking Page
 function bookRide(rideId) {
     window.location.href = `/book_journey/${rideId}`;
 }

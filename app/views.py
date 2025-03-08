@@ -558,9 +558,9 @@ def search_journeys():
     # One-Time Rides 
     for ride in one_time_rides:
         seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, seat_data.get("seats", 0))  # ✅ Fetch correct seat count
+        available_seats = seat_data.get(date, seat_data.get("seats", 0)) 
 
-        if available_seats >= passengers:  # 🚨 **STRICT SEAT CHECK FIX**
+        if available_seats >= passengers:  
             journey_list.append({
                 "id": ride.id,
                 "from": ride.from_location,
@@ -597,15 +597,15 @@ def search_journeys():
 
 def get_base_url():
     """ Automatically detects and returns the correct base URL. """
-    # ✅ If running in GitHub Codespaces
+    # If running in GitHub Codespaces
     if "CODESPACE_NAME" in os.environ:
         return f"https://{os.getenv('CODESPACE_NAME')}-5000.githubpreview.dev"
 
-    # ✅ If running in production (detect custom domain)
+    # If running in production (detect custom domain)
     if "PRODUCTION_DOMAIN" in os.environ:
         return f"https://{os.getenv('PRODUCTION_DOMAIN')}"
 
-    # ✅ Otherwise, use whatever Flask detects
+    # Otherwise, use whatever Flask detects
     return request.host_url.rstrip('/')
 
 # Route for forgot password 
@@ -614,7 +614,7 @@ def forgot_password():
     if request.method == 'GET':
         return render_template('forgot_password.html')
 
-    # ✅ Handle both JSON and form data
+    # Handle both JSON and form data
     if request.is_json:
         data = request.get_json()
     else:
@@ -662,7 +662,7 @@ def reset_password(token, user_id):
 
     # If it's a POST request, process password reset
     if request.method == 'POST':
-        # ✅ Handle both JSON and form data
+        # Handle both JSON and form data
         if request.is_json:
             data = request.get_json()
         else:

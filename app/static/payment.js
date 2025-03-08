@@ -47,8 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
             card_number: document.getElementById("card_number").value,
             expiry: document.getElementById("expiry").value,
             cvv: document.getElementById("cvv").value,
-            selected_date: selectedDate,  // ✅ Send selected_date
-            email: confirmationEmail  // ✅ Send email if needed
+            selected_date: selectedDate,  
+            email: confirmationEmail  
         };
 
         fetch("/process_payment", {
