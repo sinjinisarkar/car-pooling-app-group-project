@@ -32,15 +32,7 @@
                 <input type="number" class="form-control" id="seats" name="seats" 
                     min="1" max="{{ ride.available_seats }}" required>
                     <small>Current Available Seats: 
-                        <span id="availableSeats">
-                            {% if ride.category == "commuting" %}
-                                {% for date in available_dates %}
-                                    Date: {{ date }} - Seats: {{ seat_data.get(date, 0) }}<br>
-                                {% endfor %}
-                            {% else %}
-                                0
-                            {% endif %}
-                        </span>                        
+                        <span id="availableSeats"></span>                        
                     </small>
                     
                                       
@@ -56,11 +48,6 @@
                 <label for="selected_dates" class="form-label">Select Commute Dates:</label>
                 <input type="text" id="selected_dates" class="form-control" placeholder="Choose available dates" id="selected_date_input" name="selected_date" value="" required>
             </div>            
-            
-            <div class="col-md-6">
-                <label for="selected_time" class="form-label">Select Commute Time:</label>
-                <input type="text" class="form-control" id="selected_time" value="{{ ride.commute_times }}" readonly>
-            </div>
         </div>
 
 

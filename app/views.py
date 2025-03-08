@@ -228,7 +228,6 @@ def book_commuting(ride_id):
             flash("Invalid seat number!", "danger")
             return redirect(url_for('book_commuting', ride_id=ride_id))
         total_price = num_seats * ride.price_per_seat
-        
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=",".join(selected_dates), email=confirmation_email))
     return render_template(
         'book_commuting.html', 
@@ -260,7 +259,6 @@ def get_available_seats(ride_id):
         selected_dates = data.get("selected_dates", [])
     else:
         selected_dates = request.args.get("selected_dates", "").split(",")
-
     ride = publish_ride.query.get_or_404(ride_id)
     # Ensure available_seats_per_date exists
     if not ride.available_seats_per_date or ride.available_seats_per_date.strip() == "":
@@ -286,7 +284,6 @@ def get_available_seats(ride_id):
 @app.route('/payment/<int:ride_id>/<int:seats>/<float:total_price>', methods=['GET'])
 @login_required
 def payment_page(ride_id, seats, total_price):
-
     selected_dates = request.args.getlist("selected_dates")
     email = request.args.get("email", None)
     ride = publish_ride.query.get_or_404(ride_id)
@@ -307,39 +304,31 @@ def process_payment():
         data = request.json
         if not data:
             return jsonify({"success": False, "message": "Invalid request: No data received"}), 400
-
         ride_id = data.get("ride_id")
         seats = data.get("seats")
         total_price = data.get("total_price")
         selected_dates = data.get("selected_dates")  # Should be a list
         confirmation_email = data.get("email")
-
         print(f"🔍 Received selected dates: {selected_dates}")
-
-        # ✅ Fix: Ensure selected_dates is always a list
+        # Ensure selected_dates is always a list
         if not selected_dates or not isinstance(selected_dates, list):
             return jsonify({"success": False, "message": "No valid selected dates provided"}), 400
-
         ride = publish_ride.query.get(ride_id)
         if not ride:
             return jsonify({"success": False, "message": "Ride not found"}), 404
-
         # Load seat tracking data
         seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-
         seats = int(seats)
         for selected_date in selected_dates:
             if selected_date in seat_tracking:
                 seat_tracking[selected_date] -= seats
                 seat_tracking[selected_date] = max(0, seat_tracking[selected_date])
             else:
-                print(f"❌ Warning: Ride date {selected_date} not found in seat tracking")
+                print(f"Warning: Ride date {selected_date} not found in seat tracking")
                 return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
-
-        # Update available seats in DB
+        # Update available seats in database
         ride.available_seats_per_date = json.dumps(seat_tracking)
         db.session.commit()
-
         # Save the booking
         new_booking = book_ride(
             user_id=current_user.id,
@@ -352,13 +341,10 @@ def process_payment():
         )
         db.session.add(new_booking)
         db.session.commit()
-
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
-    
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
-
 
 
 # Route for user dashboard

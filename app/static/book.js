@@ -105,7 +105,7 @@ function handleBookingSubmit(event) {
 // Initialize Flatpickr for date and time selection
 function initializeFlatpickr() {
     if (document.querySelector("#date_time")) {
-        flatpickr("#date_time", { enableTime: true, dateFormat: "Y-m-d H:i", disableMobile: true });
+        flatpickr("#date_time", { enableTime: true, dateFormat: "Y-m-d H:i", disableMobile: false });
     }
     if (document.querySelector("#selected_dates")) {
         fetchAvailableDates();
@@ -157,10 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const bookingForm = document.getElementById("bookingForm");
     if (bookingForm) {
-        console.log("✅ Booking form found. Attaching submit listener.");
+        console.log("Booking form found. Attaching submit listener.");
         document.addEventListener("submit", handleBookingSubmit);
-    } else {
-        console.warn("⚠️ No booking form found on this page. Skipping form event listener.");
     }
-    
 });
