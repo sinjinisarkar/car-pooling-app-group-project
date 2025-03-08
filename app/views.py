@@ -73,7 +73,7 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    # Ensure email is converted to lowercase for case insensitivity
+    # Email is converted to lowercase for case insensitivity
     email = email.lower() if email else None
     
     # Validate email
@@ -263,7 +263,7 @@ def book_journey(ride_id):
             flash(f"Not enough seats available on {selected_date}.", "danger")
             return redirect(url_for('book_journey', ride_id=ride_id))
 
-        # ✅ Redirect to Payment Page with selected_date included
+        # Redirect to Payment Page with selected_date included
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=selected_date, email=confirmation_email))
 
     return render_template(

@@ -55,6 +55,9 @@
                         {{ user.username }}
                     </button>
                     <div class="dropdown-menu">
+                        <a href="{{ url_for('dashboard') }}" class="dropdown-item">
+                            <i class='bx bx-home'></i> Dashboard
+                        </a>
                         <form id="logout-form" action="{{ url_for('logout') }}" method="POST">
                             <button type="submit" class="dropdown-item"><i class='bx bx-exit'></i>Logout</button>
                         </form>
@@ -109,6 +112,10 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Forgot Password Link -->
+                    <div class="text-right">
+                        <a href="#" data-toggle="modal" data-target="#forgotPasswordModal" id="forgot-password-link">Forgot Password?</a>
+                    </div>
                         <button type="submit" class="btn btn-one btn-block">Log In</button>
                     </form>
                     <div class="text-center mt-3">
@@ -184,7 +191,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- 🔎 Search Fields -->
+                    <!--  Search Fields -->
                     <div class="mb-3">
                         <label for="searchFrom" class="form-label">Leaving from</label>
                         <input type="text" id="searchFrom" class="form-control" placeholder="Enter starting location">
