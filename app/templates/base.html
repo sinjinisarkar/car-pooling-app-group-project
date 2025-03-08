@@ -44,7 +44,7 @@
             <!-- Search Bar -->
             <div class="search-container">
                 <form class="form-inline">
-                    <input class="form-control input" type="search" placeholder="Search..." aria-label="Search">
+                    <input class="form-control input" type="search" placeholder="Search..." aria-label="Search" id="searchInput" readonly>
                 </form>
             </div>
 
@@ -175,6 +175,50 @@
         </div>
     </div>
 
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">Find a Ride</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 🔎 Search Fields -->
+                    <div class="mb-3">
+                        <label for="searchFrom" class="form-label">Leaving from</label>
+                        <input type="text" id="searchFrom" class="form-control" placeholder="Enter starting location">
+                    </div>
+                    <div class="mb-3">
+                        <label for="searchTo" class="form-label">Going to</label>
+                        <input type="text" id="searchTo" class="form-control" placeholder="Enter destination">
+                    </div>
+                    <div class="mb-3">
+                        <label for="searchDate" class="form-label">Date</label>
+                        <input type="date" id="searchDate" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="searchPassengers" class="form-label">Passengers</label>
+                        <select id="searchPassengers" class="form-select">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="4">5</option>
+                            <option value="4">6</option>
+                            <option value="4">7</option>
+                            <option value="4">8</option>
+                        </select>
+                    </div>
+                    <!-- Search Button -->
+                    <button id="searchButton" class="btn btn-primary w-100">Search</button>
+
+                    <!-- Search Results (Dynamically Inserted Here) -->
+                    <div id="searchResults" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <br>
@@ -201,7 +245,7 @@
     <script src="{{ url_for('static', filename='homepage.js') }}"></script>
     <script src="{{ url_for('static', filename='book.js') }}"></script>
     <script src="{{ url_for('static', filename='payment.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='search.js') }}"></script>
 
 </body>
 </html>

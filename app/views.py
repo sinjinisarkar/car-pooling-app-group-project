@@ -523,3 +523,74 @@ def cancel_booking(booking_id):
     db.session.commit()
     flash("Booking canceled successfully!", "success")
     return redirect(url_for('dashboard'))
+
+
+# Route for searching journeys using a calendar view 
+@app.route('/search_journeys', methods=['GET'])
+def search_journeys():
+    from_location = request.args.get("from")
+    to_location = request.args.get("to")
+    date = request.args.get("date")
+    passengers = int(request.args.get("passengers", 1))
+
+    # Query One-Time Rides 
+    one_time_rides = publish_ride.query.filter(
+        publish_ride.from_location.ilike(f"%{from_location}%"),
+        publish_ride.to_location.ilike(f"%{to_location}%"),
+        func.date(publish_ride.date_time) == date,
+        publish_ride.category == "one-time",
+        publish_ride.is_available == True
+    ).all()
+
+    # Query Commuting Rides 
+    commuting_rides = publish_ride.query.filter(
+        publish_ride.from_location.ilike(f"%{from_location}%"),
+        publish_ride.to_location.ilike(f"%{to_location}%"),
+        publish_ride.category == "commuting",
+        publish_ride.is_available == True,
+        func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
+    ).all()
+
+    # 
+    journey_list = []
+
+    # One-Time Rides 
+    for ride in one_time_rides:
+        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+        available_seats = seat_data.get(date, seat_data.get("seats", 0))  # ✅ Fetch correct seat count
+
+        if available_seats >= passengers:  # 🚨 **STRICT SEAT CHECK FIX**
+            journey_list.append({
+                "id": ride.id,
+                "from": ride.from_location,
+                "to": ride.to_location,
+                "date": ride.date_time.strftime('%Y-%m-%d'),
+                "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
+                "seats_available": available_seats,
+                "price_per_seat": ride.price_per_seat
+            })
+
+    # Commuting Rides 
+    for ride in commuting_rides:
+        recurrence_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
+        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+
+        for commute_date in recurrence_dates:
+            commute_date = commute_date.strip()
+
+            if commute_date == date:  
+                available_seats = seat_data.get(commute_date, 0)  
+
+                if available_seats >= passengers: 
+                    journey_list.append({
+                        "id": ride.id,
+                        "from": ride.from_location,
+                        "to": ride.to_location,
+                        "date": commute_date,
+                        "time": "Flexible (Multiple Times)",
+                        "seats_available": available_seats,
+                        "price_per_seat": ride.price_per_seat
+                    })
+
+    return jsonify({"journeys": journey_list})
+
