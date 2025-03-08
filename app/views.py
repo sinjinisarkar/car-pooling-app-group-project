@@ -208,12 +208,12 @@ def book_onetime(ride_id):
 @login_required
 def book_commuting(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
+    print(f"ride is {ride} right on entering commuting route")
     # Load latest seat tracking data
     db.session.refresh(ride)
     seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
     # Get available commuting dates
     available_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
-    selected_dates = request.args.getlist("selected_dates")
     seat_data = seat_tracking
     if request.method == 'POST':
         num_seats = request.form.get('seats')
@@ -228,10 +228,7 @@ def book_commuting(ride_id):
             flash("Invalid seat number!", "danger")
             return redirect(url_for('book_commuting', ride_id=ride_id))
         total_price = num_seats * ride.price_per_seat
-        # if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
-        #     flash(f"Not enough seats available on {selected_date}.", "danger")
-        #     return redirect(url_for('book_commuting', ride_id=ride_id))
-        # Redirect to payment page
+        
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=",".join(selected_dates), email=confirmation_email))
     return render_template(
         'book_commuting.html', 
@@ -239,7 +236,6 @@ def book_commuting(ride_id):
         available_dates=available_dates, 
         seat_data=seat_data,
         seat_tracking=seat_tracking,
-        selected_date=selected_dates,
         user=current_user
     )
 

@@ -17,7 +17,7 @@
     
 
     <!-- Booking form -->
-    <form method="POST" action="{{ url_for('book_commuting', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
+    <form id="bookingForm" method="POST" action="{{ url_for('book_commuting', ride_id=ride.id) }}" class="p-4 border rounded shadow-sm bg-light">
          <!-- (A) HIDDEN INPUTS FOR RIDE & PRICE -->
          <input type="hidden" id="ride_id" value="{{ ride.id }}">
          <input type="hidden" id="price_per_seat" data-price="{{ ride.price_per_seat }}">

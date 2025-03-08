@@ -1,221 +1,166 @@
-function updateUI() {
-    const elements = {
-        categorySelect: document.getElementById("category"),
-        dateTimeDiv: document.getElementById("date_time_div"),
-        recurrenceSection: document.getElementById("recurrence_section"),
-        commuteTimesSection: document.getElementById("commute_times_section"),
-        dateTimeInput: document.getElementById("date_time"),
-    };
-
-    if (!elements.categorySelect || !elements.dateTimeDiv || !elements.recurrenceSection || !elements.commuteTimesSection || !elements.dateTimeInput) {
-        console.error("One or more elements are missing in the DOM!");
-        return; 
-    }
-
-    const isOneTime = elements.categorySelect.value === "one-time";
-    elements.dateTimeDiv.style.display = isOneTime ? "block" : "none";
-    elements.recurrenceSection.style.display = isOneTime ? "none" : "block";
-    elements.commuteTimesSection.style.display = isOneTime ? "none" : "block";
-    elements.dateTimeInput.required = isOneTime;
-}
-
+// Fetch available seats based on selected dates
 function fetchAvailableSeats(selectedDates) {
-    let availableSeatsElement = document.getElementById("availableSeats");
-    let rideIdElement = document.getElementById("ride_id");
-    let rideId = rideIdElement ? rideIdElement.value : null;
+    const availableSeatsElement = document.getElementById("availableSeats");
+    const rideIdElement = document.getElementById("ride_id");
 
-    if (!rideId) {
-        console.error(" Ride ID not found!");
+    if (!availableSeatsElement || !rideIdElement) {
+        console.error("Missing elements in fetchAvailableSeats()");
         return;
     }
-
-    if (!selectedDates || selectedDates.length === 0) {
-        console.warn(" No dates selected for fetching available seats.");
+        
+    const rideId = rideIdElement.value;
+    if (!rideId || selectedDates.length === 0) {
         availableSeatsElement.textContent = "N/A";
         return;
     }
 
-    let formattedDates = selectedDates.map(date => new Date(date).toISOString().split('T')[0]);
-    console.log("Fetching available seats for:", formattedDates);
+    const formattedDates = selectedDates.map(date => new Date(date).toISOString().split('T')[0]);
 
-    // Use GET instead of POST
     fetch(`/api/get_available_seats/${rideId}?selected_dates=${formattedDates.join(",")}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("API Response:", data);
-        if (!data.available_seats || Object.keys(data.available_seats).length === 0) {
-            console.warn(" No available seats data received from API.");
-            availableSeatsElement.textContent = "0";
-            return;
-        }
-
-        let minSeats = Math.min(...Object.values(data.available_seats));
-        availableSeatsElement.textContent = minSeats || 0;
-    })
-    .catch(error => {
-        console.error("Error fetching available seats:", error);
-        availableSeatsElement.textContent = "Error";
-    });
+        .then(response => response.json())
+        .then(data => {
+            console.log("✅ API Response:", data);
+            const availableSeats = data.available_seats || {};
+            const minSeats = Math.min(...Object.values(availableSeats)) || 0;
+            availableSeatsElement.textContent = minSeats;
+        })
+        .catch(() => {
+            availableSeatsElement.textContent = "Error";
+        });
 }
 
-
-// Fetch Available Dates Function
+// Fetch available dates for booking
 function fetchAvailableDates() {
-    let selectedDatesInput = document.querySelector("#selected_dates");
-    let rideIdElement = document.getElementById("ride_id");
-    let rideId = rideIdElement ? rideIdElement.value : null;
+    const selectedDatesInput = document.querySelector("#selected_dates");
+    const rideIdElement = document.getElementById("ride_id");
 
-    if (!selectedDatesInput || !rideId) {
-        console.error("Missing selectedDatesInput or rideId");
-        return;
-    }
+    if (!selectedDatesInput || !rideIdElement) return;
 
-    fetch(`/api/get_available_dates/${rideId}`)
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            return response.json();
-        })
+    fetch(`/api/get_available_dates/${rideIdElement.value}`)
+        .then(response => response.json())
         .then(data => {
-            console.log(" API Response (Available Dates):", data);
-            if (!data.available_dates || data.available_dates.length === 0) {
-                console.warn("No available dates returned from API.");
-                return;
-            }
-
+            if (!data.available_dates) return;
             flatpickr(selectedDatesInput, {
                 mode: "multiple",
                 dateFormat: "Y-m-d",
                 disableMobile: true,
-                enable: data.available_dates,  // Only allow valid dates
-                clickOpens: true,  // Ensures calendar only opens on click
-                allowInput: false,  // Prevents manual typing
-                onChange: function (selectedDates, dateStr, instance) {
-                    console.log("Selected Dates:", selectedDates);
-                    if (selectedDates.length > 0) {
-                        fetchAvailableSeats(selectedDates);
-                    }
-                }
+                enable: data.available_dates,
+                onChange: (selectedDates) => fetchAvailableSeats(selectedDates)
             });
-        })
-        .catch(error => console.error("Error fetching available dates:", error));
+        });
 }
 
+// Get selected dates from Flatpickr input
 function getSelectedDates() {
-    let selectedDatesInput = document.querySelector("#selected_dates");
-    if (!selectedDatesInput) {
-        console.error("Selected dates input field not found!");
-        return [];
-    }
-
-    let selectedDates = selectedDatesInput._flatpickr.selectedDates.map(date => 
-        date.toISOString().split('T')[0] // Convert to "YYYY-MM-DD" format
-    );
-
-    console.log("Collected Selected Dates:", selectedDates);
-    return selectedDates;
+    const selectedDatesInput = document.querySelector("#selected_dates");
+    if (!selectedDatesInput || !selectedDatesInput._flatpickr) return [];
+    return selectedDatesInput._flatpickr.selectedDates.map(date => date.toISOString().split('T')[0]);
 }
 
+// Handle form submission for booking
+// Handle form submission for booking
+function handleBookingSubmit(event) {
+    console.log("📌 handleBookingSubmit triggered!");
 
-// Event Listener for UI & Initialization
-document.addEventListener("DOMContentLoaded", function () {
-    updateUI(); // Initialize UI
-
-    let categorySelect = document.getElementById("category");
-    if (categorySelect) {
-        categorySelect.addEventListener("change", updateUI);
+    if (event.target.id !== "bookingForm") {
+        console.warn("⚠️ Form ID does not match 'bookingForm'. Event ignored.");
+        return;
     }
 
-    fetchAvailableDates(); // Fetch available dates on page load
+    event.preventDefault();
+    console.log("✅ Form submission prevented. Proceeding...");
 
-    // Initialize Flatpickr for Date & Time Selection
+    const selectedDates = getSelectedDates();
+    console.log("📅 Selected Dates:", selectedDates);
+
+    if (selectedDates.length === 0) {
+        alert("❌ Please select at least one date before proceeding.");
+        console.error("🚨 No dates selected! Blocking submission.");
+        return;
+    }
+
+    const rideId = document.getElementById("ride_id")?.value;
+    const seats = document.getElementById("seats")?.value;
+    const totalPrice = document.getElementById("total_price")?.value;
+    const confirmationEmail = document.getElementById("email")?.value;
+
+    console.log("📝 Form Data:", { rideId, seats, totalPrice, confirmationEmail });
+
+    if (!rideId || !seats || !totalPrice || !confirmationEmail) {
+        console.error("🚨 Missing required booking details! Blocking submission.");
+        alert("❌ Please complete all required fields.");
+        return;
+    }
+
+    // 🔄 FIX: Redirect using Flask’s expected URL structure
+    let paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}?email=${encodeURIComponent(confirmationEmail)}`;
+
+    // ✅ Ensure selected dates are still passed via query parameters
+    selectedDates.forEach(date => paymentUrl += `&selected_dates=${date}`);
+
+    console.log("🔗 Redirecting to:", paymentUrl);
+    window.location.href = paymentUrl;
+}
+
+// Initialize Flatpickr for date and time selection
+function initializeFlatpickr() {
     if (document.querySelector("#date_time")) {
         flatpickr("#date_time", { enableTime: true, dateFormat: "Y-m-d H:i", disableMobile: true });
     }
-    if (document.querySelector("#recurrence_dates")) {
-        flatpickr("#recurrence_dates", { mode: "multiple", dateFormat: "Y-m-d", disableMobile: true });
+    if (document.querySelector("#selected_dates")) {
+        fetchAvailableDates();
     }
-    if (document.querySelector("#commute_times")) {
-        flatpickr("#commute_times", { enableTime: true, noCalendar: true, mode: "multiple", dateFormat: "H:i", disableMobile: true });
-    }
+}
 
-    // Calculate Total Price When Selecting Seats
-    let seatsInput = document.getElementById("seats");
-    let totalPriceInput = document.getElementById("total_price");
-    let pricePerSeatElement = document.getElementById("price_per_seat");
-    let availableSeatsElement = document.getElementById("availableSeats");
+// Calculate total price based on selected seats
+function setupSeatPriceCalculation() {
+    const seatsInput = document.getElementById("seats");
+    const totalPriceInput = document.getElementById("total_price");
+    const pricePerSeatElement = document.getElementById("price_per_seat");
+    const availableSeatsElement = document.getElementById("availableSeats");
 
-    if (seatsInput && totalPriceInput && pricePerSeatElement && availableSeatsElement) {
-        let pricePerSeat = parseFloat(pricePerSeatElement.dataset.price);
-        let availableSeats = parseInt(availableSeatsElement.textContent); 
+    if (!seatsInput || !totalPriceInput || !pricePerSeatElement || !availableSeatsElement) return;
 
-        if (isNaN(pricePerSeat)) pricePerSeat = 0;
-        if (isNaN(availableSeats)) availableSeats = 0;
+    const pricePerSeat = parseFloat(pricePerSeatElement.dataset.price) || 0;
 
-        seatsInput.addEventListener("input", function () {
-            let selectedSeats = parseInt(this.value);
-            let availableSeats = parseInt(availableSeatsElement.textContent);
-            let pricePerSeat = parseFloat(pricePerSeatElement.dataset.price);
-        
-            if (isNaN(selectedSeats) || selectedSeats <= 0) {
-                totalPriceInput.value = "0.00"; 
-                return;
-            }
-        
-            if (selectedSeats > availableSeats) {
-                alert("Not enough available seats!");
-                this.value = availableSeats;
-                selectedSeats = availableSeats;
-            }
-        
-            totalPriceInput.value = (selectedSeats * pricePerSeat).toFixed(2);
-        });
-        
-    }
+    seatsInput.addEventListener("input", function () {
+        let selectedSeats = parseInt(this.value) || 0;
+        let availableSeats = parseInt(availableSeatsElement.textContent) || 0;
 
-    // Toggle Bookings Section
-    let toggleBookingsBtn = document.getElementById("toggleBookings");
-    let bookingsContainer = document.getElementById("bookingsContainer");
-
-    if (toggleBookingsBtn && bookingsContainer) {
-        toggleBookingsBtn.addEventListener("click", function () {
-            bookingsContainer.style.display = (bookingsContainer.style.display === "none") ? "block" : "none";
-        });
-    }
-});
-
-document.addEventListener("submit", function (event) {
-    if (event.target.id === "bookingForm") {  // Ensure it's the correct form
-        event.preventDefault(); // Prevent normal form submission
-
-        let selectedDates = getSelectedDates();
-        if (selectedDates.length === 0) {
-            alert("Please select at least one date before proceeding.");
-            return;
+        if (selectedSeats > availableSeats) {
+            alert("Not enough available seats!");
+            this.value = availableSeats;
+            selectedSeats = availableSeats;
         }
 
-        let rideId = document.getElementById("ride_id").value;
-        let seats = document.getElementById("seats").value;
-        let totalPrice = document.getElementById("total_price").value;
-        let confirmationEmail = document.getElementById("email").value;
+        totalPriceInput.value = (selectedSeats * pricePerSeat).toFixed(2);
+    });
+}
 
+// Toggle bookings section
+function setupToggleBookings() {
+    const toggleBookingsBtn = document.getElementById("toggleBookings");
+    const bookingsContainer = document.getElementById("bookingsContainer");
 
-        let queryParams = new URLSearchParams({
-            ride_id: rideId,
-            seats: seats,
-            total_price: totalPrice,
-            email: confirmationEmail
+    if (toggleBookingsBtn && bookingsContainer) {
+        toggleBookingsBtn.addEventListener("click", () => {
+            bookingsContainer.style.display = bookingsContainer.style.display === "none" ? "block" : "none";
         });
-
-        // ✅ Append multiple selected dates as repeated parameters
-        selectedDates.forEach(date => queryParams.append("selected_dates", date));
-
-        // Redirect to the payment page with selected dates included
-        window.location.href = `/payment?${queryParams.toString()}`;
     }
-});
+}
 
+// Initialize all event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    initializeFlatpickr();
+    setupSeatPriceCalculation();
+    setupToggleBookings();
+    
+    const bookingForm = document.getElementById("bookingForm");
+    if (bookingForm) {
+        console.log("✅ Booking form found. Attaching submit listener.");
+        document.addEventListener("submit", handleBookingSubmit);
+    } else {
+        console.warn("⚠️ No booking form found on this page. Skipping form event listener.");
+    }
+    
+});

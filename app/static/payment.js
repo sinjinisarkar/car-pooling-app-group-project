@@ -9,15 +9,15 @@ document.addEventListener("DOMContentLoaded", function () {
         const expiry = document.getElementById("expiry").value;
         const cvv = document.getElementById("cvv").value;
 
-        // ✅ Fix: Get selected date properly
+        // ✅ Fix: Get all selected dates properly
         let urlParams = new URLSearchParams(window.location.search);
-        let selectedDate = urlParams.get("selected_date"); 
+        let selectedDates = urlParams.getAll("selected_dates");  // ✅ Get all values as an array
         let confirmationEmail = urlParams.get("email"); 
 
-        console.log("Extracted selected date:", selectedDate);
+        console.log("Extracted selected dates:", selectedDates);
 
-        if (!selectedDate || selectedDate === "None") {
-            alert("Error: No selected date found! Please try again.");
+        if (!selectedDates.length) {
+            alert("Error: No selected dates found! Please try again.");
             return;
         }
 
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card_number: cardNumber,
             expiry: expiry,
             cvv: cvv,
-            selected_dates: [selectedDate],  // ✅ Ensure this is always an array
+            selected_dates: selectedDates,  // ✅ Now always an array
             email: confirmationEmail  
         };
 
