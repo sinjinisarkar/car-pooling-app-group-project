@@ -2,12 +2,13 @@ import os, json, sys, re
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from app import app, db
+from app import app, db, mail
 from app.models import User, publish_ride, view_ride, book_ride, SavedRide
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
 from datetime import datetime
+from flask_mail import Message
 
 
 # Route for home page
@@ -594,3 +595,92 @@ def search_journeys():
 
     return jsonify({"journeys": journey_list})
 
+def get_base_url():
+    """ Automatically detects and returns the correct base URL. """
+    # ✅ If running in GitHub Codespaces
+    if "CODESPACE_NAME" in os.environ:
+        return f"https://{os.getenv('CODESPACE_NAME')}-5000.githubpreview.dev"
+
+    # ✅ If running in production (detect custom domain)
+    if "PRODUCTION_DOMAIN" in os.environ:
+        return f"https://{os.getenv('PRODUCTION_DOMAIN')}"
+
+    # ✅ Otherwise, use whatever Flask detects
+    return request.host_url.rstrip('/')
+
+# Route for forgot password 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'GET':
+        return render_template('forgot_password.html')
+
+    # ✅ Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form  # Handle form submissions
+
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    
+    if user:
+        token = user.generate_reset_password_token(secret_key=app.config['SECRET_KEY'])
+        # Check if running in GitHub Codespaces
+        codespace_url = os.getenv("CODESPACE_NAME")
+        if codespace_url:
+            base_url = f"https://{codespace_url}-5000.app.github.dev"
+        else:
+            base_url = request.url_root.rstrip('/')  # Fallback for local use
+
+        reset_url = f"{base_url}{url_for('reset_password', token=token, user_id=user.id)}"
+        print("Generated Reset URL:", reset_url)
+
+
+        subject = 'Password Reset Request'
+        msg = Message(subject, recipients=[email], body=f"""
+To reset your password, visit the following link: {reset_url}
+If you did not request this, please ignore this email. The link expires in 10 minutes.
+        """)
+        mail.send(msg)
+
+        return jsonify({"success": True, "message": "Password reset link sent to your email."})
+    else:
+        return jsonify({"success": False, "message": "No account found with that email address."}), 404
+
+
+@app.route('/reset-password/<token>/<int:user_id>', methods=['GET', 'POST'])
+def reset_password(token, user_id):
+    if request.method == 'GET':
+        # Validate token before showing reset page
+        user = User.validate_reset_password_token(token, secret_key=app.config['SECRET_KEY'], user_id=user_id)
+
+        if not user:
+            return jsonify({"success": False, "message": "Invalid or expired reset link!"}), 400
+
+        # Render the reset password HTML page (you already have it)
+        return render_template("reset_password.html", token=token, user_id=user_id)
+
+    # If it's a POST request, process password reset
+    if request.method == 'POST':
+        # ✅ Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
+
+        new_password = data.get('password')
+
+        print("Received Token:", token)
+        print("Received User ID:", user_id)
+
+        user = User.validate_reset_password_token(token, secret_key=app.config['SECRET_KEY'], user_id=user_id)
+
+        if not user:
+            return redirect(url_for('index', expired_reset=True))
+
+        if new_password:
+            user.set_password(new_password)
+            db.session.commit()
+            return jsonify({"success": True, "message": "Your password has been updated! You can now log in."})
+
+        return jsonify({"success": False, "message": "Password update failed!"}), 400

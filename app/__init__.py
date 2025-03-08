@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_mail import Mail  
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -16,7 +17,12 @@ db.init_app(app)
 migrate.init_app(app, db)
 login_manager.init_app(app)
 
+# Initialize Flask-Mail
+mail = Mail(app)
+
 login_manager.login_view = "login"  # Redirects to login page if user isn't logged in
+
+
 
 # Import models and views inside app context
 with app.app_context():
