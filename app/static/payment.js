@@ -14,6 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
         let selectedDates = urlParams.getAll("selected_dates");  // ✅ Get all values as an array
         let confirmationEmail = urlParams.get("email"); 
 
+        // ✅ If no dates found, check `selected_date` (singular)
+        if (selectedDates.length === 0) {
+            let singleDate = urlParams.get("selected_date");
+            if (singleDate) {
+                selectedDates = [singleDate];
+            }
+        }
+
         console.log("Extracted selected dates:", selectedDates);
 
         if (!selectedDates.length) {

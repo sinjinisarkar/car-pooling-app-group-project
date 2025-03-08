@@ -190,7 +190,7 @@ def book_onetime(ride_id):
             flash(f"Not enough seats available on {selected_date}.", "danger")
             return redirect(url_for('book_onetime', ride_id=ride_id))
         # Redirect to Payment Page with selected_date included
-        return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=selected_date, email=confirmation_email))
+        return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_dates=selected_date, email=confirmation_email))
     return render_template(
         'book_onetime.html', 
         ride=ride, 
