@@ -24,7 +24,9 @@
                                 <p><strong>Seats:</strong> {{ ride.seats_selected }}</p>
                                 <p><strong>Total Price:</strong> £{{ ride.total_price }}</p>
                                 <p><strong>Confirmation Email:</strong> {{ ride.confirmation_email }}</p>
-                                
+                                <button class="resend-email-btn btn btn-primary" data-booking-id="{{ ride.booking_id }}">
+                                    Resend Confirmation Email
+                                </button>
                                 <!-- Actions -->
                         
                             </div>
@@ -46,6 +48,9 @@
                         <p><strong>Seats:</strong> {{ ride.seats_selected }}</p>
                         <p><strong>Total Price:</strong> £{{ ride.total_price }}</p>
                         <p><strong>Confirmation Email:</strong> {{ ride.confirmation_email }}</p>
+                        <button class="resend-email-btn btn btn-primary" data-booking-id="{{ ride.booking_id }}">
+                            Resend Confirmation Email
+                        </button>
 
                         <!-- Table for multiple commuting dates -->
                         <h6 class="mt-3">Scheduled Rides:</h6>

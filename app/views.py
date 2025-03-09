@@ -342,10 +342,47 @@ def process_payment():
         )
         db.session.add(new_booking)
         db.session.commit()
+
+        # Send Booking Confirmation Email
+        send_booking_confirmation_email(confirmation_email, ride, seats, total_price, selected_dates)
+
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
+
+
+# Route to send booking confirmation email
+def send_booking_confirmation_email(email, ride, seats, total_price, selected_dates):
+    try:
+        subject = "Booking Confirmation - Your Ride Details"
+        selected_dates_str = ", ".join(selected_dates)
+
+        body = f"""
+        Dear User,
+
+        Thank you for booking your ride. Here are your details:
+
+        📍 From: {ride.from_location}
+        📍 To: {ride.to_location}
+        🚗 Driver: {ride.driver_name}
+        🎟️ Seats Booked: {seats}
+        💰 Total Price: £{total_price}
+        📅 Ride Date(s): {selected_dates_str}
+
+        If you have any issues, please contact support.
+
+        Regards,
+        CatchMyRide
+        """
+
+        msg = Message(subject, recipients=[email], body=body)
+        mail.send(msg)
+
+        print(f"Booking confirmation email sent to {email}")
+
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
 
 # Route for user dashboard
@@ -394,6 +431,24 @@ def dashboard():
         one_time_rides=one_time_rides,
         commuting_rides=commuting_rides
     )
+
+# Route to resend email from the dashboard if the user wants
+@app.route("/resend_booking_confirmation/<int:booking_id>", methods=["POST"])
+@login_required
+def resend_booking_confirmation(booking_id):
+    """ Allows users to resend the booking confirmation email """
+    booking = book_ride.query.get_or_404(booking_id)
+
+    if booking.user_id != current_user.id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    ride = publish_ride.query.get(booking.ride_id)
+    if not ride:
+        return jsonify({"success": False, "message": "Ride not found"}), 404
+
+    send_booking_confirmation_email(booking.confirmation_email, ride, booking.seats_selected, booking.total_price, [str(booking.ride_date)])
+
+    return jsonify({"success": True, "message": "Booking confirmation email resent!"})
 
 
 @app.context_processor
@@ -470,6 +525,7 @@ def search_journeys():
 
     return jsonify({"journeys": journey_list})
 
+
 def get_base_url():
     """ Automatically detects and returns the correct base URL. """
     # If running in GitHub Codespaces
@@ -482,6 +538,7 @@ def get_base_url():
 
     # Otherwise, use whatever Flask detects
     return request.host_url.rstrip('/')
+
 
 # Route for forgot password 
 @app.route('/forgot-password', methods=['GET', 'POST'])
