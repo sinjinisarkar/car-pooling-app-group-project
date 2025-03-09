@@ -113,9 +113,12 @@
                             </div>
                         </div>
                         <!-- Forgot Password Link -->
-                    <div class="text-right">
-                        <a href="#" data-toggle="modal" data-target="#forgotPasswordModal" id="forgot-password-link">Forgot Password?</a>
-                    </div>
+                        <div class="text-right">
+                            <p class="text-center mt-3">
+                                <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+                            </p>
+                        </div>
+                        
                         <button type="submit" class="btn btn-one btn-block">Log In</button>
                     </form>
                     <div class="text-center mt-3">
@@ -253,6 +256,7 @@
     <script src="{{ url_for('static', filename='book.js') }}"></script>
     <script src="{{ url_for('static', filename='payment.js') }}"></script>
     <script src="{{ url_for('static', filename='search.js') }}"></script>
+    <script src="{{ url_for('static', filename='password_reset.js') }}"></script>
     <script src="{{ url_for('static', filename='publish.js') }}"></script>
 
 </body>

@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from app import db
 from datetime import date, datetime
+from itsdangerous import URLSafeTimedSerializer
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Association table to track which passengers booked which rides
 passenger_rides = db.Table(
@@ -16,7 +18,6 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)  # Stores hashed passwords
-    date_of_birth = db.Column(db.String(10), nullable=True)  # Store DOB
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
 
      # Relationship: A driver can publish multiple rides
@@ -24,10 +25,7 @@ class User(db.Model, UserMixin):
 
     # Relationship: A passenger can book multiple rides
     booked_rides = db.relationship('publish_ride', secondary=passenger_rides, backref='passengers')
-    
-    def __repr__(self):
-        return f"<User {self.username}>"
-    
+        
      # Method to set hashed password
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -35,6 +33,29 @@ class User(db.Model, UserMixin):
     # Method to check hashed password
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+     # Generate Password Reset Token
+    def generate_reset_password_token(self, secret_key, expires_in=600):
+        """Generates a secure token for password reset."""
+        serializer = URLSafeTimedSerializer(secret_key)
+        return serializer.dumps({'email': self.email}, salt=self.password_hash)
+    
+    # Validate Password Reset Token
+    @staticmethod
+    def validate_reset_password_token(token, secret_key, user_id):
+        """Validates the reset token and returns the user if valid."""
+        serializer = URLSafeTimedSerializer(secret_key)
+        user = User.query.get(user_id)
+        if not user:
+            return None
+        try:
+            data = serializer.loads(token, salt=user.password_hash, max_age=600)  # 10 min expiry
+        except Exception:
+            return None
+        return user if data.get('email') == user.email else None
+    
+    def __repr__(self):
+        return f"<User {self.username}>"
 
 # Table for driver to publish ride
 class publish_ride(db.Model):

@@ -47,4 +47,14 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         console.warn("Login or Signup modal not found.");
     }
+
+    // Check if reset password flag exists
+    if (sessionStorage.getItem("openLoginModal") === "true") {
+        // Show the login modal
+        $("#loginModal").modal("show");
+
+        // Remove the flag to prevent reopening modal again
+        sessionStorage.removeItem("openLoginModal");
+    }
+
 });
