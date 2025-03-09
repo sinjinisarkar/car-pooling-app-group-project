@@ -2,90 +2,154 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Dashboard</h2>
-    
-    <!-- Upcoming Journeys Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4>Upcoming Journeys</h4>
+    <h2 class="mb-4 text-center">Welcome, {{ user.username }}!</h2>
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active" id="showUpcoming">Upcoming Journeys</a>
+                <a href="#" class="list-group-item list-group-item-action" id="showPublished">Your Published Rides</a>
+            </div>
         </div>
-        <div class="card-body">
-            {% if upcoming_journeys %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for journey in upcoming_journeys %}
-                    <tr>
-                        <td>{{ journey.from }}</td>
-                        <td>{{ journey.to }}</td>
-                        <td>{{ journey.date }}</td>
-                        <td>{{ journey.time }}</td>
-                        <td>{{ journey.status }}</td>
-                        <td>${{ journey.price }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="text-muted">No upcoming journeys booked.</p>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Published Rides Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h4>Published Rides</h4>
-        </div>
-        <div class="card-body">
-            {% if published_rides %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Price</th>
-                        <th>Passengers</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ride in published_rides %}
-                    <tr>
-                        <td>{{ ride.from }}</td>
-                        <td>{{ ride.to }}</td>
-                        <td>{{ ride.date }}</td>
-                        <td>{{ ride.time }}</td>
-                        <td>${{ ride.price }}</td>
-                        <td>
-                            {% if ride.passengers %}
-                            <ul>
-                                {% for passenger in ride.passengers %}
-                                <li>{{ passenger.name }} ({{ passenger.email }})</li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <p class="text-muted">No passengers yet.</p>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="text-muted">No published rides.</p>
-            {% endif %}
+        
+        <!-- Content Area -->
+        <div class="col-md-9">
+            <!-- Upcoming Journeys Section -->
+            <div id="upcomingSection" class="mb-4">
+                <h4>Upcoming Journeys</h4>
+                {% if upcoming_journeys %}
+                    <div class="row">
+                        {% for journey in upcoming_journeys %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card p-3">
+                                <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
+                                <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
+                                <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
+                                <p class="detail-item"><span class="detail-heading">Status:</span> {{ journey.status }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> ${{ journey.price }}</p>
+                                <div class="text-center mt-3">
+                                    <button class="btn-one">Cancel Ride</button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No upcoming journeys booked.</p>
+                {% endif %}
+            </div>
+            
+            <!-- Published Rides Section -->
+            <div id="publishedSection" class="mb-4" style="display: none;">
+                <h4>Your Published Rides</h4>
+                
+                <!-- One-Time Journeys -->
+                <h5>One-Time Journeys</h5>
+                {% if published_rides.one_time %}
+                    <div class="row">
+                        {% for ride in published_rides.one_time %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card p-3">
+                                <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
+                                <p class="detail-item"><span class="detail-heading">Date:</span> {{ ride.date }}</p>
+                                <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> ${{ ride.price }}</p>
+                                <div class="text-center mt-3">
+                                    <button class="btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Passenger Modal for One-Time Journeys -->
+                        <div class="modal fade" id="passengerModalOneTime{{ ride.ride_id }}" tabindex="-1" aria-labelledby="passengerModalLabelOneTime{{ ride.ride_id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Passengers for {{ ride.from }} ➝ {{ ride.to }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% if ride.passengers %}
+                                            <ul>
+                                                {% for passenger in ride.passengers %}
+                                                    <li>{{ passenger.name }} ({{ passenger.email }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted">No passengers yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No one-time journeys published.</p>
+                {% endif %}
+                
+                <!-- Commuting Journeys -->
+                <h5 class="mt-4">Commuting Journeys</h5>
+                {% if published_rides.commuting %}
+                    <div class="row">
+                        {% for ride in published_rides.commuting %}
+                        <div class="col-md-12 mb-3">
+                            <div class="card p-3">
+                                <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
+                                <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price per Seat:</span> ${{ ride.price }}</p>
+                                
+                                <button class="btn-one mt-3" data-bs-toggle="collapse" data-bs-target="#rideDates{{ ride.ride_id }}" aria-expanded="false">
+                                    View Ride Dates
+                                </button>
+                                
+                                <div class="collapse mt-2" id="rideDates{{ ride.ride_id }}">
+                                    <ul class="list-group">
+                                        {% for date, passengers in ride.dates.items() %}
+                                        <li class="list-group-item">
+                                            <strong>{{ date }}</strong>
+                                            <button class="btn-one float-end" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">View Passengers</button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Passenger Modals for Each Date -->
+                        {% for date, passengers in ride.dates.items() %}
+                        <div class="modal fade" id="passengerModalCommute{{ ride.ride_id }}_{{ date }}" tabindex="-1" aria-labelledby="passengerModalLabelCommute{{ ride.ride_id }}_{{ date }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Passengers for {{ ride.from }} ➝ {{ ride.to }} on {{ date }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% if passengers %}
+                                            <ul>
+                                                {% for passenger in passengers %}
+                                                    <li>{{ passenger.name }} ({{ passenger.email }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted">No passengers yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No commuting journeys published.</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Include external JavaScript -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
