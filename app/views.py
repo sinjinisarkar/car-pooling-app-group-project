@@ -348,54 +348,6 @@ def process_payment():
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
 
 
-# Route for user dashboard
-@app.route('/dashboard', methods=['GET'])
-@login_required
-def dashboard():
-    booked_rides = book_ride.query.filter_by(user_id=current_user.id).all()
-    # Categorize Rides
-    one_time_rides = []
-    commuting_rides = {}
-    for ride in booked_rides:
-        # Skip broken bookings
-        if ride.ride is None:
-            print(f" Ride object missing for booking ID {ride.id}")
-            continue
-        ride_data = {
-            "booking_id": ride.id,
-            "from": ride.ride.from_location,
-            "to": ride.ride.to_location,
-            "seats_selected": ride.seats_selected,
-            "total_price": ride.total_price,
-            "confirmation_email": ride.confirmation_email,
-            "ride_id": ride.ride.id
-        }
-        # One-Time Rides (Single Date)
-        if ride.ride.category == "one-time":
-            ride_data["date_time"] = ride.ride.date_time.strftime('%Y-%m-%d %H:%M') if ride.ride.date_time else "N/A"
-            one_time_rides.append(ride_data)
-        # Commuting Rides (Multiple Dates & Times)
-        else:
-            ride_date = ride.ride_date.strftime('%Y-%m-%d') if ride.ride_date else "N/A"
-            ride_time = ride.ride_time if hasattr(ride, "ride_time") and ride.ride_time else "N/A"
-            if ride.ride.id not in commuting_rides:
-                commuting_rides[ride.ride.id] = {
-                    "from": ride.ride.from_location,
-                    "to": ride.ride.to_location,
-                    "confirmation_email": ride.confirmation_email,
-                    "seats_selected": ride.seats_selected,
-                    "total_price": ride.total_price,
-                    "ride_id": ride.ride.id,
-                    "dates_times": []  # Store multiple commuting instances
-                }
-            commuting_rides[ride.ride.id]["dates_times"].append({"date": ride_date, "time": ride_time})
-    return render_template(
-        'dashboard.html',
-        one_time_rides=one_time_rides,
-        commuting_rides=commuting_rides
-    )
-
-
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
@@ -559,3 +511,50 @@ def reset_password(token, user_id):
             return jsonify({"success": True, "message": "Your password has been updated! You can now log in."})
 
         return jsonify({"success": False, "message": "Password update failed!"}), 400
+
+
+# Route for user dashboard
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Get upcoming journeys (booked rides)
+    booked_rides = book_ride.query.filter_by(user_id=current_user.id).all()
+    upcoming_journeys = []
+
+    for booking in booked_rides:
+        ride = publish_ride.query.get(booking.ride_id)
+        if ride:
+            upcoming_journeys.append({
+                "ride_id": ride.id,
+                "from": ride.from_location,
+                "to": ride.to_location,
+                "date": booking.ride_date.strftime('%Y-%m-%d'),
+                "time": ride.date_time.strftime('%H:%M') if ride.date_time else "N/A",
+                "status": booking.status,
+                "price": booking.total_price
+            })
+
+    # Get published rides (rides created by the user)
+    user_published_rides = publish_ride.query.filter_by(driver_id=current_user.id).all()
+    published_rides = []
+
+    for ride in user_published_rides:
+        passengers = book_ride.query.filter_by(ride_id=ride.id).all()
+        passenger_list = [
+            {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email}
+            for passenger in passengers
+        ]
+        published_rides.append({
+            "ride_id": ride.id,
+            "from": ride.from_location,
+            "to": ride.to_location,
+            "date": ride.date_time.strftime('%Y-%m-%d') if ride.date_time else "Recurring",
+            "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Flexible",
+            "price": ride.price_per_seat,
+            "passengers": passenger_list
+        })
+
+    return render_template("dashboard.html", 
+                           user=current_user, 
+                           upcoming_journeys=upcoming_journeys, 
+                           published_rides=published_rides)
