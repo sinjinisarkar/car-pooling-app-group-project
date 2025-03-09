@@ -33,17 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
             ride_id: rideId,
             seats: seats,
             total_price: totalPrice,
-<<<<<<< HEAD
-            card_number: document.getElementById("card_number").value,
-            expiry: document.getElementById("expiry").value,
-            cvv: document.getElementById("cvv").value,
-            selected_date: selectedDate,  
-=======
             card_number: cardNumber,
             expiry: expiry,
             cvv: cvv,
-            selected_dates: selectedDates,  // ✅ Now always an array
->>>>>>> origin/main
+            selected_dates: selectedDates, 
             email: confirmationEmail  
         };
 
