@@ -327,21 +327,22 @@ def process_payment():
             else:
                 print(f"Warning: Ride date {selected_date} not found in seat tracking")
                 return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
-        # Update available seats in database
+            # Save the booking
+            new_booking = book_ride(
+                user_id=current_user.id,
+                ride_id=ride.id,
+                status="Booked",
+                total_price=total_price,
+                seats_selected=seats,
+                confirmation_email=confirmation_email,
+                ride_date=datetime.strptime(selected_date, "%Y-%m-%d").date(),
+            )
+            db.session.add(new_booking)
+            db.session.commit()
+            # Update available seats in database
         ride.available_seats_per_date = json.dumps(seat_tracking)
         db.session.commit()
-        # Save the booking
-        new_booking = book_ride(
-            user_id=current_user.id,
-            ride_id=ride.id,
-            status="Booked",
-            total_price=total_price,
-            seats_selected=seats,
-            confirmation_email=confirmation_email,
-            ride_date=datetime.strptime(selected_dates[0], "%Y-%m-%d").date(),
-        )
-        db.session.add(new_booking)
-        db.session.commit()
+        
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
     except Exception as e:
         db.session.rollback()
@@ -523,15 +524,31 @@ def dashboard():
     for booking in booked_rides:
         ride = publish_ride.query.get(booking.ride_id)
         if ride:
-            upcoming_journeys.append({
-                "ride_id": ride.id,
-                "from": ride.from_location,
-                "to": ride.to_location,
-                "date": booking.ride_date.strftime('%Y-%m-%d'),
-                "time": ride.date_time.strftime('%H:%M') if ride.category == "one-time" and ride.date_time else ride.commute_times,
-                "status": booking.status,
-                "price": booking.total_price
-            })
+            # Handle commuting rides properly
+            if ride.category == "commuting":
+                seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+                if booking.ride_date.strftime('%Y-%m-%d') in seat_tracking:
+                    upcoming_journeys.append({
+                        "ride_id": ride.id,
+                        "from": ride.from_location,
+                        "to": ride.to_location,
+                        "date": booking.ride_date.strftime('%Y-%m-%d'),
+                        "time": ride.commute_times,
+                        "status": booking.status,
+                        "price": ride.price_per_seat * booking.seats_selected,
+                        "seats_booked": booking.seats_selected
+                    })
+            else:
+                upcoming_journeys.append({
+                    "ride_id": ride.id,
+                    "from": ride.from_location,
+                    "to": ride.to_location,
+                    "date": booking.ride_date.strftime('%Y-%m-%d'),
+                    "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
+                    "status": booking.status,
+                    "price": booking.total_price,
+                    "seats_booked": booking.seats_selected
+                })
 
     # Get published rides (separate one-time and commuting)
     user_published_rides = publish_ride.query.filter_by(driver_id=current_user.id).all()
@@ -551,7 +568,7 @@ def dashboard():
                     for passenger in book_ride.query.filter_by(ride_id=ride.id).all()
                 ]
             })
-        else:  # Commuting rides (fetching dates from `book_ride` table)
+        else:  # Commuting rides
             ride_data = {
                 "ride_id": ride.id,
                 "from": ride.from_location,
@@ -564,7 +581,7 @@ def dashboard():
             # Get all unique dates booked for this ride
             ride_dates = db.session.query(book_ride.ride_date).filter_by(ride_id=ride.id).distinct().all()
             for date_obj in ride_dates:
-                date_str = date_obj[0].strftime('%Y-%m-%d')  # Convert date object to string
+                date_str = date_obj[0].strftime('%Y-%m-%d')
                 passengers = book_ride.query.filter_by(ride_id=ride.id, ride_date=date_obj[0]).all()
                 ride_data["dates"][date_str] = [
                     {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email}
