@@ -1,7 +1,7 @@
 from config import SQLALCHEMY_DATABASE_URI
 from app import app, db
 import os.path
-from app.models import User, publish_ride, view_ride, book_ride  # Import all models
+from app.models import User, publish_ride, book_ride  # Import all models
 
 # Create all database tables
 with app.app_context():
