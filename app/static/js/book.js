@@ -123,7 +123,11 @@ function setupSeatPriceCalculation() {
     function calculateTotalPrice() {
         let selectedSeats = parseInt(seatsInput.value) || 0;
         let availableSeats = parseInt(availableSeatsElement.textContent) || 0;
-        let selectedDates = selectedDatesInput._flatpickr.selectedDates.length;  // Get number of selected dates
+        let selectedDates = 1; // Default to 1 for one-time rides
+
+        if (selectedDatesInput && selectedDatesInput._flatpickr) {
+            selectedDates = selectedDatesInput._flatpickr.selectedDates.length || 1; // Use selected dates if available
+        }
 
         if (selectedSeats > availableSeats) {
             alert("Not enough available seats!");

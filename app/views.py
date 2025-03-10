@@ -230,11 +230,10 @@ def book_onetime(ride_id):
         except ValueError:
             flash("Invalid seat number!", "danger")
             return redirect(url_for('book_onetime', ride_id=ride_id))
-        total_price = num_seats * ride.price_per_seat
         if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
             flash(f"Not enough seats available on {selected_date}.", "danger")
             return redirect(url_for('book_onetime', ride_id=ride_id))
-        
+        total_price = num_seats * ride.price_per_seat
         # Redirect to Payment Page with selected_date included
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_dates=selected_date, email=confirmation_email))
     
