@@ -1,4 +1,4 @@
-import os, json, sys
+import os, json, sys, re
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -27,14 +27,33 @@ def register():
     password = data.get("password")
     confirm_password = data.get("confirm_password")
     
-    # Check if user already exists
-    if User.query.filter_by(email=email).first():
-        return jsonify({"message": "Email already registered"}), 400
+    # Email converted to lower case
+    email = email.lower() if email else None
+
+    # Validate email format
+    if not email or not email.endswith("@gmail.com"):
+        return jsonify({"error": "Invalid email format. Email must be a valid '@gmail.com' address."}), 400
     
+    # Check if user already exists (case insensitive)
+    if User.query.filter_by(email=email).first():        
+        return jsonify({"message": "Email already registered"}), 400
+
+    # Checks if the 'username' is empty
+    if not data.get('username'):
+        return jsonify({"error": "Username is required"}), 400
+    
+    # Check if 'email' is empty 
+    if not data.get('email'):
+        return jsonify({"error": "Email is required"}), 400
+
+    # Strong password Validation
+    if len(password) < 8 or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return jsonify({"error": "Password must be at least 8 characters long and contain at least one special character."}), 400
+
     # Check if passwords match
     if password != confirm_password:
         return jsonify({"message": "Passwords do not match"}), 400
-    
+
     # Hash password and create new user
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     new_user = User(username=username, email=email, password_hash=hashed_password)
@@ -49,12 +68,19 @@ def login():
     data = request.json
     email = data.get("email")
     password = data.get("password")
-    user = User.query.filter_by(email=email).first()
+
+    # Email is converted to lowercase for case insensitivity
+    email = email.lower() if email else None
     
+    # Validate email
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
+    # Find the user by email (case insensitive)
+    user = User.query.filter_by(email=email).first()
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
-    
     return jsonify({"message": "Login successful"}), 200
 
 
