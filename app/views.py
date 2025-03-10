@@ -1,5 +1,5 @@
 import os, json, sys, re
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
@@ -14,9 +14,33 @@ from flask_mail import Message
 @app.route('/')
 def home():
     return render_template('index.html', user=current_user)  
+
 if __name__ == '__main__':
     app.run(debug=True)
 
+# Redirection to the appropriate booking page from the search functionality when the user hasn't logged in
+# check login status for the search functionality
+@app.route('/check_login_status', methods=['GET'])
+def check_login_status():
+    if not current_user.is_authenticated:
+        return jsonify({"is_logged_in": False, "message": "You need to log in before booking a ride."})
+    return jsonify({"is_logged_in": True})
+
+@app.before_request
+def check_redirect_after_login():
+    if 'redirect_after_login' in session and current_user.is_authenticated:
+        redirect_path = session.pop('redirect_after_login')
+        return redirect(redirect_path)
+
+# check the redirect path
+@app.route('/set_redirect_path', methods=['POST'])
+def set_redirect_path():
+    data = request.get_json()
+    path = data.get('path')
+    if path:
+        session['redirect_after_login'] = path
+        return jsonify({"message": "Redirect path set successfully."}), 200
+    return jsonify({"message": "No path provided."}), 400
 
 # Route for User Registration (Signup)
 @app.route("/register", methods=["POST"])
@@ -81,6 +105,7 @@ def login():
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
+
     return jsonify({"message": "Login successful"}), 200
 
 
@@ -412,19 +437,71 @@ def process_payment():
         # Update available seats in database
         ride.available_seats_per_date = json.dumps(seat_tracking)
         db.session.commit()
-        
+
+        # Send Booking Confirmation Email
+        send_booking_confirmation_email(confirmation_email, ride, seats, total_price, selected_dates)
+
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
 
+# Route to send booking confirmation email
+def send_booking_confirmation_email(email, ride, seats, total_price, selected_dates):
+    try:
+        subject = "Booking Confirmation - Your Ride Details"
+        selected_dates_str = ", ".join(selected_dates)
+
+        body = f"""
+        Dear User,
+
+        Thank you for booking your ride. Here are your details:
+
+        📍 From: {ride.from_location}
+        📍 To: {ride.to_location}
+        🚗 Driver: {ride.driver_name}
+        🎟️ Seats Booked: {seats}
+        💰 Total Price: £{total_price}
+        📅 Ride Date(s): {selected_dates_str}
+
+        If you have any issues, please contact support.
+
+        Regards,
+        CatchMyRide
+        """
+
+        msg = Message(subject, recipients=[email], body=body)
+        mail.send(msg)
+
+        print(f"Booking confirmation email sent to {email}")
+
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+# Route to resend email from the dashboard if the user wants
+@app.route("/resend_booking_confirmation/<int:booking_id>", methods=["POST"])
+@login_required
+def resend_booking_confirmation(booking_id):
+    """ Allows users to resend the booking confirmation email """
+    booking = book_ride.query.get_or_404(booking_id)
+
+    if booking.user_id != current_user.id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    ride = publish_ride.query.get(booking.ride_id)
+    if not ride:
+        return jsonify({"success": False, "message": "Ride not found"}), 404
+
+    send_booking_confirmation_email(booking.confirmation_email, ride, booking.seats_selected, booking.total_price, [str(booking.ride_date)])
+
+    return jsonify({"success": True, "message": "Booking confirmation email resent!"})
 
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
 
 
-# Route for searching journeys using a calendar view 
 @app.route('/search_journeys', methods=['GET'])
 def search_journeys():
     from_location = request.args.get("from")
@@ -450,15 +527,13 @@ def search_journeys():
         func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
     ).all()
 
-    # 
     journey_list = []
 
-    # One-Time Rides 
+    # One-Time Rides
     for ride in one_time_rides:
         seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, seat_data.get("seats", 0)) 
-
-        if available_seats >= passengers:  
+        available_seats = seat_data.get(date, 0)
+        if available_seats >= passengers:
             journey_list.append({
                 "id": ride.id,
                 "from": ride.from_location,
@@ -466,32 +541,29 @@ def search_journeys():
                 "date": ride.date_time.strftime('%Y-%m-%d'),
                 "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
                 "seats_available": available_seats,
-                "price_per_seat": ride.price_per_seat
+                "price_per_seat": ride.price_per_seat,
+                "category": ride.category
             })
 
-    # Commuting Rides 
+    # Commuting Rides
     for ride in commuting_rides:
-        recurrence_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
         seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-
-        for commute_date in recurrence_dates:
-            commute_date = commute_date.strip()
-
-            if commute_date == date:  
-                available_seats = seat_data.get(commute_date, 0)  
-
-                if available_seats >= passengers: 
-                    journey_list.append({
-                        "id": ride.id,
-                        "from": ride.from_location,
-                        "to": ride.to_location,
-                        "date": commute_date,
-                        "time": "Flexible (Multiple Times)",
-                        "seats_available": available_seats,
-                        "price_per_seat": ride.price_per_seat
-                    })
+        available_seats = seat_data.get(date, 0)
+        if available_seats >= passengers:
+            journey_list.append({
+                "id": ride.id,
+                "from": ride.from_location,
+                "to": ride.to_location,
+                "date": date,
+                "time": "Flexible (Multiple Times)",
+                "seats_available": available_seats,
+                "price_per_seat": ride.price_per_seat,
+                "category": ride.category
+            })
 
     return jsonify({"journeys": journey_list})
+
+
 
 def get_base_url():
     """ Automatically detects and returns the correct base URL. """
