@@ -118,23 +118,30 @@ function setupSeatPriceCalculation() {
     const totalPriceInput = document.getElementById("total_price");
     const pricePerSeatElement = document.getElementById("price_per_seat");
     const availableSeatsElement = document.getElementById("availableSeats");
+    const selectedDatesInput = document.querySelector("#selected_dates");
 
     if (!seatsInput || !totalPriceInput || !pricePerSeatElement || !availableSeatsElement) return;
 
     const pricePerSeat = parseFloat(pricePerSeatElement.dataset.price) || 0;
 
-    seatsInput.addEventListener("input", function () {
-        let selectedSeats = parseInt(this.value) || 0;
+    function calculateTotalPrice() {
+        let selectedSeats = parseInt(seatsInput.value) || 0;
         let availableSeats = parseInt(availableSeatsElement.textContent) || 0;
+        let selectedDates = selectedDatesInput._flatpickr.selectedDates.length;  // ✅ Get number of selected dates
 
         if (selectedSeats > availableSeats) {
             alert("Not enough available seats!");
-            this.value = availableSeats;
+            seatsInput.value = availableSeats;
             selectedSeats = availableSeats;
         }
 
-        totalPriceInput.value = (selectedSeats * pricePerSeat).toFixed(2);
-    });
+        // 🔄 Fix: Multiply by the number of selected dates
+        let totalPrice = selectedSeats * selectedDates * pricePerSeat;
+        totalPriceInput.value = totalPrice.toFixed(2);
+    }
+
+    seatsInput.addEventListener("input", calculateTotalPrice);
+    selectedDatesInput.addEventListener("change", calculateTotalPrice);
 }
 
 // Toggle bookings section

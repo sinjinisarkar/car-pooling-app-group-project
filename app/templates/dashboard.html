@@ -30,7 +30,14 @@
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> ${{ journey.price }}</p>
                                 <div class="text-center mt-3">
-                                    <button class="btn-one">Cancel Ride</button>
+                                    {% if journey.status == "Booked" %}
+                                    <button class="btn btn-one cancel-btn" data-booking-id="{{ journey.booking_id }}" 
+                                            data-price="{{ journey.price }}" data-date="{{ journey.date }}">
+                                        Cancel
+                                    </button>
+                                    {% else %}
+                                        <span class="text-muted">Canceled</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
