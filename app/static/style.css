@@ -180,9 +180,23 @@ hr {
 
 .btn-red {
     --color: #1f1d21;
-    --border-color: #9E2626;
+    --border-color: #BE5B63;
     --bg-color: #EEB9B9;
-    --shadow-color: #9E2626;
+    --shadow-color: #BE5B63;
+}
+
+.btn-green {
+    --color: #1f1d21;
+    --border-color: #94BE5B;
+    --bg-color: #C9DEAD;
+    --shadow-color: #94BE5B;
+}
+
+.btn-blue {
+    --color: #1f1d21;
+    --border-color: #5BBEB7;
+    --bg-color: #C8E9E7;
+    --shadow-color: #5BBEB7;
 }
 
 .btn-container {
