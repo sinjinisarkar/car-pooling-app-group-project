@@ -1,5 +1,5 @@
 import os, json, sys, re
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
@@ -14,9 +14,33 @@ from flask_mail import Message
 @app.route('/')
 def home():
     return render_template('index.html', user=current_user)  
+
 if __name__ == '__main__':
     app.run(debug=True)
 
+# Redirection to the appropriate booking page from the search functionality when the user hasn't logged in
+# check login status for the search functionality
+@app.route('/check_login_status', methods=['GET'])
+def check_login_status():
+    if not current_user.is_authenticated:
+        return jsonify({"is_logged_in": False, "message": "You need to log in before booking a ride."})
+    return jsonify({"is_logged_in": True})
+
+@app.before_request
+def check_redirect_after_login():
+    if 'redirect_after_login' in session and current_user.is_authenticated:
+        redirect_path = session.pop('redirect_after_login')
+        return redirect(redirect_path)
+
+# check the redirect path
+@app.route('/set_redirect_path', methods=['POST'])
+def set_redirect_path():
+    data = request.get_json()
+    path = data.get('path')
+    if path:
+        session['redirect_after_login'] = path
+        return jsonify({"message": "Redirect path set successfully."}), 200
+    return jsonify({"message": "No path provided."}), 400
 
 # Route for User Registration (Signup)
 @app.route("/register", methods=["POST"])
@@ -81,6 +105,7 @@ def login():
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
+
     return jsonify({"message": "Login successful"}), 200
 
 
@@ -631,12 +656,6 @@ def reset_password(token, user_id):
 
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
-# check login status for the search functionality
-@app.route('/check_login_status', methods=['GET'])
-def check_login_status():
-    if not current_user.is_authenticated:
-        return jsonify({"is_logged_in": False, "message": "You need to log in before booking a ride."})
-    return jsonify({"is_logged_in": True})
 
 @app.route('/dashboard')
 @login_required

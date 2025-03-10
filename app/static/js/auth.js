@@ -55,13 +55,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Handle User Login
+    // Handle User Login with redirect
     $("#loginForm").submit(function (event) {
         event.preventDefault(); // Prevent normal form submission
 
         const loginData = {
             email: $("#login-email").val(),
             password: $("#login-password").val(),
+            redirect: sessionStorage.getItem("redirect_after_login") || null
         };
 
         $.ajax({
@@ -72,7 +73,13 @@ document.addEventListener("DOMContentLoaded", function () {
             success: function (response) {
                 alert(response.message);
                 $("#loginModal").modal("hide");
-                location.reload(); // Refresh page after login
+
+                // Redirect to the intended journey page if set
+                if (response.redirect_url) {
+                    window.location.href = response.redirect_url;
+                } else {
+                    location.reload(); // Refresh the page if no specific redirect
+                }
             },
             error: function (xhr) {
                 alert(xhr.responseJSON.message || "Login failed.");

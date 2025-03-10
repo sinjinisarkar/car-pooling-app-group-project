@@ -71,7 +71,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Function to Redirect to Booking Page Based on Category
-// Function to Redirect to Booking Page Based on Category
 function bookRide(rideId, category) {
     fetch('/check_login_status')
         .then(response => response.json())
@@ -89,9 +88,22 @@ function bookRide(rideId, category) {
                 // Remove any existing modal backdrops to avoid UI blocking
                 document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
 
-                // Open the login modal smoothly
-                const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
-                loginModal.show();
+                // Define the intended redirect path
+                const redirectPath = category === "one-time"
+                    ? `/book_onetime/${rideId}`
+                    : `/book_commuting/${rideId}`;
+
+                // Send redirect path to backend
+                fetch('/set_redirect_path', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: redirectPath })
+                }).then(() => {
+                    // Open the login modal smoothly
+                    const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+                    loginModal.show();
+                });
+
                 return;
             }
 
@@ -108,4 +120,3 @@ function bookRide(rideId, category) {
             console.error("Error checking login status:", error);
         });
 }
-
