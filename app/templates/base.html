@@ -120,6 +120,8 @@
                                 <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
                             </p>
                         </div>
+                        <!-- Hidden input to store the redirect path -->
+                        <input type="hidden" id="loginRedirectInput" name="redirect" value="">
                         
                         <button type="submit" class="btn btn-base btn-one btn-block">Log In</button>
                     </form>
@@ -267,6 +269,7 @@
     <script src="{{ url_for('static', filename='js/publish.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cancel_ride.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/send_booking_email.js') }}"></script>
     
 </body>
 </html>

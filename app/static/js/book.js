@@ -57,7 +57,6 @@ function getSelectedDates() {
 }
 
 // Handle form submission for booking
-// Handle form submission for booking
 function handleBookingSubmit(event) {
     console.log("handleBookingSubmit triggered!");
 
@@ -83,12 +82,12 @@ function handleBookingSubmit(event) {
     const confirmationEmail = document.getElementById("email")?.value;
 
     if (!rideId || !seats || !totalPrice || !confirmationEmail) {
-        console.error("🚨 Missing required booking details! Blocking submission.");
+        console.error("Missing required booking details! Blocking submission.");
         alert("Please complete all required fields.");
         return;
     }
 
-    // 🔄 FIX: Redirect using Flask’s expected URL structure
+    // FIX: Redirect using Flask’s expected URL structure
     let paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}?email=${encodeURIComponent(confirmationEmail)}`;
 
     // Ensure selected dates are still passed via query parameters
