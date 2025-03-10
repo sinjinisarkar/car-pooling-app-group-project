@@ -412,33 +412,15 @@ def process_payment():
         # Update available seats in database
         ride.available_seats_per_date = json.dumps(seat_tracking)
         db.session.commit()
-<<<<<<< HEAD
-        # Save the booking
-        new_booking = book_ride(
-            user_id=current_user.id,
-            ride_id=ride.id,
-            status="Booked",
-            total_price=total_price,
-            seats_selected=seats,
-            confirmation_email=confirmation_email,
-            ride_date=datetime.strptime(selected_dates[0], "%Y-%m-%d").date(),
-        )
-        db.session.add(new_booking)
-        db.session.commit()
 
         # Send Booking Confirmation Email
         send_booking_confirmation_email(confirmation_email, ride, seats, total_price, selected_dates)
 
-=======
-        
->>>>>>> origin/main
         return jsonify({"success": True, "message": "Payment successful & booking confirmed!", "redirect_url": url_for("dashboard")})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
 
-
-<<<<<<< HEAD
 # Route to send booking confirmation email
 def send_booking_confirmation_email(email, ride, seats, total_price, selected_dates):
     try:
@@ -537,9 +519,6 @@ def resend_booking_confirmation(booking_id):
 
     return jsonify({"success": True, "message": "Booking confirmation email resent!"})
 
-
-=======
->>>>>>> origin/main
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
