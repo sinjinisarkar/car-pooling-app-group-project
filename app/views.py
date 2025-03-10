@@ -454,53 +454,6 @@ def send_booking_confirmation_email(email, ride, seats, total_price, selected_da
         print(f"Error sending email: {e}")
 
 
-# Route for user dashboard
-@app.route('/dashboard', methods=['GET'])
-@login_required
-def dashboard():
-    booked_rides = book_ride.query.filter_by(user_id=current_user.id).all()
-    # Categorize Rides
-    one_time_rides = []
-    commuting_rides = {}
-    for ride in booked_rides:
-        # Skip broken bookings
-        if ride.ride is None:
-            print(f" Ride object missing for booking ID {ride.id}")
-            continue
-        ride_data = {
-            "booking_id": ride.id,
-            "from": ride.ride.from_location,
-            "to": ride.ride.to_location,
-            "seats_selected": ride.seats_selected,
-            "total_price": ride.total_price,
-            "confirmation_email": ride.confirmation_email,
-            "ride_id": ride.ride.id
-        }
-        # One-Time Rides (Single Date)
-        if ride.ride.category == "one-time":
-            ride_data["date_time"] = ride.ride.date_time.strftime('%Y-%m-%d %H:%M') if ride.ride.date_time else "N/A"
-            one_time_rides.append(ride_data)
-        # Commuting Rides (Multiple Dates & Times)
-        else:
-            ride_date = ride.ride_date.strftime('%Y-%m-%d') if ride.ride_date else "N/A"
-            ride_time = ride.ride_time if hasattr(ride, "ride_time") and ride.ride_time else "N/A"
-            if ride.ride.id not in commuting_rides:
-                commuting_rides[ride.ride.id] = {
-                    "from": ride.ride.from_location,
-                    "to": ride.ride.to_location,
-                    "confirmation_email": ride.confirmation_email,
-                    "seats_selected": ride.seats_selected,
-                    "total_price": ride.total_price,
-                    "ride_id": ride.ride.id,
-                    "dates_times": []  # Store multiple commuting instances
-                }
-            commuting_rides[ride.ride.id]["dates_times"].append({"date": ride_date, "time": ride_time})
-    return render_template(
-        'dashboard.html',
-        one_time_rides=one_time_rides,
-        commuting_rides=commuting_rides
-    )
-
 # Route to resend email from the dashboard if the user wants
 @app.route("/resend_booking_confirmation/<int:booking_id>", methods=["POST"])
 @login_required

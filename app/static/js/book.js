@@ -57,7 +57,6 @@ function getSelectedDates() {
 }
 
 // Handle form submission for booking
-// Handle form submission for booking
 function handleBookingSubmit(event) {
     console.log("handleBookingSubmit triggered!");
 
@@ -88,7 +87,7 @@ function handleBookingSubmit(event) {
         return;
     }
 
-    // 🔄 FIX: Redirect using Flask’s expected URL structure
+    // FIX: Redirect using Flask’s expected URL structure
     let paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}?email=${encodeURIComponent(confirmationEmail)}`;
 
     // Ensure selected dates are still passed via query parameters
