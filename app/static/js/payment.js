@@ -9,12 +9,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const expiry = document.getElementById("expiry").value;
         const cvv = document.getElementById("cvv").value;
 
-        // ✅ Fix: Get all selected dates properly
+        // Get all selected dates properly
         let urlParams = new URLSearchParams(window.location.search);
-        let selectedDates = urlParams.getAll("selected_dates");  // ✅ Get all values as an array
+        let selectedDates = urlParams.getAll("selected_dates");  // Get all values as an array
         let confirmationEmail = urlParams.get("email"); 
 
-        // ✅ If no dates found, check `selected_date` (singular)
+        // If no dates found, check `selected_date` (singular)
         if (selectedDates.length === 0) {
             let singleDate = urlParams.get("selected_date");
             if (singleDate) {
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card_number: cardNumber,
             expiry: expiry,
             cvv: cvv,
-            selected_dates: selectedDates,  // ✅ Now always an array
+            selected_dates: selectedDates,  // Now always an array
             email: confirmationEmail  
         };
 

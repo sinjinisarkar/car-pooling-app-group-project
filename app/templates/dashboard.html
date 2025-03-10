@@ -28,7 +28,7 @@
                                     <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 {% endif %}
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
-                                <p class="detail-item"><span class="detail-heading">Price:</span> ${{ journey.price }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
                                     <button class="btn btn-one cancel-btn" data-booking-id="{{ journey.booking_id }}" 
@@ -62,7 +62,7 @@
                                 <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ ride.date }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
-                                <p class="detail-item"><span class="detail-heading">Price:</span> ${{ ride.price }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                 <div class="text-center mt-3">
                                     <button class="btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
                                 </div>
@@ -106,7 +106,7 @@
                             <div class="card p-3">
                                 <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
-                                <p class="detail-item"><span class="detail-heading">Price per Seat:</span> ${{ ride.price }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price per Seat:</span> £{{ ride.price }}</p>
                                 
                                 <button class="btn-one mt-3" data-bs-toggle="collapse" data-bs-target="#rideDates{{ ride.ride_id }}" aria-expanded="false">
                                     View Ride Dates

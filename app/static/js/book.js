@@ -19,7 +19,6 @@ function fetchAvailableSeats(selectedDates) {
     fetch(`/api/get_available_seats/${rideId}?selected_dates=${formattedDates.join(",")}`)
         .then(response => response.json())
         .then(data => {
-            console.log("✅ API Response:", data);
             const availableSeats = data.available_seats || {};
             const minSeats = Math.min(...Object.values(availableSeats)) || 0;
             availableSeatsElement.textContent = minSeats;
@@ -60,22 +59,21 @@ function getSelectedDates() {
 // Handle form submission for booking
 // Handle form submission for booking
 function handleBookingSubmit(event) {
-    console.log("📌 handleBookingSubmit triggered!");
+    console.log("handleBookingSubmit triggered!");
 
     if (event.target.id !== "bookingForm") {
-        console.warn("⚠️ Form ID does not match 'bookingForm'. Event ignored.");
+        console.warn("Form ID does not match 'bookingForm'. Event ignored.");
         return;
     }
 
     event.preventDefault();
-    console.log("✅ Form submission prevented. Proceeding...");
+    console.log("Form submission prevented. Proceeding...");
 
     const selectedDates = getSelectedDates();
-    console.log("📅 Selected Dates:", selectedDates);
 
     if (selectedDates.length === 0) {
-        alert("❌ Please select at least one date before proceeding.");
-        console.error("🚨 No dates selected! Blocking submission.");
+        alert("Please select at least one date before proceeding.");
+        console.error("No dates selected! Blocking submission.");
         return;
     }
 
@@ -84,21 +82,19 @@ function handleBookingSubmit(event) {
     const totalPrice = document.getElementById("total_price")?.value;
     const confirmationEmail = document.getElementById("email")?.value;
 
-    console.log("📝 Form Data:", { rideId, seats, totalPrice, confirmationEmail });
-
     if (!rideId || !seats || !totalPrice || !confirmationEmail) {
         console.error("🚨 Missing required booking details! Blocking submission.");
-        alert("❌ Please complete all required fields.");
+        alert("Please complete all required fields.");
         return;
     }
 
     // 🔄 FIX: Redirect using Flask’s expected URL structure
     let paymentUrl = `/payment/${rideId}/${seats}/${totalPrice}?email=${encodeURIComponent(confirmationEmail)}`;
 
-    // ✅ Ensure selected dates are still passed via query parameters
+    // Ensure selected dates are still passed via query parameters
     selectedDates.forEach(date => paymentUrl += `&selected_dates=${date}`);
 
-    console.log("🔗 Redirecting to:", paymentUrl);
+    console.log("Redirecting to:", paymentUrl);
     window.location.href = paymentUrl;
 }
 
@@ -127,7 +123,7 @@ function setupSeatPriceCalculation() {
     function calculateTotalPrice() {
         let selectedSeats = parseInt(seatsInput.value) || 0;
         let availableSeats = parseInt(availableSeatsElement.textContent) || 0;
-        let selectedDates = selectedDatesInput._flatpickr.selectedDates.length;  // ✅ Get number of selected dates
+        let selectedDates = selectedDatesInput._flatpickr.selectedDates.length;  // Get number of selected dates
 
         if (selectedSeats > availableSeats) {
             alert("Not enough available seats!");
@@ -135,7 +131,7 @@ function setupSeatPriceCalculation() {
             selectedSeats = availableSeats;
         }
 
-        // 🔄 Fix: Multiply by the number of selected dates
+        // Multiply by the number of selected dates
         let totalPrice = selectedSeats * selectedDates * pricePerSeat;
         totalPriceInput.value = totalPrice.toFixed(2);
     }

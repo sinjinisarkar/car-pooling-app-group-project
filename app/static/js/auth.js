@@ -136,10 +136,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (passwordInput.type === "password") {
             passwordInput.type = "text";
-            toggleIcon.innerHTML = "👁‍🗨️"; // Eye closed
+            toggleIcon.classList.replace("bx-hide", "bx-show"); // Show eye open
         } else {
             passwordInput.type = "password";
-            toggleIcon.innerHTML = "👁️"; // Eye open
+            toggleIcon.classList.replace("bx-show", "bx-hide"); // Show eye closed
         }
     }
 

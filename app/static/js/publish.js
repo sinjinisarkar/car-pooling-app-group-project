@@ -6,14 +6,14 @@ document.addEventListener("DOMContentLoaded", function () {
         flatpickr("#date_time", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
-            disableMobile: false  // ✅ Ensures Flatpickr works on mobile
+            disableMobile: false
         });
     }
 
     // Recurring Dates Picker for Commuting Rides
     if (document.querySelector("#recurrence_dates")) {
         flatpickr("#recurrence_dates", {
-            mode: "multiple",  // ✅ Allows selecting multiple dates
+            mode: "multiple",
             dateFormat: "Y-m-d",
             disableMobile: false
         });
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         flatpickr("#commute_times", {
             enableTime: true,
             noCalendar: true,
-            mode: "multiple",  // ✅ Allows selecting multiple time slots
+            mode: "multiple",
             dateFormat: "H:i",
             disableMobile: false
         });

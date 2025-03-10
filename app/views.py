@@ -120,6 +120,7 @@ def publish_ride_view():
         if category == "one-time":
             date_time_str = request.form.get('date_time')
             available_seats = int(request.form.get('available_seats', 0))  
+            
             if not date_time_str:
                 flash("Please select a valid Date & Time for one-time rides.", "danger")
                 return redirect(url_for('publish_ride_view'))
@@ -128,6 +129,7 @@ def publish_ride_view():
             except ValueError:
                 flash("Invalid Date & Time format!", "danger")
                 return redirect(url_for('publish_ride_view'))
+            
             available_seats_per_date = json.dumps({date_time.strftime("%Y-%m-%d"): available_seats})
             print(f"Storing available_seats_per_date: {available_seats_per_date}")
 
@@ -135,9 +137,11 @@ def publish_ride_view():
             recurrence_dates_list = request.form.getlist('recurrence_dates')
             commute_times_list = request.form.getlist('commute_times')
             available_seats = int(request.form.get('available_seats', 0))  
+            
             if not recurrence_dates_list or not commute_times_list:
                 flash("Please select at least one commute day and time.", "danger")
                 return redirect(url_for('publish_ride_view'))
+            
             recurrence_dates = ",".join(recurrence_dates_list)
             commute_times = ",".join(commute_times_list)
             # Split the recurrence_dates string properly
@@ -718,4 +722,4 @@ def cancel_booking(booking_id):
     ride.available_seats_per_date = json.dumps(seat_tracking)
     db.session.commit()
 
-    return jsonify({"success": True, "message": f"✅ Booking successfully canceled. Refund: £{refund_amount}"}), 200
+    return jsonify({"success": True, "message": f"Booking successfully canceled. Refund: £{refund_amount}"}), 200
