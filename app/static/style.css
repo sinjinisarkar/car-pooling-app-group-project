@@ -138,45 +138,65 @@ hr {
 
 
 /* ---------------------------------------- Buttons styling ---------------------------------------- */
-#profileDropdown {
-    color: #1f1d21;
-    font-size: 1.2rem;
-    background-color: #fff;
+.btn-base {
     padding: 10px 15px;
-    border-radius: 20px;
-    border: 2px solid #855bbe;
-    box-shadow: 3px 4px 0px #855bbe;
+    border-radius: 23px; 
     transition: all 0.2s ease-in-out;
+    background-color: white;
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+    box-shadow: 3px 4px 0px var(--shadow-color);
 }
 
-#profileDropdown:hover,
-#profileDropdown:focus {
-    background-color: #e6d6fc;
+.btn-base:hover,
+.btn-base:focus {
+    outline: none;
+    background-color: var(--bg-color);
+    box-shadow: 3px 4px 0px var(--shadow-color);
+}
+
+.btn-base:active {
+    outline: none;
+    box-shadow: 1px 1px 0px var(--shadow-color);
+    transform: translateY(2px);
 }
 
 .btn-one {
-    color: #1f1d21;
-    background-color: white;
-    padding: 10px 15px;
+    --color: #1f1d21;
+    --border-color: #855bbe;
+    --shadow-color: #855bbe;
+    --bg-color: #e6d6fc;
     font-weight: bold;
-    border-radius: 23px;
-    border: 2px solid #855bbe;
-    box-shadow: 3px 4px 0px #855bbe;
-    transition: all 0.2s ease-in-out;
 }
 
-.btn-one:hover,
-.btn-one:focus {
-    outline: none;
-    background-color: #e6d6fc;
-    box-shadow: 3px 4px 0px #855bbe;
+.btn-profile {
+    --color: #1f1d21;
+    --border-color: #855bbe;
+    --bg-color: #e6d6fc;
+    --shadow-color: #855bbe;
+    font-size: 1.2rem;
+    border-radius: 20px;
 }
 
-#profileDropdown:active,
-.btn-one:active {
-    outline: ;
-    box-shadow: 1px 1px 0px #855bbe;
-    transform: translateY(2px);
+.btn-red {
+    --color: #1f1d21;
+    --border-color: #BE5B63;
+    --bg-color: #EEB9B9;
+    --shadow-color: #BE5B63;
+}
+
+.btn-green {
+    --color: #1f1d21;
+    --border-color: #94BE5B;
+    --bg-color: #C9DEAD;
+    --shadow-color: #94BE5B;
+}
+
+.btn-blue {
+    --color: #1f1d21;
+    --border-color: #5BBEB7;
+    --bg-color: #C8E9E7;
+    --shadow-color: #5BBEB7;
 }
 
 .btn-container {
@@ -289,39 +309,5 @@ hr {
     transition: border-color 0.3s ease-in-out;
     border-color: #855bbe;
     box-shadow: 1px 2px 0px #855bbe;
-}
-
-/* ---------------------------------------- Search functionality ---------------------------------------- */
-/* ---------------------------------------- Passenger Stepper Styling ---------------------------------------- */
-.stepper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 5px;
-    background-color: white;
-    width: 120px; /* Adjust size */
-}
-
-.stepper button {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 5px;
-    color: #855bbe;
-}
-
-.stepper button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.stepper input {
-    width: 30px;
-    text-align: center;
-    border: none;
-    font-size: 16px;
 }
 

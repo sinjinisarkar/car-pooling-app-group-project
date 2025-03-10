@@ -24,14 +24,12 @@
                             <div class="card p-3">
                                 <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
-                                {% if journey.seats_booked %}
-                                    <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
-                                {% endif %}
+                                <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
-                                    <button class="btn btn-one cancel-btn" data-booking-id="{{ journey.booking_id }}" 
+                                    <button class="btn btn-base btn-red cancel-btn" data-booking-id="{{ journey.booking_id }}" 
                                             data-price="{{ journey.price }}" data-date="{{ journey.date }}">
                                         Cancel
                                     </button>
@@ -45,6 +43,33 @@
                     </div>
                 {% else %}
                     <p class="text-muted">No upcoming journeys booked.</p>
+                {% endif %}
+                <!-- Toggle Inactive Bookings Button -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-secondary" id="toggleInactive">Show Inactive Bookings</button>
+                </div>
+            </div>
+
+            <!-- Inactive Bookings Section (Initially Hidden) -->
+            <div id="inactiveSection" class="mb-4" style="display: none;">
+                <h4>Inactive Bookings</h4>
+                {% if inactive_journeys %}
+                    <div class="row">
+                        {% for journey in inactive_journeys %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card p-3">
+                                <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
+                                <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
+                                <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
+                                <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
+                                <p class="detail-item text-danger"><span class="detail-heading">Status:</span> {{ journey.status }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No inactive bookings.</p>
                 {% endif %}
             </div>
             
@@ -64,7 +89,7 @@
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                 <div class="text-center mt-3">
-                                    <button class="btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
+                                    <button class="btn-base btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
                                 </div>
                             </div>
                         </div>
@@ -108,7 +133,7 @@
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price per Seat:</span> £{{ ride.price }}</p>
                                 
-                                <button class="btn-one mt-3" data-bs-toggle="collapse" data-bs-target="#rideDates{{ ride.ride_id }}" aria-expanded="false">
+                                <button class="btn-base btn-one mt-3" data-bs-toggle="collapse" data-bs-target="#rideDates{{ ride.ride_id }}" aria-expanded="false">
                                     View Ride Dates
                                 </button>
                                 
@@ -117,7 +142,7 @@
                                         {% for date, passengers in ride.dates.items() %}
                                         <li class="list-group-item">
                                             <strong>{{ date }}</strong>
-                                            <button class="btn-one float-end" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">View Passengers</button>
+                                            <button class="btn-base btn-one float-end" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">View Passengers</button>
                                         </li>
                                         {% endfor %}
                                     </ul>

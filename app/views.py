@@ -660,40 +660,36 @@ def reset_password(token, user_id):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Get upcoming journeys (booked rides)
+    # Get upcoming and inactive journeys
     booked_rides = book_ride.query.filter_by(user_id=current_user.id).all()
     upcoming_journeys = []
+    inactive_journeys = []
+
+    current_time = datetime.utcnow()
 
     for booking in booked_rides:
         ride = publish_ride.query.get(booking.ride_id)
         if ride:
-            # Handle commuting rides properly
-            if ride.category == "commuting":
-                seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-                if booking.ride_date.strftime('%Y-%m-%d') in seat_tracking:
-                    upcoming_journeys.append({
-                        "booking_id": booking.id,
-                        "ride_id": ride.id,
-                        "from": ride.from_location,
-                        "to": ride.to_location,
-                        "date": booking.ride_date.strftime('%Y-%m-%d'),
-                        "time": ride.commute_times,
-                        "status": booking.status,
-                        "price": ride.price_per_seat * booking.seats_selected,
-                        "seats_booked": booking.seats_selected
-                    })
+            is_canceled = booking.status == "Canceled"
+
+            journey_data = {
+                "booking_id": booking.id,
+                "ride_id": ride.id,
+                "from": ride.from_location,
+                "to": ride.to_location,
+                "date": booking.ride_date.strftime('%Y-%m-%d'),
+                "time": ride.commute_times if ride.category == "commuting" else (
+                    ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided"
+                ),
+                "status": booking.status,
+                "price": booking.total_price,
+                "seats_booked": booking.seats_selected
+            }
+
+            if is_canceled:
+                inactive_journeys.append(journey_data)
             else:
-                upcoming_journeys.append({
-                    "booking_id": booking.id,
-                    "ride_id": ride.id,
-                    "from": ride.from_location,
-                    "to": ride.to_location,
-                    "date": booking.ride_date.strftime('%Y-%m-%d'),
-                    "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
-                    "status": booking.status,
-                    "price": booking.total_price,
-                    "seats_booked": booking.seats_selected
-                })
+                upcoming_journeys.append(journey_data)
 
     # Get published rides (separate one-time and commuting)
     user_published_rides = publish_ride.query.filter_by(driver_id=current_user.id).all()
@@ -723,11 +719,14 @@ def dashboard():
                 "dates": {}
             }
 
-            # Get all unique dates booked for this ride
             ride_dates = db.session.query(book_ride.ride_date).filter_by(ride_id=ride.id).distinct().all()
             for date_obj in ride_dates:
                 date_str = date_obj[0].strftime('%Y-%m-%d')
-                passengers = book_ride.query.filter_by(ride_id=ride.id, ride_date=date_obj[0]).all()
+                passengers = book_ride.query.filter(
+                    book_ride.ride_id == ride.id,
+                    book_ride.ride_date == date_obj[0],
+                    book_ride.status != "Canceled"
+                ).all()
                 ride_data["dates"][date_str] = [
                     {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email}
                     for passenger in passengers
@@ -738,6 +737,7 @@ def dashboard():
     return render_template("dashboard.html",
                            user=current_user,
                            upcoming_journeys=upcoming_journeys,
+                           inactive_journeys=inactive_journeys,
                            published_rides=published_rides)
 
 
