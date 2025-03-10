@@ -24,9 +24,7 @@
                             <div class="card p-3">
                                 <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
-                                {% if journey.seats_booked %}
-                                    <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
-                                {% endif %}
+                                <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
                                 <div class="text-center mt-3">
@@ -45,6 +43,33 @@
                     </div>
                 {% else %}
                     <p class="text-muted">No upcoming journeys booked.</p>
+                {% endif %}
+                <!-- Toggle Inactive Bookings Button -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-secondary" id="toggleInactive">Show Inactive Bookings</button>
+                </div>
+            </div>
+
+            <!-- Inactive Bookings Section (Initially Hidden) -->
+            <div id="inactiveSection" class="mb-4" style="display: none;">
+                <h4>Inactive Bookings</h4>
+                {% if inactive_journeys %}
+                    <div class="row">
+                        {% for journey in inactive_journeys %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card p-3">
+                                <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
+                                <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
+                                <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
+                                <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
+                                <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
+                                <p class="detail-item text-danger"><span class="detail-heading">Status:</span> {{ journey.status }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No inactive bookings.</p>
                 {% endif %}
             </div>
             
