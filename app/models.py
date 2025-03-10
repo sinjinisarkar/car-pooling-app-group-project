@@ -12,12 +12,13 @@ passenger_rides = db.Table(
     db.Column('ride_id', db.Integer, db.ForeignKey('publish_ride.id'), primary_key=True)
 )
 
+
 # Table for user Login and Accounts 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)  # Stores hashed passwords
+    password_hash = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
 
      # Relationship: A driver can publish multiple rides
@@ -57,6 +58,7 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User {self.username}>"
 
+
 # Table for driver to publish ride
 class publish_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,32 +84,38 @@ class book_ride(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
     status = db.Column(db.String(20), default="Booked")
-    total_price = db.Column(db.Float, nullable=False)  # Stores the total price of the booking
-    seats_selected = db.Column(db.Integer, nullable=False)  # Stores the number of seats selected
-    confirmation_email = db.Column(db.String(150), nullable=False)  # Stores the email address for confirmation
-    ride_date = db.Column(db.DateTime, nullable=True)  # ✅ Make this nullable for commuting rides
+    total_price = db.Column(db.Float, nullable=False)
+    seats_selected = db.Column(db.Integer, nullable=False)
+    confirmation_email = db.Column(db.String(150), nullable=False) # ⁉️ do we need this
+    ride_date = db.Column(db.DateTime, nullable=True)
+    cancellation_timestamp = db.Column(db.DateTime, nullable=True)
     
     ride = db.relationship('publish_ride', backref='bookings')
 
     def __repr__(self):
         return f"<Booking for {self.ride.from_location} to {self.ride.to_location}>"
 
+
 # Table for saved journey for easy rebooking for a commuting ride
-class SavedRide(db.Model):
+class saved_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
-    recurrence_days = db.Column(db.String(100), nullable=True)  # Stored as "Monday, Wednesday"
+    recurrence_days = db.Column(db.String(100), nullable=True)
     
-    # Define relationships
     user = db.relationship('User', backref='saved_rides')
     ride = db.relationship('publish_ride', backref='saved_rides')
+
 
 # Table for payment of the booked journeys
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
+    book_ride_id = db.Column(db.Integer, db.ForeignKey('book_ride.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default="Success")  # Simulated Payment Success
+    status = db.Column(db.String(20), default="Success")  
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    refunded = db.Column(db.Boolean, default=False)
+
+    booking = db.relationship('book_ride', backref='payment')

@@ -28,15 +28,10 @@
         <!-- Number of Seats -->
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="seats" class="form-label">Number of Seats:</label>
-                <input type="number" class="form-control" id="seats" name="seats" 
-                    min="1" max="{{ ride.available_seats }}" required>
-                    <small>Current Available Seats: 
-                        <span id="availableSeats"></span>                        
-                    </small>
-                    
-                                      
-            </div>
+                <label for="selected_dates" class="form-label">Select Commute Dates:</label>
+                <input type="text" id="selected_dates" class="form-control" placeholder="Choose available dates" id="selected_date_input" name="selected_date" value="" required>
+            </div>   
+            
             <div class="col-md-6">
                 <label for="total_price" class="form-label">Total Price (£):</label>
                 <input type="text" class="form-control" id="total_price" name="total_price" readonly>
@@ -45,9 +40,13 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="selected_dates" class="form-label">Select Commute Dates:</label>
-                <input type="text" id="selected_dates" class="form-control" placeholder="Choose available dates" id="selected_date_input" name="selected_date" value="" required>
-            </div>            
+                <label for="seats" class="form-label">Number of Seats:</label>
+                <input type="number" class="form-control" id="seats" name="seats" 
+                    min="1" max="{{ ride.available_seats }}" required>
+                    <small>Current Available Seats: 
+                        <span id="availableSeats"></span>                        
+                    </small>               
+            </div>          
         </div>
 
 

@@ -72,6 +72,7 @@ hr {
 }
 
 .navbar .form-inline input {
+    background-color: #fff;
     height: 50px;
     width: 300px;
     border: 2px solid #855bbe;
@@ -166,12 +167,14 @@ hr {
 
 .btn-one:hover,
 .btn-one:focus {
+    outline: none;
     background-color: #e6d6fc;
     box-shadow: 3px 4px 0px #855bbe;
 }
 
 #profileDropdown:active,
 .btn-one:active {
+    outline: ;
     box-shadow: 1px 1px 0px #855bbe;
     transform: translateY(2px);
 }
