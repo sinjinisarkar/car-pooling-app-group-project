@@ -456,7 +456,6 @@ def inject_user():
     return dict(user=current_user)
 
 
-# Route for searching journeys using a calendar view 
 @app.route('/search_journeys', methods=['GET'])
 def search_journeys():
     from_location = request.args.get("from")
@@ -482,15 +481,13 @@ def search_journeys():
         func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
     ).all()
 
-    # 
     journey_list = []
 
-    # One-Time Rides 
+    # One-Time Rides
     for ride in one_time_rides:
         seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, seat_data.get("seats", 0)) 
-
-        if available_seats >= passengers:  
+        available_seats = seat_data.get(date, 0)
+        if available_seats >= passengers:
             journey_list.append({
                 "id": ride.id,
                 "from": ride.from_location,
@@ -498,32 +495,28 @@ def search_journeys():
                 "date": ride.date_time.strftime('%Y-%m-%d'),
                 "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
                 "seats_available": available_seats,
-                "price_per_seat": ride.price_per_seat
+                "price_per_seat": ride.price_per_seat,
+                "category": ride.category
             })
 
-    # Commuting Rides 
+    # Commuting Rides
     for ride in commuting_rides:
-        recurrence_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
         seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-
-        for commute_date in recurrence_dates:
-            commute_date = commute_date.strip()
-
-            if commute_date == date:  
-                available_seats = seat_data.get(commute_date, 0)  
-
-                if available_seats >= passengers: 
-                    journey_list.append({
-                        "id": ride.id,
-                        "from": ride.from_location,
-                        "to": ride.to_location,
-                        "date": commute_date,
-                        "time": "Flexible (Multiple Times)",
-                        "seats_available": available_seats,
-                        "price_per_seat": ride.price_per_seat
-                    })
+        available_seats = seat_data.get(date, 0)
+        if available_seats >= passengers:
+            journey_list.append({
+                "id": ride.id,
+                "from": ride.from_location,
+                "to": ride.to_location,
+                "date": date,
+                "time": "Flexible (Multiple Times)",
+                "seats_available": available_seats,
+                "price_per_seat": ride.price_per_seat,
+                "category": ride.category
+            })
 
     return jsonify({"journeys": journey_list})
+
 
 
 def get_base_url():
@@ -616,3 +609,9 @@ def reset_password(token, user_id):
             return jsonify({"success": True, "message": "Your password has been updated! You can now log in."})
 
         return jsonify({"success": False, "message": "Password update failed!"}), 400
+
+@app.route('/check_login_status', methods=['GET'])
+def check_login_status():
+    if not current_user.is_authenticated:
+        return jsonify({"is_logged_in": False, "message": "You need to log in before booking a ride."})
+    return jsonify({"is_logged_in": True})
