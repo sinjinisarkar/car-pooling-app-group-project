@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
         flatpickr("#date_time", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
+            minDate: "today",
+            defaultDate: "today",
             disableMobile: false
         });
     }
@@ -15,6 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
         flatpickr("#recurrence_dates", {
             mode: "multiple",
             dateFormat: "Y-m-d",
+            minDate: "today",
+            defaultDate: "today",
             disableMobile: false
         });
     }
