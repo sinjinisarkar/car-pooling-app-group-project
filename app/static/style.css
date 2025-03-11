@@ -140,7 +140,8 @@ hr {
 /* ---------------------------------------- Buttons styling ---------------------------------------- */
 .btn-base {
     padding: 10px 15px;
-    border-radius: 23px; 
+    border-radius: 23px;
+    font-weight: bold;
     transition: all 0.2s ease-in-out;
     background-color: white;
     color: var(--text-color);
@@ -166,7 +167,6 @@ hr {
     --border-color: #855bbe;
     --shadow-color: #855bbe;
     --bg-color: #e6d6fc;
-    font-weight: bold;
 }
 
 .btn-profile {
