@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchButton = document.getElementById("searchButton");
     const resultsContainer = document.getElementById("searchResults");
     const searchDate = document.getElementById("searchDate");
+    
 
     // Initialize Flatpickr for the date input
     if (searchDate) {

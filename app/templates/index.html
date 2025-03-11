@@ -8,8 +8,29 @@
     <img src="https://res.cloudinary.com/dpar2oaev/image/upload/v1741282825/E1FD0525-DB3E-4588-8A14-CA40127C0635_dv3xcq.png" alt="Banner" class="banner-image">
 </div>
 
+<!-- Separate Search Container for Better Positioning -->
+<div class="search-container-banner">
+    <div class="banner-search">
+        <input type="text" id="bannerSearchFrom" placeholder="Leaving from" class="form-control">
+        <input type="text" id="bannerSearchTo" placeholder="Going to" class="form-control">
+        <input type="text" id="bannerSearchDate" placeholder="Date" class="form-control">
+        <select id="bannerSearchPassengers" class="form-control">
+            <option value="" disabled selected>Passengers</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
+        <button id="bannerSearchButton" class="btn btn-primary">Search</button>
+    </div>
+</div>
+
 <!-- Ride Options -->
-<div class="container text-center my-4 btn-container">
+<div class="container text-center my-4 btn-container" id="rideOptions">
     <a href="{{ url_for('view_journeys') }}" class="btn btn-base btn-one btn-lg">Find a Ride</a>
 
     {% if current_user.is_authenticated %}
