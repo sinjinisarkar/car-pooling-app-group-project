@@ -224,6 +224,9 @@ def view_journeys():
 @app.route('/book_onetime/<int:ride_id>', methods=['GET', 'POST'])
 @login_required
 def book_onetime(ride_id):
+    if not current_user.is_authenticated:
+        return jsonify({"error": "You need to log in before booking a ride."}), 403
+
     ride = publish_ride.query.filter_by(id=ride_id).first()
     # Load latest seat tracking data
     db.session.refresh(ride)  

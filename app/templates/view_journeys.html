@@ -45,11 +45,15 @@
                                 </form>
                             {% else %}
                                 {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
-                                    <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
-                                        <button type="submit" class="btn btn-base btn-one">Book</button>
-                                    </form>
+                                    {% if user.is_authenticated %}
+                                        <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
+                                            <button type="submit" class="btn btn-base btn-one">Book</button>
+                                        </form>
+                                    {% else %}
+                                        <a href="{{ url_for('login') }}" class="btn btn-base btn-blue" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Log in to Book</a>
+                                    {% endif %}
                                 {% else %}
-                                    <button class="btn btn-danger" disabled>Fully Booked</button>
+                                    <button class="btn btn-base btn-red" disabled>Fully Booked</button>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -106,11 +110,15 @@
                                 </form>
                             {% else %}
                                 {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
-                                    <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
-                                        <button type="submit" class="btn btn-base btn-one">Book</button>
-                                    </form>
+                                    {% if user.is_authenticated %}
+                                        <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
+                                            <button type="submit" class="btn btn-base btn-one">Book</button>
+                                        </form>
+                                    {% else %}
+                                        <a href="{{ url_for('login') }}" class="btn btn-base btn-blue" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Log in to Book</a>
+                                    {% endif %}
                                 {% else %}
-                                    <button class="btn btn-danger" disabled>Fully Booked</button>
+                                    <button class="btn btn-base btn-red" disabled>Fully Booked</button>
                                 {% endif %}
                             {% endif %}
                         </div>
