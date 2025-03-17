@@ -429,3 +429,31 @@ select.form-control {
     background-position: right 10px center;
     background-size: 12px;
 }
+
+
+/* ---------------------------------------- Search Autocomplete ---------------------------------------- */
+/* Style for the autocomplete suggestions container */
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;  /* Position directly below the input */
+    left: 0;
+    width: 100%;  /* Match input width */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for each suggestion item */
+.autocomplete-suggestion {
+    padding: 10px;
+    cursor: pointer;
+}
+
+/* Highlight suggestion on hover */
+.autocomplete-suggestion:hover {
+    background-color: #f0f0f0;
+}
