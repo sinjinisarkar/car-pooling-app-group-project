@@ -51,7 +51,7 @@
             <!-- Profile Dropdown -->
             <div class="dropdown">
                 {% if user.is_authenticated %}
-                    <button class="btn btn-base btn-profile dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown">
+                    <button class="btn btn-base btn-profile dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {{ user.username }}
                     </button>
                     <div class="dropdown-menu">
@@ -63,15 +63,14 @@
                         </form>
                     </div>
                 {% else %}
-                    <button class="btn btn-base btn-profile dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-base btn-profile dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa-solid fa-user-circle fa-lg"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#loginModal">
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
                             <i class='bx bx-user-check'></i>Log in
                         </a>
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#signupModal">
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#signupModal">
                             <i class='bx bx-user-plus'></i>Sign up
                         </a>
                     </div>
@@ -130,7 +129,7 @@
                     </div>
                     <div class="text-center mt-3">
                         Not a member yet? 
-                        <a href="#" id="switchToSignup">Sign up</a>
+                        <a href="#" data-bs-target="#signupModal" data-bs-toggle="modal" data-bs-dismiss="modal">Sign up</a>
                     </div>
                 </div>
             </div>
@@ -186,7 +185,7 @@
                     </div>
                     <div class="text-center mt-3">
                         Already have an account? 
-                        <a href="#" id="switchToLogin">Log in</a>
+                        <a href="#" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Log in</a>
                     </div>
                 </div>
             </div>
@@ -256,12 +255,11 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Local js -->
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/homepage.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/homepage.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/book.js') }}"></script>
     <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
     <script src="{{ url_for('static', filename='js/search.js') }}"></script>

@@ -152,12 +152,14 @@ hr {
 .btn-base:hover,
 .btn-base:focus {
     outline: none;
+    border: 2px solid var(--border-color);
     background-color: var(--bg-color);
     box-shadow: 3px 4px 0px var(--shadow-color);
 }
 
 .btn-base:active {
     outline: none;
+    border: 2px solid var(--border-color);
     box-shadow: 1px 1px 0px var(--shadow-color);
     transform: translateY(2px);
 }
