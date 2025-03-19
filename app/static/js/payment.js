@@ -39,6 +39,17 @@ document.addEventListener("DOMContentLoaded", function () {
         manualCardSection.style.display = "block";
     });
 
+    function isValidExpiryDate(expiry) {
+        const regex = /^(0[1-9]|1[0-2])\/\d{2}$/; // Format: MM/YY
+        if (!regex.test(expiry)) return false;
+
+        const [month, year] = expiry.split("/").map(Number);
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear() % 100; // Get last two digits of the year
+        const currentMonth = currentDate.getMonth() + 1; // Months are 0-indexed
+
+        return year > currentYear || (year === currentYear && month >= currentMonth);
+    }
 
     // Handle Saved Card Payment
     payWithSavedCardButton.addEventListener("click", function () {
@@ -107,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const seats = document.getElementById("seats").value;
         const totalPrice = document.getElementById("total_price").value;
         const cardNumber = cardNumberInput.value;
-        const expiry = expiryInput.value;
+        const expiry = expiryInput.value.trim();
         const cvv = cvvInput.value;
         const cardholderName = cardholderNameInput.value;
         const saveCard = saveCardCheckbox.checked;
@@ -125,6 +136,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!selectedDates.length) {
             alert("Error: No selected dates found! Please try again.");
+            return;
+        }
+
+        if (!isValidExpiryDate(expiry)) {
+            alert("Invalid expiry date. Please enter a valid MM/YY format and ensure the card is not expired.");
             return;
         }
 
