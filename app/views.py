@@ -406,16 +406,16 @@ def process_payment():
         seats = int(seats)
         per_day_price = seats * ride.price_per_seat
 
-        # **Handle Payment Method (Saved Card vs. Manual Entry)**
+        # Handle Payment Method (Saved Card vs. Manual Entry)
         if use_saved_card:
             # If using a saved card, validate it
             saved_card = SavedCard.query.get(saved_card_id)
             if not saved_card or saved_card.user_id != current_user.id:
                 return jsonify({"success": False, "message": "Invalid saved card selected."}), 400
-            decrypted_card_number = saved_card.get_card_number()
+            # decrypted_card_number = saved_card.get_card_number()
         
         else:
-            # **If entering card manually, validate details**
+            # If entering card manually, validate details
             card_number = data.get("card_number")
             expiry = data.get("expiry")
             cardholder_name = data.get("cardholder_name")
@@ -427,7 +427,7 @@ def process_payment():
             # Extract last four digits for reference
             last_four_digits = card_number[-4:]
 
-            # **Save the card if requested**
+            # Save the card if requested
             if save_card:
                 new_card = SavedCard(
                     user_id=current_user.id,
@@ -481,6 +481,7 @@ def process_payment():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
+
 
 # Route to send booking confirmation email
 def send_booking_confirmation_email(email, ride, seats, total_price, selected_dates):
@@ -707,6 +708,7 @@ def dashboard():
         ride = publish_ride.query.get(booking.ride_id)
         if ride:
             is_canceled = booking.status == "Canceled"
+            price_per_seat = ride.price_per_seat
 
             journey_data = {
                 "booking_id": booking.id,
@@ -718,7 +720,7 @@ def dashboard():
                     ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided"
                 ),
                 "status": booking.status,
-                "price": booking.total_price,
+                "price": price_per_seat,
                 "seats_booked": booking.seats_selected
             }
 
