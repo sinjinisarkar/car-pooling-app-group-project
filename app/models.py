@@ -1,9 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from app import db
+from app import app, db
 from datetime import date, datetime
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
+from cryptography.fernet import Fernet
 
 # Association table to track which passengers booked which rides
 passenger_rides = db.Table(
@@ -119,3 +120,26 @@ class Payment(db.Model):
     refunded = db.Column(db.Boolean, default=False)
 
     booking = db.relationship('book_ride', backref='payment')
+
+
+cipher = Fernet(app.config["ENCRYPTION_KEY"])
+
+class SavedCard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    encrypted_card_number = db.Column(db.String(500), nullable=False)  # Encrypted card number
+    expiry_date = db.Column(db.String(5), nullable=False)
+    cardholder_name = db.Column(db.String(100), nullable=False)
+    last_four_digits = db.Column(db.String(4), nullable=False)  # Only last 4 digits for reference
+    is_default = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref='saved_cards')
+
+    # Method to encrypt card number
+    def set_card_number(self, card_number):
+        self.encrypted_card_number = cipher.encrypt(card_number.encode()).decode()
+        self.last_four_digits = card_number[-4:]  # Store last 4 digits separately
+
+    # Method to decrypt card number
+    def get_card_number(self):
+        return cipher.decrypt(self.encrypted_card_number.encode()).decode()

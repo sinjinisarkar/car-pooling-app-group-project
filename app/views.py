@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
@@ -390,7 +390,8 @@ def process_payment():
         total_price = data.get("total_price")
         selected_dates = data.get("selected_dates")  # Should be a list
         confirmation_email = data.get("email")
-        print(f"🔍 Received selected dates: {selected_dates}")
+        use_saved_card = data.get("use_saved_card", False)
+        saved_card_id = int(data.get("saved_card_id", 0)) if data.get("saved_card_id") else None
 
         # Ensure selected_dates is always a list
         if not selected_dates or not isinstance(selected_dates, list):
@@ -403,7 +404,39 @@ def process_payment():
         # Load seat tracking data
         seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
         seats = int(seats)
-        per_day_price = seats * ride.price_per_seat  
+        per_day_price = seats * ride.price_per_seat
+
+        # **Handle Payment Method (Saved Card vs. Manual Entry)**
+        if use_saved_card:
+            # If using a saved card, validate it
+            saved_card = SavedCard.query.get(saved_card_id)
+            if not saved_card or saved_card.user_id != current_user.id:
+                return jsonify({"success": False, "message": "Invalid saved card selected."}), 400
+            decrypted_card_number = saved_card.get_card_number()
+        
+        else:
+            # **If entering card manually, validate details**
+            card_number = data.get("card_number")
+            expiry = data.get("expiry")
+            cardholder_name = data.get("cardholder_name")
+            save_card = data.get("save_card", False)
+
+            if not card_number or not expiry or not cardholder_name:
+                return jsonify({"success": False, "message": "Card details missing."}), 400
+            
+            # Extract last four digits for reference
+            last_four_digits = card_number[-4:]
+
+            # **Save the card if requested**
+            if save_card:
+                new_card = SavedCard(
+                    user_id=current_user.id,
+                    expiry_date=expiry,
+                    cardholder_name=cardholder_name,
+                )
+                new_card.set_card_number(card_number)
+                db.session.add(new_card)
+                db.session.commit()
 
         for selected_date in selected_dates:
             if selected_date in seat_tracking:
