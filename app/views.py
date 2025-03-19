@@ -777,6 +777,20 @@ def dashboard():
                            published_rides=published_rides)
 
 
+@app.route("/delete_saved_card/<int:card_id>", methods=["DELETE"])
+@login_required
+def delete_saved_card(card_id):
+    saved_card = SavedCard.query.get(card_id)
+
+    if not saved_card or saved_card.user_id != current_user.id:
+        return jsonify({"success": False, "message": "Card not found or unauthorized"}), 403
+
+    db.session.delete(saved_card)
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Card deleted successfully"})
+
+
 @app.route("/cancel_booking/<int:booking_id>", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):

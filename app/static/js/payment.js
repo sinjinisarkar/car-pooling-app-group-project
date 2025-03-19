@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
         manualCardSection.style.display = "block";
     });
 
+
     // Handle Saved Card Payment
     payWithSavedCardButton.addEventListener("click", function () {
         const rideId = document.getElementById("ride_id").value;
@@ -97,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    
     // Handle Manual Card Payment
     paymentForm.addEventListener("submit", function (event) {
         event.preventDefault();
