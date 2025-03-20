@@ -2,11 +2,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const showUpcoming = document.getElementById("showUpcoming");
     const showPublished = document.getElementById("showPublished");
     const showSavedCards = document.getElementById("showSavedCards");
+
     const upcomingSection = document.getElementById("upcomingSection");
     const publishedSection = document.getElementById("publishedSection");
     const savedCardsSection = document.getElementById("savedCardsSection");
+    
     const toggleInactive = document.getElementById("toggleInactive");
     const inactiveSection = document.getElementById("inactiveSection");
+
+    upcomingSection.style.display = "block";
+    publishedSection.style.display = "none";
+    savedCardsSection.style.display = "none";
+    inactiveSection.style.display = "none"; // Ensure inactive section is hidden at start
+    showUpcoming.classList.add("active");
 
     if (showUpcoming && showPublished && showSavedCards) {
         showUpcoming.addEventListener("click", function () {
@@ -22,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
             upcomingSection.style.display = "none";
             publishedSection.style.display = "block";
             savedCardsSection.style.display = "none";
+            inactiveSection.style.display = "none";
             showPublished.classList.add("active");
             showUpcoming.classList.remove("active");
             showSavedCards.classList.remove("active");
@@ -31,6 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
             upcomingSection.style.display = "none";
             publishedSection.style.display = "none";
             savedCardsSection.style.display = "block";
+            inactiveSection.style.display = "none";
             showSavedCards.classList.add("active");
             showUpcoming.classList.remove("active");
             showPublished.classList.remove("active");
@@ -39,12 +49,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (toggleInactive && inactiveSection) {
         toggleInactive.addEventListener("click", function () {
-            if (inactiveSection.style.display === "none") {
-                inactiveSection.style.display = "block";
-                toggleInactive.textContent = "Hide Inactive Bookings";
-            } else {
-                inactiveSection.style.display = "none";
-                toggleInactive.textContent = "Show Inactive Bookings";
+            if (upcomingSection.style.display === "block") {
+                if (inactiveSection.style.display === "none") {
+                    inactiveSection.style.display = "block";
+                    toggleInactive.textContent = "Hide Inactive Bookings";
+                } else {
+                    inactiveSection.style.display = "none";
+                    toggleInactive.textContent = "Show Inactive Bookings";
+                }
             }
         });
     }
@@ -75,5 +87,4 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
-
 });
