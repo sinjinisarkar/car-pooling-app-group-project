@@ -29,10 +29,15 @@
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
-                                    <button class="btn btn-base btn-red cancel-btn" data-booking-id="{{ journey.booking_id }}" 
-                                            data-price="{{ journey.price }}" data-date="{{ journey.date }}">
-                                        Cancel
-                                    </button>
+                                        <button class="btn btn-base btn-red cancel-btn" data-booking-id="{{ journey.booking_id }}" 
+                                                data-price="{{ journey.price }}" data-date="{{ journey.date }}">
+                                            Cancel
+                                        </button>
+                        
+                                        <!-- Passenger Button: View Pickup -->
+                                        <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-primary mt-2">
+                                            View Pickup Location
+                                        </a>
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -90,6 +95,8 @@
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                 <div class="text-center mt-3">
                                     <button class="btn-base btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
+                                     <!-- Driver Button: Track Passengers -->
+                                    <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-success mt-2">Track Passengers</a>
                                 </div>
                             </div>
                         </div>

@@ -459,3 +459,9 @@ select.form-control {
 .autocomplete-suggestion:hover {
     background-color: #f0f0f0;
 }
+
+#map {
+    height: 400px; /* You can increase the height if needed */
+    width: 100%;
+    
+}

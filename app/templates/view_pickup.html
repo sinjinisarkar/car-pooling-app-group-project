@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Pickup Location</h2>
+    <input type="hidden" id="ride-id" value="{{ ride_id }}">
+    <input type="hidden" id="user-type" value="{{ 'driver' if user.is_driver else 'passenger' }}">
+    <p id="status-message" class="alert alert-info">Tracking your location...</p>
+    <div id="map" style="height: 400px;"></div>
+</div>
+
+{% endblock %}
