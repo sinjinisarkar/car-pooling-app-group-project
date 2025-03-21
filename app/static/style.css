@@ -306,9 +306,10 @@ hr {
     padding: 10px;
     border-radius: 25px;
     background-color: #fff;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 2px 10px rgba(133, 91, 190, 0.5);
+    border-bottom: none;
     z-index: 10;
-    width: 80%; /* Make it broader */
+    width: 80%;
     justify-content: space-between;
     align-items: center;
 }
@@ -357,15 +358,6 @@ hr {
     border-radius: 25px 0 0 25px;
 }
 
-/* ---------------------------------------- Journey Filter Forms Styling ---------------------------------------- */
-.journey-filters input:focus,
-.journey-filters select:focus,
-.journey-filters input:active,
-.journey-filters select:active {
-    transition: border-color 0.3s ease-in-out;
-    border-color: #855bbe;
-    box-shadow: 1px 2px 0px #855bbe;
-}
 
 /* ---------------------------------------- Position the ride options buttons ---------------------------------------- */
 #rideOptions {
@@ -378,7 +370,7 @@ hr {
 
 
 
-select option[disabled] {
+.custom-select option[disabled] {
     color: #999;  /* Light color to indicate it's a placeholder */
 }
 
@@ -398,23 +390,16 @@ select.form-control {
     
 }
 
-/* Optional: Placeholder style for better visibility */
-select option[disabled] {
-    color: #999;
-}
-
-/* Remove focus outline */
-select.form-control:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-/* Customizing the arrow for the dropdown */
-select.form-control {
+.custom-select.form-control {
     background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23855bbe" class="bi bi-caret-down-fill" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658A.5.5 0 0 1 2.88 5h10.24a.5.5 0 0 1 .429.758l-4.796 5.482a.5.5 0 0 1-.754 0z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 12px;
+}
+
+.custom-select.form-control:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 
@@ -425,7 +410,7 @@ select.form-control {
     top: 100%;  /* Position directly below the input */
     left: 0;
     width: 100%;  /* Match input width */
-    border: 1px solid #ccc;
+    border: none;
     border-radius: 4px;
     background: white;
     z-index: 1000;
