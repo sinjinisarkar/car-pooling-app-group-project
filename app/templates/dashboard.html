@@ -33,11 +33,12 @@
                                                 data-price="{{ journey.price }}" data-date="{{ journey.date }}">
                                             Cancel
                                         </button>
-                        
-                                        <!-- Passenger Button: View Pickup -->
+
+                                        <!-- View Pickup Location for Passenger -->
                                         <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-primary mt-2">
                                             View Pickup Location
                                         </a>
+                                        
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
