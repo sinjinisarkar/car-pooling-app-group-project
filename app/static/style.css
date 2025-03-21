@@ -56,37 +56,6 @@ hr {
 }
 
 
-/* ---------------------------------------- Search Bar ---------------------------------------- */
-.search-container {
-    max-width: 300px;
-    text-align: center;
-}
-
-@media (min-width: 992px) { 
-    .search-container {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.navbar .form-inline input {
-    background-color: #fff;
-    height: 50px;
-    width: 300px;
-    border: 2px solid #855bbe;
-    box-shadow: 3px 4px 0px #855bbe;
-    border-radius: 20px;
-    transition: all 0.3s ease-in-out;
-    padding: 8px 15px;
-}
-
-.navbar .form-inline input:focus {
-    box-shadow: 1px 1px 0px #855bbe;
-}
-
-
 /* ---------------------------------------- Modal styling ---------------------------------------- */
 .modal-content {
     border-radius: 23px;
@@ -296,6 +265,12 @@ hr {
     font-weight: 600;
 }
 
+.card-list-container {
+    max-height: 80vh;  /* Adjust as needed */
+    overflow-y: auto;   /* Enables scrolling */
+    padding-right: 10px; /* Prevents scrollbar from covering content */
+}
+
 
 /* ---------------------------------------- Form styling ---------------------------------------- */
 /* ---------------------------------------- Publish Ride Form Styling ---------------------------------------- */
@@ -380,6 +355,16 @@ hr {
 /* Rounded left corner for the first input */
 .banner-search input:first-child {
     border-radius: 25px 0 0 25px;
+}
+
+/* ---------------------------------------- Journey Filter Forms Styling ---------------------------------------- */
+.journey-filters input:focus,
+.journey-filters select:focus,
+.journey-filters input:active,
+.journey-filters select:active {
+    transition: border-color 0.3s ease-in-out;
+    border-color: #855bbe;
+    box-shadow: 1px 2px 0px #855bbe;
 }
 
 /* ---------------------------------------- Position the ride options buttons ---------------------------------------- */

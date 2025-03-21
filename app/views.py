@@ -539,69 +539,6 @@ def inject_user():
     return dict(user=current_user)
 
 
-@app.route('/search_journeys', methods=['GET'])
-def search_journeys():
-    from_location = request.args.get("from")
-    to_location = request.args.get("to")
-    date = request.args.get("date")
-    passengers = int(request.args.get("passengers", 1))
-
-    # Query One-Time Rides 
-    one_time_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        func.date(publish_ride.date_time) == date,
-        publish_ride.category == "one-time",
-        publish_ride.is_available == True
-    ).all()
-
-    # Query Commuting Rides 
-    commuting_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        publish_ride.category == "commuting",
-        publish_ride.is_available == True,
-        func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
-    ).all()
-
-    journey_list = []
-
-    # One-Time Rides
-    for ride in one_time_rides:
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, 0)
-        if available_seats >= passengers:
-            journey_list.append({
-                "id": ride.id,
-                "from": ride.from_location,
-                "to": ride.to_location,
-                "date": ride.date_time.strftime('%Y-%m-%d'),
-                "time": ride.date_time.strftime('%H:%M') if ride.date_time else "Not Provided",
-                "seats_available": available_seats,
-                "price_per_seat": ride.price_per_seat,
-                "category": ride.category
-            })
-
-    # Commuting Rides
-    for ride in commuting_rides:
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, 0)
-        if available_seats >= passengers:
-            journey_list.append({
-                "id": ride.id,
-                "from": ride.from_location,
-                "to": ride.to_location,
-                "date": date,
-                "time": "Flexible (Multiple Times)",
-                "seats_available": available_seats,
-                "price_per_seat": ride.price_per_seat,
-                "category": ride.category
-            })
-
-    return jsonify({"journeys": journey_list})
-
-
-
 def get_base_url():
     """ Automatically detects and returns the correct base URL. """
     # If running in GitHub Codespaces
@@ -849,70 +786,82 @@ def cancel_booking(booking_id):
 
 
 # Route to filter out journeys
+from flask import request, render_template
+from sqlalchemy import func
+import json
+
 @app.route('/filter_journeys', methods=['GET'])
 def filter_journeys():
-    from_location = request.args.get("from")
-    to_location = request.args.get("to")
-    date = request.args.get("date")
+    from_location = request.args.get("from", "").strip()
+    to_location = request.args.get("to", "").strip()
+    date = request.args.get("date", "").strip()
+    category = request.args.get("category", "").strip()
+    max_price = request.args.get("price", "").strip()
     passengers = int(request.args.get("passengers", 1))
 
-    # Query One-Time Rides
-    one_time_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        func.date(publish_ride.date_time) == date,
-        publish_ride.category == "one-time",
-        publish_ride.is_available == True
-    ).all()
+    query_filters = []
 
-    # Query Commuting Rides
-    commuting_rides = publish_ride.query.filter(
-        publish_ride.from_location.ilike(f"%{from_location}%"),
-        publish_ride.to_location.ilike(f"%{to_location}%"),
-        publish_ride.category == "commuting",
-        publish_ride.is_available == True,
-        func.lower(publish_ride.recurrence_dates).like(f"%{date}%")
-    ).all()
+    if from_location:
+        query_filters.append(publish_ride.from_location.ilike(f"%{from_location}%"))
+    if to_location:
+        query_filters.append(publish_ride.to_location.ilike(f"%{to_location}%"))
+    if max_price:
+        query_filters.append(publish_ride.price_per_seat <= float(max_price))
 
-    # Prepare final data structure
     journeys = []
 
-    # Process One-Time Rides
-    for ride in one_time_rides:
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, 0)
-        if available_seats >= passengers:
-            journeys.append({
-                "id": ride.id,
-                "from_location": ride.from_location,
-                "to_location": ride.to_location,
-                "date_time": ride.date_time,
-                "seat_tracking": seat_data,
-                "price_per_seat": ride.price_per_seat,
-                "category": ride.category,
-                "driver_name": ride.driver_name,
-                "user_has_booked": False,  # This can be enhanced if needed
-                "recurrence_dates": None,
-                "commute_times": None
-            })
+    # One-Time Rides Query
+    if not category or category == "one-time":
+        one_time_rides = publish_ride.query.filter(
+            *query_filters,
+            publish_ride.category == "one-time",
+            publish_ride.is_available == True,
+            func.date(publish_ride.date_time) == date if date else True
+        ).all()
 
-    # Process Commuting Rides
-    for ride in commuting_rides:
-        seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-        available_seats = seat_data.get(date, 0)
-        if available_seats >= passengers:
-            journeys.append({
-                "id": ride.id,
-                "from_location": ride.from_location,
-                "to_location": ride.to_location,
-                "date_time": None,
-                "seat_tracking": seat_data,
-                "price_per_seat": ride.price_per_seat,
-                "category": ride.category,
-                "driver_name": ride.driver_name,
-                "user_has_booked": False,
-                "recurrence_dates": ride.recurrence_dates,
-                "commute_times": ride.commute_times
-            })
+        for ride in one_time_rides:
+            seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+            available_seats = seat_data.get(date, 0) if date else max(seat_data.values(), default=0)
+            if available_seats >= passengers:
+                journeys.append({
+                    "id": ride.id,
+                    "from_location": ride.from_location,
+                    "to_location": ride.to_location,
+                    "date_time": ride.date_time,
+                    "seat_tracking": seat_data,
+                    "price_per_seat": ride.price_per_seat,
+                    "category": ride.category,
+                    "driver_name": ride.driver_name,
+                    "user_has_booked": False,
+                    "recurrence_dates": None,
+                    "commute_times": None
+                })
+
+    # Commuting Rides Query
+    if not category or category == "commuting":
+        commuting_rides = publish_ride.query.filter(
+            *query_filters,
+            publish_ride.category == "commuting",
+            publish_ride.is_available == True,
+            publish_ride.recurrence_dates.ilike(f"%{date}%") if date else True
+        ).all()
+
+        for ride in commuting_rides:
+            seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+            available_seats = seat_data.get(date, 0) if date else max(seat_data.values(), default=0)
+            if available_seats >= passengers:
+                journeys.append({
+                    "id": ride.id,
+                    "from_location": ride.from_location,
+                    "to_location": ride.to_location,
+                    "date_time": None,
+                    "seat_tracking": seat_data,
+                    "price_per_seat": ride.price_per_seat,
+                    "category": ride.category,
+                    "driver_name": ride.driver_name,
+                    "user_has_booked": False,
+                    "recurrence_dates": ride.recurrence_dates,
+                    "commute_times": ride.commute_times
+                })
 
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
