@@ -26,34 +26,85 @@
             </div>
         </div>
 
-        <!-- Payment Form -->
+        <!-- Payment Methods -->
         <div class="col-md-6">
-            <form id="paymentForm" method = "POST" class="custom-form">
-                <input type="hidden" id="ride_id" name="ride_id" value="{{ ride.id if ride else '0' }}">
-                <input type="hidden" class="form-control" id="seats" name="seats" min="1" max required value="{{ seats if seats else '0' }}">
-                <input type="hidden" class="form-control" id="total_price" name="total_price" readonly value="{{ total_price if total_price else '0.00' }}">
 
-                <!-- Card Details -->
-                <div class="mb-4">
-                    <label for="card_number">Card Number:</label>
-                    <input type="text" id="card_number" class="form-control" required placeholder="1234 5678 1234 5678">
+            <!-- Tabs for Payment Selection -->
+            <ul class="nav nav-tabs" id="paymentTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="savedCardTab" href="#">Use Saved Card</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="manualCardTab" href="#">Enter Manually</a>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3">
+
+                <!-- Saved Card Selection (Hidden by Default) -->
+                <div id="savedCardSection">
+                    <h6>Select a Saved Card:</h6>
+                    {% if user.saved_cards %}
+                        {% for card in user.saved_cards %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="saved_card" id="card{{ card.id }}" value="{{ card.id }}">
+                                <label class="form-check-label" for="card{{ card.id }}">
+                                    **** **** **** {{ card.last_four_digits }} (Exp: {{ card.expiry_date }})
+                                </label>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No saved cards available.</p>
+                    {% endif %}
+
+                    <div class="text-center mt-4 btn-container">
+                        <button id="payWithSavedCard" class="btn btn-base btn-one btn-lg mt-3">Pay Now</button>
+                        <a href="{{ url_for('home') }}" class="btn btn-base btn-red btn-lg mt-3">Back to Home</a>
+                    </div>
                 </div>
 
-                <div class="mb-4">
-                    <label for="expiry">Expiry Date (MM/YY):</label>
-                    <input type="text" id="expiry" class="form-control" required placeholder="MM/YY">
-                </div>
+                <!-- Manual card entry -->
+                <div id="manualCardSection" style="display: none;">
+                    <form id="paymentForm" method = "POST" class="custom-form">
+                        <input type="hidden" id="ride_id" name="ride_id" value="{{ ride.id if ride else '0' }}">
+                        <input type="hidden" class="form-control" id="seats" name="seats" min="1" max required value="{{ seats if seats else '0' }}">
+                        <input type="hidden" class="form-control" id="total_price" name="total_price" readonly value="{{ total_price if total_price else '0.00' }}">
 
-                <div class="mb-4">
-                    <label for="cvv">CVV:</label>
-                    <input type="text" id="cvv" class="form-control" required placeholder="123">
-                </div>
+                        <div id="manualCardSection">
+                            <div class="mb-4">
+                                <label for="cardholder_name">Cardholder Name:</label>
+                                <input type="text" id="cardholder_name" class="form-control" placeholder="John Doe">
+                            </div>
 
-                <div class="text-center mt-4 btn-container">
-                    <button type="submit" class="btn btn-base btn-one btn-lg mt-3">Pay Now</button>
-                    <a href="{{ url_for('home') }}" class="btn btn-base btn-red btn-lg mt-3">Back to Home</a>
+                            <div class="mb-4">
+                                <label for="card_number">Card Number:</label>
+                                <input type="text" id="card_number" class="form-control" required placeholder="1234 5678 1234 5678">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="expiry">Expiry Date (MM/YY):</label>
+                                <input type="text" id="expiry" class="form-control" required placeholder="MM/YY">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="cvv">CVV:</label>
+                                <input type="text" id="cvv" class="form-control" required placeholder="123">
+                            </div>
+
+                            <!-- Save Card Checkbox -->
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="save_card">
+                                <label class="form-check-label" for="save_card">Save this card for future use</label>
+                            </div>
+
+                            <div class="text-center mt-4 btn-container">
+                                <button type="submit" class="btn btn-base btn-one btn-lg mt-3">Pay Now</button>
+                                <a href="{{ url_for('home') }}" class="btn btn-base btn-red btn-lg mt-3">Back to Home</a>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

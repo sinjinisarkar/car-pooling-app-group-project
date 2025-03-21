@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("🚀 Initializing Flatpickr for Publish Ride Page...");
 
-    // Date & Time Picker for One-Time Ride
+    // date and time picker for one-time journey
     if (document.querySelector("#date_time")) {
         flatpickr("#date_time", {
             enableTime: true,
@@ -12,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Recurring Dates Picker for Commuting Rides
+    // recurring dates picker for commuting journeys
     if (document.querySelector("#recurrence_dates")) {
         flatpickr("#recurrence_dates", {
             mode: "multiple",
@@ -22,8 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
             disableMobile: false
         });
     }
-
-    // Commute Times Picker for Commuting Rides
+    // commute time picker for commuting journeys
     if (document.querySelector("#commute_times")) {
         flatpickr("#commute_times", {
             enableTime: true,
@@ -34,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Category Selection Logic (Show/Hide Fields Dynamically)
+    // category selection (one-time or commuting)
     const categorySelect = document.getElementById("category");
     const dateTimeDiv = document.getElementById("date_time_div");
     const recurrenceSection = document.getElementById("recurrence_section");
@@ -49,7 +47,16 @@ document.addEventListener("DOMContentLoaded", function () {
         commuteTimesSection.style.display = isOneTime ? "none" : "block";
     }
 
-    // Apply UI updates on page load and on category change
+    // update UI on category change
     updateUI();
     categorySelect?.addEventListener("change", updateUI);
+
+    // price validation
+    const priceInput = document.getElementById("price_per_seat");
+
+    priceInput.addEventListener("input", function () {
+        if (priceInput.value < 1) {
+            priceInput.value = 1;
+        }
+    });
 });
