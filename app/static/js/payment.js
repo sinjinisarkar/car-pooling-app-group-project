@@ -1,15 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Get tab elements
     const savedCardTab = document.getElementById("savedCardTab");
     const manualCardTab = document.getElementById("manualCardTab");
     const savedCardSection = document.getElementById("savedCardSection");
     const manualCardSection = document.getElementById("manualCardSection");
-
-    // Get saved card elements
     const payWithSavedCardButton = document.getElementById("payWithSavedCard");
 
-    // Get manual card form elements
+    // manual card form elements
     const paymentForm = document.getElementById("paymentForm");
     const cardNumberInput = document.getElementById("card_number");
     const expiryInput = document.getElementById("expiry");
@@ -17,12 +14,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const cvvInput = document.getElementById("cvv");
     const saveCardCheckbox = document.getElementById("save_card");
 
-    // Default Tab Selection
+    // default tab
     savedCardTab.classList.add("active");
     savedCardSection.style.display = "block";
     manualCardSection.style.display = "none";
 
-    // Tab Switching
+    // tab switching
     savedCardTab.addEventListener("click", function (event) {
         event.preventDefault();
         savedCardTab.classList.add("active");
@@ -39,19 +36,32 @@ document.addEventListener("DOMContentLoaded", function () {
         manualCardSection.style.display = "block";
     });
 
+    // validation functions for card details
     function isValidExpiryDate(expiry) {
-        const regex = /^(0[1-9]|1[0-2])\/\d{2}$/; // Format: MM/YY
+        const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
         if (!regex.test(expiry)) return false;
 
         const [month, year] = expiry.split("/").map(Number);
         const currentDate = new Date();
-        const currentYear = currentDate.getFullYear() % 100; // Get last two digits of the year
-        const currentMonth = currentDate.getMonth() + 1; // Months are 0-indexed
+        const currentYear = currentDate.getFullYear() % 100;
+        const currentMonth = currentDate.getMonth() + 1;
 
         return year > currentYear || (year === currentYear && month >= currentMonth);
     }
 
-    // Handle Saved Card Payment
+    function isValidCardNumber(cardNumber) {
+        return /^\d{16}$/.test(cardNumber);
+    }
+
+    function isValidCVV(cvv) {
+        return /^\d{3}$/.test(cvv);
+    }
+
+    function isValidCardholderName(name) {
+        return /^[A-Za-z\s]+$/.test(name);
+    }
+
+    // handling payments via saved card option
     payWithSavedCardButton.addEventListener("click", function () {
         const rideId = document.getElementById("ride_id").value;
         const seats = document.getElementById("seats").value;
@@ -89,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
             saved_card_id: selectedCard
         };
 
+        // go to process payment route
         fetch("/process_payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -109,8 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    
-    // Handle Manual Card Payment
+    // handling payment via manual form
     paymentForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -133,17 +143,30 @@ document.addEventListener("DOMContentLoaded", function () {
                 selectedDates = [singleDate];
             }
         }
-
         if (!selectedDates.length) {
             alert("Error: No selected dates found! Please try again.");
             return;
         }
 
+        // checking that all the details are entered valid
         if (!isValidExpiryDate(expiry)) {
             alert("Invalid expiry date. Please enter a valid MM/YY format and ensure the card is not expired.");
             return;
         }
+        if (!isValidCardNumber(cardNumber)) {
+            alert("Invalid card number. Please enter a 16-digit card number.");
+            return;
+        }
+        if (!isValidCVV(cvv)) {
+            alert("Invalid CVV. Please enter a 3-digit CVV.");
+            return;
+        }
+        if (!isValidCardholderName(cardholderName)) {
+            alert("Invalid cardholder name. Only letters and spaces are allowed.");
+            return;
+        }
 
+        // go to process payment route
         const paymentData = {
             ride_id: rideId,
             seats: seats,
