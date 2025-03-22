@@ -3,19 +3,22 @@
 {% block title %}View Available Journeys{% endblock %}
 
 {% block content %}
+
 <div class="container-fluid my-5">
     <div class="row">
+
         <!-- Filtering Sidebar -->
         <div class="col-md-3">
-            <div class="filter-sidebar p-3 rounded shadow">
-                <h5>Filter Journeys</h5>
-                <form id="journeyFilters" class="custom-form">
+            <div class="filter-sidebar p-3">
+                <h5>Sort Journeys by</h5>
+                <br>
+                <form id="journeyFilters">
                     <div class="mb-3">
-                        <label for="filterFrom" class="form-label">From</label>
+                        <label for="filterFrom" class="form-label">From Location</label>
                         <input type="text" class="form-control" id="filterFrom">
                     </div>
                     <div class="mb-3">
-                        <label for="filterTo" class="form-label">To</label>
+                        <label for="filterTo" class="form-label">To Location</label>
                         <input type="text" class="form-control" id="filterTo">
                     </div>
                     <div class="mb-3">
@@ -34,6 +37,7 @@
                         <label for="filterPrice" class="form-label">Max Price (£)</label>
                         <input type="number" class="form-control" id="filterPrice">
                     </div>
+                    <br>
                     <button type="button" id="applyFilters" class="btn btn-base btn-one w-100">Apply Filters</button>
                 </form>
             </div>
@@ -42,94 +46,104 @@
         <!-- Journey Cards -->
         <div class="col-md-9 card-list-container">
             {% if journeys %}
-            <div class="row">
-                {% for journey in journeys %}
-                <div class="col-12 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ journey.from_location }} → {{ journey.to_location }}</h5>
-
-                            <div class="journey-details">
-                                {% if journey.category == "one-time" %}
-                                <div class="detail-item">
-                                    <span class="detail-heading">Date:</span>
-                                    <span>{{ journey.date_time.strftime('%Y-%m-%d') }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-heading">Time:</span>
-                                    <span>{{ journey.date_time.strftime('%H:%M') }}</span>
-                                </div>
-                                {% elif journey.category == "commuting" %}
-                                <div class="detail-item">
-                                    <span class="detail-heading">Commuting Days:</span>
-                                    <ul class="date-list">
-                                        {% for date in journey.recurrence_dates.split(',') %}
-                                        <li>{{ date.strip() }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-heading">Available Time Slots:</span>
-                                    <span>
-                                        {% if journey.commute_times %}
-                                            {{ journey.commute_times | replace(',', ', ') }}
-                                        {% else %}
-                                            N/A
+                <div class="row">
+                    {% for journey in journeys %}
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- card heading with highlighted to and from locations -->
+                                    <div class="journey-title-container">
+                                        <div class="from">
+                                            <strong>{{ journey.from_location.split(',')[0] }}</strong>{{ journey.from_location.replace(journey.from_location.split(',')[0], '') }}
+                                        </div>
+                                        <div class="arrow">→</div>
+                                        <div class="to">
+                                            <strong>{{ journey.to_location.split(',')[0] }}</strong>{{ journey.to_location.replace(journey.to_location.split(',')[0], '') }}
+                                        </div>
+                                    </div>
+                                    <!-- journey details -->
+                                    <div class="journey-details">
+                                        {% if journey.category == "one-time" %}
+                                            <div class="detail-item">
+                                                <span class="detail-heading">Date:</span>
+                                                <span>{{ journey.date_time.strftime('%Y-%m-%d') }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-heading">Time:</span>
+                                                <span>{{ journey.date_time.strftime('%H:%M') }}</span>
+                                            </div>
+                                        {% elif journey.category == "commuting" %}
+                                            <div class="detail-item">
+                                                <span class="detail-heading">Commuting Days:</span>
+                                                <ul class="date-list">
+                                                    {% for date in journey.recurrence_dates.split(',') %}
+                                                    <li>{{ date.strip() }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-heading">Available Time Slots:</span>
+                                                <span>
+                                                    {% if journey.commute_times %}
+                                                        {{ journey.commute_times | replace(',', ', ') }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
+                                            </div>
                                         {% endif %}
-                                    </span>
-                                </div>
-                                {% endif %}
 
-                                <div class="detail-item">
-                                    <span class="detail-heading">Available Seats:</span>
-                                    <span>{{ journey.seat_tracking.values() | max if journey.seat_tracking else 0 }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-heading">Price per Seat:</span>
-                                    <span>£{{ journey.price_per_seat }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-heading">Driver:</span>
-                                    <span>{{ journey.driver_name }}</span>
-                                </div>
-                            </div>
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Available Seats:</span>
+                                            <span>{{ journey.seat_tracking.values() | max if journey.seat_tracking else 0 }}</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Price per Seat:</span>
+                                            <span>£{{ journey.price_per_seat }}</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Driver:</span>
+                                            <span>{{ journey.driver_name }}</span>
+                                        </div>
+                                    </div>
 
-                            <div class="text-center mt-3">
-                                {% if user and journey.user_has_booked %}
-                                    {% if journey.category == "one-time" %}
-                                        <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
-                                    {% elif journey.category == "commuting" %}
-                                        <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
-                                    {% endif %}
-                                    <button type="submit" class="btn btn-base btn-green">Rebook</button>
-                                </form>
-                                {% else %}
-                                    {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
-                                        {% if user.is_authenticated %}
+                                    <div class="text-center mt-3">
+                                        {% if user and journey.user_has_booked %}
                                             {% if journey.category == "one-time" %}
                                                 <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
                                             {% elif journey.category == "commuting" %}
                                                 <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
                                             {% endif %}
-                                            <button type="submit" class="btn btn-base btn-one">Book</button>
+                                            <button type="submit" class="btn btn-base btn-green">Rebook</button>
                                         </form>
                                         {% else %}
-                                        <a href="{{ url_for('login') }}" class="btn btn-base btn-blue" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Log in to Book</a>
+                                            {% if journey.seat_tracking and journey.seat_tracking.values() | max > 0 %}
+                                                {% if user.is_authenticated %}
+                                                    {% if journey.category == "one-time" %}
+                                                        <form action="{{ url_for('book_onetime', ride_id=journey.id) }}" method="get">
+                                                    {% elif journey.category == "commuting" %}
+                                                        <form action="{{ url_for('book_commuting', ride_id=journey.id) }}" method="get">
+                                                    {% endif %}
+                                                    <button type="submit" class="btn btn-base btn-one">Book</button>
+                                                </form>
+                                                {% else %}
+                                                    <a href="{{ url_for('login') }}" class="btn btn-base btn-blue" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Log in to Book</a>
+                                                {% endif %}
+                                            {% else %}
+                                                <button class="btn btn-base btn-red" disabled>Fully Booked</button>
+                                            {% endif %}
                                         {% endif %}
-                                    {% else %}
-                                    <button class="btn btn-base btn-red" disabled>Fully Booked</button>
-                                    {% endif %}
-                                {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
             {% else %}
-            <p class="text-center mt-4">No journeys available at the moment.</p>
+                <p class="text-center mt-4">No journeys available at the moment.</p>
             {% endif %}
-        </div> <!-- End of journey cards column -->
-    </div> <!-- End of row -->
-</div> <!-- End of container-fluid -->
+        </div> 
+    </div>
+</div>
+
 {% endblock %}
