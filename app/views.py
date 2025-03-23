@@ -924,12 +924,28 @@ def filter_journeys():
 # Store live locations in memory (Consider using a database for production)
 live_locations = {}
 
-# ✅ Route to display the pickup location map
 @app.route('/view_pickup/<int:ride_id>', methods=['GET'])
 @login_required
 def view_pickup(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
-    return render_template("view_pickup.html", ride_id=ride_id, user=current_user)
+
+    # ✅ Check if the current user has a booking for this ride
+    booking = book_ride.query.filter_by(ride_id=ride_id, user_id=current_user.id).first()
+    is_passenger = booking is not None
+
+    # ✅ Check if current user is the driver
+    is_driver = (ride.driver_id == current_user.id)
+
+    # 🧠 Now decide which view to show
+    if is_passenger and not is_driver:
+        return render_template("pickup_passenger.html", ride_id=ride_id)
+    elif is_driver and not is_passenger:
+        return render_template("pickup_driver.html", ride_id=ride_id)
+    elif is_passenger and is_driver:
+        return render_template("pickup_passenger.html", ride_id=ride_id)
+    else:
+        return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
+
 
 # ✅ API to get pickup location for a ride
 @app.route('/api/get_pickup_location/<int:ride_id>', methods=['GET'])

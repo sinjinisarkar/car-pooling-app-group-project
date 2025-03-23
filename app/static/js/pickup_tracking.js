@@ -25,13 +25,14 @@ document.addEventListener("DOMContentLoaded", function () {
      * Function to send live location to backend (for both passenger & driver)
      */
     function updateLocation(role) {
+        console.log(`Updating location for role: ${role}`); // 👈 Add this
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
                 let lat = position.coords.latitude;
                 let lon = position.coords.longitude;
-
+    
                 let apiEndpoint = role === "passenger" ? "/api/track_passenger_location" : "/api/track_driver_location";
-
+    
                 // Send location update to backend
                 fetch(apiEndpoint, {
                     method: "POST",
@@ -42,16 +43,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     console.log(`${role} location updated:`, data.message);
                     document.getElementById("status-message").innerText = data.message;
-
-                    // Update the correct marker
+    
+                    // Update or create marker
                     if (role === "passenger") {
-                        if (passengerMarker) passengerMarker.remove();
-                        passengerMarker = L.marker([lat, lon], { icon: passengerIcon }).addTo(map)
-                            .bindPopup("Your location").openPopup();
+                        if (passengerMarker) {
+                            passengerMarker.setLatLng([lat, lon]);
+                        } else {
+                            passengerMarker = L.marker([lat, lon], { icon: passengerIcon }).addTo(map)
+                                .bindPopup("Your location").openPopup();
+                        }
                     } else {
-                        if (driverMarker) driverMarker.remove();
-                        driverMarker = L.marker([lat, lon], { icon: driverIcon }).addTo(map)
-                            .bindPopup("Driver's location").openPopup();
+                        if (driverMarker) {
+                            driverMarker.setLatLng([lat, lon]);
+                        } else {
+                            driverMarker = L.marker([lat, lon], { icon: driverIcon }).addTo(map)
+                                .bindPopup("Driver's location").openPopup();
+                        }
                     }
                 });
             });
@@ -91,45 +98,89 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch(`/api/get_live_locations/${rideId}`)
             .then(response => response.json())
             .then(data => {
+                console.log("Live locations response:", data);
+                // Clear old markers (optional, based on how you're managing updates)
+                if (passengerMarker) {
+                    map.removeLayer(passengerMarker);
+                    passengerMarker = null;
+                }
+                if (driverMarker) {
+                    map.removeLayer(driverMarker);
+                    driverMarker = null;
+                }
+    
+                let passengerLatLng = null;
+                let driverLatLng = null;
+    
+                // 🧍 Passenger Marker
                 if (data.passenger) {
-                    if (passengerMarker) passengerMarker.remove();
-                    passengerMarker = L.marker([data.passenger[0], data.passenger[1]], { icon: passengerIcon })
+                    let [pLat, pLon] = data.passenger;
+    
+                    // Check if overlapping with driver
+                    if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
+                        // Slight offset to visually distinguish
+                        pLat += 0.00005;
+                        pLon += 0.00005;
+                    }
+    
+                    passengerLatLng = [pLat, pLon];
+                    const passengerPopup = userType === "passenger" ? "Your location" : "Passenger's location";
+                    passengerMarker = L.marker(passengerLatLng, { icon: passengerIcon })
                         .addTo(map)
-                        .bindPopup("Passenger's Location")
+                        .bindPopup(passengerPopup)
                         .openPopup();
                 }
-
+    
+                // 🚗 Driver Marker
                 if (data.driver) {
-                    if (driverMarker) driverMarker.remove();
-                    driverMarker = L.marker([data.driver[0], data.driver[1]], { icon: driverIcon })
+                    const [dLat, dLon] = data.driver;
+                    driverLatLng = [dLat, dLon];
+                    const driverPopup = userType === "driver" ? "Your location" : "Driver's location";
+                    driverMarker = L.marker(driverLatLng, { icon: driverIcon })
                         .addTo(map)
-                        .bindPopup("Driver's Location")
+                        .bindPopup(driverPopup)
                         .openPopup();
                 }
-
+    
+                // 🔍 Fit both markers in view
+                if (driverMarker && passengerMarker) {
+                    const group = new L.featureGroup([driverMarker, passengerMarker]);
+                    map.fitBounds(group.getBounds().pad(0.3));
+                }
+    
+                // 💡 Alert if they're nearby
                 if (data.nearby) {
                     alert("Driver and passenger are close to each other!");
                 }
-            });
+            })
+            .catch(error => console.error("Error fetching live locations:", error));
     }
+    
 
     // Fix Leaflet map rendering issue
     setTimeout(() => {
         map.invalidateSize();
     }, 500);
 
-    // Update location every 30 seconds & fetch live locations
     if (userType === "passenger") {
+        updateLocation("passenger");
+        setTimeout(fetchLiveLocations, 1500); // Delay to allow backend to store location
+    
         setInterval(() => {
             updateLocation("passenger");
-            fetchLiveLocations(); // Fetch both driver & passenger locations
-        }, 30000);
+            fetchLiveLocations();
+        }, 10000);
     } else if (userType === "driver") {
+        console.log("Driver detected");
+        updateLocation("driver");
+        setTimeout(fetchLiveLocations, 1500); // Delay to allow backend to store location
+    
         setInterval(() => {
             updateLocation("driver");
-            fetchLiveLocations(); // Fetch both driver & passenger locations
-        }, 30000);
+            fetchLiveLocations();
+        }, 10000);
     }
+    
 
     // Tab Switching in dashboard
     let upcomingBtn = document.getElementById("showUpcoming");
