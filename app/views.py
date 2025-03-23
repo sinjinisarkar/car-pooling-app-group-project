@@ -1044,3 +1044,19 @@ def get_coordinates_from_address(address):
             lon = float(data[0]["lon"])
             return lat, lon
     return None, None
+
+# Route for Journey Status
+@app.route("/api/start_journey", methods=["POST"])
+@login_required
+def start_journey():
+    data = request.json
+    ride_id = data.get("ride_id")
+
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    if ride.driver_id != current_user.id:
+        return jsonify({"error": "Only the driver can start the journey"}), 403
+
+    ride.status = "ongoing"  # Make sure this column exists in your model!
+    db.session.commit()
+    return jsonify({"message": "Journey started!"}), 200

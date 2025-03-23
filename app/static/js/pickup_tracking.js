@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("✅ pickup_tracking.js loaded");
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
     let map = L.map("map").setView([51.505, -0.09], 13); // Default view
+    let modalShown = false;
 
     // Add OpenStreetMap Tile Layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -148,9 +150,43 @@ document.addEventListener("DOMContentLoaded", function () {
                     map.fitBounds(group.getBounds().pad(0.3));
                 }
     
-                // 💡 Alert if they're nearby
-                if (data.nearby) {
-                    alert("Driver and passenger are close to each other!");
+                // Show modal if driver and passenger are nearby (driver only)
+                if (data.nearby && userType === "driver" && !modalShown) {
+                    const modal = document.getElementById("startJourneyModal");
+                    const closeBtn = document.getElementById("closeModalBtn");
+                    const startBtn = document.getElementById("startJourneyBtn");
+
+                    console.log("Nearby detected! Showing modal...");
+                    modal.style.display = "block";
+                    // Move modalShown = true ONLY inside the Start button click
+
+                    if (closeBtn) {
+                        closeBtn.addEventListener("click", () => {
+                            modal.style.display = "none";
+                            console.log("Modal closed");
+                        });
+                    }
+
+                    if (startBtn) {
+                        startBtn.addEventListener("click", () => {
+                            console.log("Start Journey clicked");
+                            fetch("/api/start_journey", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ride_id: rideId })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                alert(data.message || "Journey started!");
+                                modal.style.display = "none";
+                                modalShown = true;
+                            })
+                            .catch(err => {
+                                alert("Something went wrong.");
+                                console.error(err);
+                            });
+                        });
+                    }
                 }
             })
             .catch(error => console.error("Error fetching live locations:", error));
