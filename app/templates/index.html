@@ -11,9 +11,9 @@
 <!-- Separate Search Container for Better Positioning -->
 <div class="search-container-banner">
     <div class="banner-search">
-        <input type="text" id="bannerSearchFrom" placeholder="Leaving from" class="form-control">
-        <input type="text" id="bannerSearchTo" placeholder="Going to" class="form-control">
-        <input type="text" id="bannerSearchDate" placeholder="Date" class="form-control">
+        <input type="text" id="bannerSearchFrom" placeholder="Leaving from" class="form-control" autocomplete="off">
+        <input type="text" id="bannerSearchTo" placeholder="Going to" class="form-control" autocomplete="off">
+        <input type="text" id="bannerSearchDate" placeholder="Date" class="form-control" autocomplete="off">
         <select id="bannerSearchPassengers" class="form-control">
             <option value="" disabled selected>Passengers</option>
             <option value="1">1</option>
@@ -30,7 +30,7 @@
 </div>
 
 <!-- Ride Options -->
-<div class="container text-center my-4 btn-container" id="rideOptions">
+<div class="container text-center my-4 btn-container">
     <a href="{{ url_for('view_journeys') }}" class="btn btn-base btn-one btn-lg">Find a Ride</a>
 
     {% if current_user.is_authenticated %}
