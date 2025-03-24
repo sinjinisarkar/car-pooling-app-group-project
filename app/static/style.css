@@ -445,6 +445,7 @@ select.form-control {
     background-color: #f0f0f0;
 }
 
+
 #map {
     height: 400px; /* You can increase the height if needed */
     width: 100%;
@@ -452,9 +453,11 @@ select.form-control {
 }
 
 /* Modal styling for start journey */
+
+
 .modal {
     position: fixed;
-    z-index: 1050; /* Boost z-index above map */
+    z-index: 1050;
     left: 0;
     top: 0;
     width: 100%;
@@ -479,4 +482,4 @@ select.form-control {
     font-weight: bold;
     color: #aaa;
     cursor: pointer;
-}
+} 
