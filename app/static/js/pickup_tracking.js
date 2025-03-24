@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let map = L.map("map").setView([51.505, -0.09], 13); // Default view
     let modalShown = false;
     let pickupAdjusted = false;
+    let journeyStarted = false;
 
     // Add OpenStreetMap Tile Layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -152,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
     
                 // Show modal if driver and passenger are nearby (driver only)
-                if (data.nearby && userType === "driver" && !modalShown) {
+                if (data.nearby && userType === "driver" && !modalShown && !journeyStarted) {
                     const modal = document.getElementById("startJourneyModal");
                     const closeBtn = document.getElementById("closeModalBtn");
                     const startBtn = document.getElementById("startJourneyBtn");
@@ -164,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (closeBtn) {
                         closeBtn.addEventListener("click", () => {
                             modal.style.display = "none";
-                            console.log("Modal closed");
+                            modalShown = true;
                         });
                     }
 
@@ -178,9 +179,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             })
                             .then(res => res.json())
                             .then(data => {
-                                alert(data.message || "Journey started!");
+                                document.getElementById("status-message").innerText = data.message || "Journey started!";
                                 modal.style.display = "none";
                                 modalShown = true;
+                                journeyStarted = true;
                             })
                             .catch(err => {
                                 alert("Something went wrong.");
