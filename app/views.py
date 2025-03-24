@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, LiveLocation
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
@@ -1009,3 +1009,22 @@ def start_journey():
     ride.status = "ongoing"  # Make sure this column exists in your model!
     db.session.commit()
     return jsonify({"message": "Journey started!"}), 200
+
+@app.route('/api/update_passenger_pickup_location', methods=['POST'])
+@login_required
+def update_passenger_pickup_location():
+    data = request.json
+    ride_id = data.get('ride_id')
+    lat = data.get('latitude')
+    lon = data.get('longitude')
+
+    print(f"📥 Received update pickup request: ride_id={ride_id}, lat={lat}, lon={lon}")
+
+    # Validate inputs
+    if ride_id is None or lat is None or lon is None:
+        return jsonify({"error": "Missing ride_id or coordinates."}), 400
+
+    # ✅ Update the live location dictionary directly
+    live_locations[f"passenger_{ride_id}"] = (lat, lon)
+    print(f"✅ Updated pickup location for ride_id={ride_id}")
+    return jsonify({"message": "Pickup location updated."}), 200

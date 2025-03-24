@@ -8,6 +8,18 @@
     <input type="hidden" id="ride-id" value="{{ ride_id }}">
     <input type="hidden" id="user-type" value="passenger">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
+
+    <!-- Leaflet Map -->
     <div id="map" style="height: 400px;"></div>
+
+    <!-- Adjust Pickup Modal -->
+    <div id="adjustPickupModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span id="closeAdjustModal" class="close">&times;</span>
+            <h4>Driver is far away</h4>
+            <p>Would you like to adjust your pickup location?</p>
+            <button id="adjustPickupBtn" class="btn btn-warning">Adjust on Map</button>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
     let map = L.map("map").setView([51.505, -0.09], 13); // Default view
     let modalShown = false;
+    let pickupAdjusted = false;
 
     // Add OpenStreetMap Tile Layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -188,6 +189,84 @@ document.addEventListener("DOMContentLoaded", function () {
                         });
                     }
                 }
+
+                // Show pickup adjust modal if driver is FAR and user is passenger
+                if (
+                    userType === "passenger" &&
+                    data.passenger &&
+                    data.driver &&
+                    !pickupAdjusted &&
+                    !modalShown
+                  ) {
+                    console.log("Showing pickup adjust modal for testing...");
+                    modalShown = true;
+                  
+                    const adjustModal = document.getElementById("adjustPickupModal");
+                    const adjustBtn = document.getElementById("adjustPickupBtn");
+                    const closeBtn = document.getElementById("closeAdjustModal");
+                  
+                    adjustModal.style.display = "block";
+                  
+                    if (closeBtn) {
+                      closeBtn.addEventListener("click", () => {
+                        adjustModal.style.display = "none";
+                      });
+                    }
+                  
+                    if (adjustBtn) {
+                      adjustBtn.addEventListener("click", () => {
+                        adjustModal.style.display = "none";
+                  
+                        alert("Click on the map to set your pickup location.");
+                        let tempMarker;
+                        let adjusting = true;
+                  
+                        map.on("click", function (e) {
+                          if (!adjusting) return;
+                  
+                          if (tempMarker) {
+                            map.removeLayer(tempMarker);
+                          }
+                  
+                          const { lat, lng } = e.latlng;
+                          const newPickupIcon = L.icon({
+                            iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854878.png", // Different icon
+                            iconSize: [30, 30]
+                        });
+                        
+                        tempMarker = L.marker([lat, lng], {
+                            icon: newPickupIcon,
+                            draggable: true
+                        }).addTo(map).bindPopup("New Pickup: drag and double-click to confirm").openPopup();
+                  
+                        tempMarker.on("dblclick", () => {
+                            const newCoords = tempMarker.getLatLng();
+                            sendUpdatedPickup(newCoords.lat, newCoords.lng);
+                            adjusting = false;
+                            // map.removeLayer(tempMarker);
+                            map.off("click");
+                          });
+                        });
+                  
+                        function sendUpdatedPickup(lat, lon) {
+                          fetch("/api/update_passenger_pickup_location", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ ride_id: rideId, latitude: lat, longitude: lon })
+                          })
+                            .then(res => res.json())
+                            .then(data => {
+                              alert(data.message || "Pickup location updated.");
+                              pickupAdjusted = true;
+                            })
+                            .catch(err => {
+                              alert("Error updating pickup location.");
+                              console.error(err);
+                            });
+                        }
+                      });
+                    }
+                  }
             })
             .catch(error => console.error("Error fetching live locations:", error));
     }
@@ -241,5 +320,4 @@ document.addEventListener("DOMContentLoaded", function () {
         upcomingBtn.classList.remove("active");
     });
 
-    
 });
