@@ -43,7 +43,7 @@ hr {
 }
 
 .navbar {
-    background-color: #e6d6fc !important;
+    background-color: #e6d6fc;
     text-align: center;
     padding: 10px 0;
 }
@@ -171,6 +171,8 @@ hr {
 }
 
 .btn-container {
+    position: relative;
+    margin-top: 90px !important;
     display: flex;
     justify-content: center;
     gap: 60px;
@@ -182,7 +184,7 @@ hr {
 .dropdown-menu {
     border: none;
     border-radius: 10px;
-    background-color: #fff;
+    background-color: white;
     box-shadow: 3px 4px 0px #855bbe;
     min-width: max-content;
 }
@@ -228,16 +230,56 @@ hr {
     transition: transform 0.2s ease-in-out;
 }
 
-.card-title {
-    font-weight: 700;
+.card-list-container {
+    max-height: 80vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+}
+
+.card-title { /* remove this after editing the cards everywhere */
+    font-weight: 400;
     color: #1f1d21;
     text-align: center;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     margin-bottom: 25px;
 }
 
 .card .text-center {
     margin-top: 15px;
+}
+
+.journey-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #1f1d21;
+    margin-bottom: 25px;
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+    gap: 1rem;
+}
+
+.journey-title-container .from {
+    flex: 1;
+    text-align: left;
+}
+
+.journey-title-container .to {
+    flex: 1;
+    text-align: right;
+}
+
+.journey-title-container .arrow {
+    width: 40px;
+    text-align: center;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .journey-details {
@@ -265,15 +307,8 @@ hr {
     font-weight: 600;
 }
 
-.card-list-container {
-    max-height: 80vh;  /* Adjust as needed */
-    overflow-y: auto;   /* Enables scrolling */
-    padding-right: 10px; /* Prevents scrollbar from covering content */
-}
 
-
-/* ---------------------------------------- Form styling ---------------------------------------- */
-/* ---------------------------------------- Publish Ride Form Styling ---------------------------------------- */
+/* ---------------------------------------- Custom Form Class Styling ---------------------------------------- */
 .custom-form {
     border-radius: 22px;
     box-shadow: 5px 6px 0px #855bbe;
@@ -289,55 +324,40 @@ hr {
     box-shadow: 1px 2px 0px #855bbe;
 }
 
+.filter-sidebar input:focus,
+.filter-sidebar select:focus,
+.filter-sidebar input:active,
+.filter-sidebar select:active {
+    transition: border-color 0.3s ease-in-out;
+    border-color: #855bbe;
+    box-shadow: 1px 2px 0px #855bbe;
+}
+
+
 /* ---------------------------------------- Banner Search Form Styling ---------------------------------------- */
-/* Search Container Styling */
+
+/* banner general */
 .search-container-banner {
     position: relative;
 }
 
-/* Main Search Form */
 .banner-search {
     position: absolute;
     top: -50px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 0; 
-    padding: 10px;
-    border-radius: 25px;
-    background-color: #fff;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    width: 80%; /* Make it broader */
-    justify-content: space-between;
     align-items: center;
+    width: 80%;
+    padding: 10px;
+    background-color: white;
+    border-radius: 25px;
+    box-shadow: 0px 2px 10px rgba(133, 91, 190, 0.5);
+    z-index: 10;
 }
 
-/* Styling Inputs and Selects */
-.banner-search input,
-.banner-search select {
-    padding: 15px;
-    flex: 1;
-    border: none;
-    outline: none;
-    border-radius: 0;
-    font-size: 1rem;
-}
-
-/* Add subtle placeholder color */
-.banner-search input::placeholder,
-.banner-search select {
-    color: #6c757d;
-}
-
-/* Add dividing borders between inputs */
-.banner-search input:not(:last-child),
-.banner-search select:not(:last-child) {
-    border-right: 1px solid #e0e0e0;
-}
-
-/* Styling for the Search Button */
-.banner-search button {
+/* banner search button */
+#bannerSearchButton {
     padding: 15px 30px;
     background-color: #855bbe;
     color: #fff;
@@ -348,101 +368,87 @@ hr {
     transition: background-color 0.3s ease;
 }
 
-.banner-search button:hover {
-    background-color: #ba92f2;
+#bannerSearchButton:hover {
+    background-color: #e6d6fc;
+    color: #855bbe;
 }
 
-/* Rounded left corner for the first input */
-.banner-search input:first-child {
-    border-radius: 25px 0 0 25px;
+/* banner input and select */
+.banner-search input,
+.banner-search input:focus,
+.banner-search input:active,
+.banner-search select,
+.banner-search select:focus,
+.banner-search select:active {
+    flex: 1;
+    padding: 15px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
 }
 
-/* ---------------------------------------- Journey Filter Forms Styling ---------------------------------------- */
-.journey-filters input:focus,
-.journey-filters select:focus,
-.journey-filters input:active,
-.journey-filters select:active {
-    transition: border-color 0.3s ease-in-out;
-    border-color: #855bbe;
-    box-shadow: 1px 2px 0px #855bbe;
+.banner-search input::placeholder {
+    color: #857d8c;
 }
 
-/* ---------------------------------------- Position the ride options buttons ---------------------------------------- */
-#rideOptions {
-    position: relative;
-    margin-top: 90px !important;  
-    display: flex !important;
-    justify-content: center !important;
-    gap: 60px !important;
+.banner-search input:not(:last-child),
+#bannerSearchPassengers:not(:last-child) {
+    border-right: 1px solid #e0e0e0;
 }
 
-
-
-select option[disabled] {
-    color: #999;  /* Light color to indicate it's a placeholder */
+.flatpickr-input {
+    background-color: transparent !important;
 }
 
-select {
-    color: #555;  /* Normal text color for selected options */
-}
-
-select.form-control {
+/* banner select dropdown */
+#bannerSearchPassengers {
+    color: #857d8c;
     border: none;
     background: transparent;
-    color: #555;
     font-size: 16px;
     padding: 5px 10px 10px;
     width: 100%;
     outline: none;
     appearance: none;
-    
-}
-
-/* Optional: Placeholder style for better visibility */
-select option[disabled] {
-    color: #999;
-}
-
-/* Remove focus outline */
-select.form-control:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-/* Customizing the arrow for the dropdown */
-select.form-control {
     background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23855bbe" class="bi bi-caret-down-fill" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658A.5.5 0 0 1 2.88 5h10.24a.5.5 0 0 1 .429.758l-4.796 5.482a.5.5 0 0 1-.754 0z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 12px;
 }
 
-
-/* ---------------------------------------- Search Autocomplete ---------------------------------------- */
-/* Style for the autocomplete suggestions container */
-.autocomplete-suggestions {
-    position: absolute;
-    top: 100%;  /* Position directly below the input */
-    left: 0;
-    width: 100%;  /* Match input width */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-    z-index: 1000;
-    max-height: 200px;
-    overflow-y: auto;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+#bannerSearchPassengers:focus {
+    outline: none;
+    box-shadow: none;
 }
 
-/* Style for each suggestion item */
+/* banner search autocomplete */
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    background: white;
+    border-radius: 25px;
+    z-index: 1000;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(133, 91, 190, 0.2);
+    scrollbar-gutter: stable;
+}
+
+.autocomplete-suggestions::-webkit-scrollbar {
+    border-radius: 25px;
+}
+
 .autocomplete-suggestion {
     padding: 10px;
     cursor: pointer;
 }
 
-/* Highlight suggestion on hover */
 .autocomplete-suggestion:hover {
-    background-color: #f0f0f0;
+    background-color: #e6d6fc;
 }
 
 
@@ -483,3 +489,4 @@ select.form-control {
     color: #aaa;
     cursor: pointer;
 } 
+   
