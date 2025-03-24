@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2><strong>Pickup Location</strong></h2>
+    <h3>Driver's View</h3>
+    <p class="text-muted">You're tracking the passenger's location.</p>
+
+    <input type="hidden" id="ride-id" value="{{ ride_id }}">
+    <input type="hidden" id="user-type" value="driver">
+    <p id="status-message" class="alert alert-info">Tracking your location...</p>
+
+     <!-- Map -->
+    <div id="map" style="height: 400px;"></div>
+
+    <!-- Modal -->
+    <div id="startJourneyModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="closeModalBtn" class="close" >&times;</span>
+            <h4>Passenger is nearby</h4>
+            <p>Would you like to start the journey now?</p>
+            <button id="startJourneyBtn" class="btn btn-success">Start Journey</button>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,13 +1,15 @@
-import os, json, sys, re
+import os, json, sys, re, requests
 from flask import render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, LiveLocation
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
 from flask_mail import Message
+from geopy.distance import geodesic
+
 
 
 # Route for home page
@@ -865,3 +867,164 @@ def filter_journeys():
                 })
 
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
+
+
+# ID 14 here:
+# Store live locations in memory (Consider using a database for production)
+live_locations = {}
+
+@app.route('/view_pickup/<int:ride_id>', methods=['GET'])
+@login_required
+def view_pickup(ride_id):
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    # ✅ Check if the current user has a booking for this ride
+    booking = book_ride.query.filter_by(ride_id=ride_id, user_id=current_user.id).first()
+    is_passenger = booking is not None
+
+    # ✅ Check if current user is the driver
+    is_driver = (ride.driver_id == current_user.id)
+
+    # 🧠 Now decide which view to show
+    if is_passenger and not is_driver:
+        return render_template("pickup_passenger.html", ride_id=ride_id)
+    elif is_driver and not is_passenger:
+        return render_template("pickup_driver.html", ride_id=ride_id)
+    elif is_passenger and is_driver:
+        return render_template("pickup_passenger.html", ride_id=ride_id)
+    else:
+        return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
+
+
+# ✅ API to get pickup location for a ride
+@app.route('/api/get_pickup_location/<int:ride_id>', methods=['GET'])
+@login_required
+def get_pickup_location(ride_id):
+    ride = publish_ride.query.get_or_404(ride_id)
+    return jsonify({"from_location": ride.from_location}), 200
+
+# ✅ Passenger Updates Their Location
+@app.route('/api/track_passenger_location', methods=['POST'])
+@login_required
+def track_passenger_location():
+    data = request.json
+    ride_id = data.get("ride_id")
+    lat = data.get("latitude")
+    lon = data.get("longitude")
+
+    if not ride_id or not lat or not lon:
+        return jsonify({"error": "Invalid data"}), 400
+
+    live_locations[f"passenger_{ride_id}"] = (lat, lon)
+    return jsonify({"message": "Passenger location updated"}), 200
+
+# ✅ Driver Updates Their Location
+@app.route('/api/track_driver_location', methods=['POST'])
+@login_required
+def track_driver_location():
+    data = request.json
+    ride_id = data.get("ride_id")
+    lat = data.get("latitude")
+    lon = data.get("longitude")
+
+    if not ride_id or not lat or not lon:
+        return jsonify({"error": "Invalid data"}), 400
+
+    live_locations[f"driver_{ride_id}"] = (lat, lon)
+    return jsonify({"message": "Driver location updated"}), 200
+
+# ✅ Fetch Both Passenger & Driver Live Locations
+@app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
+@login_required
+def get_live_locations(ride_id):
+    passenger_loc = live_locations.get(f"passenger_{ride_id}")
+    driver_loc = live_locations.get(f"driver_{ride_id}")
+
+    if not passenger_loc and not driver_loc:
+        return jsonify({"error": "No location data available"}), 404
+
+    # Check if they are within 100 meters
+    nearby = False
+    if passenger_loc and driver_loc:
+        distance = geodesic(passenger_loc, driver_loc).meters
+        if distance <= 100:
+            nearby = True
+
+    return jsonify({
+        "passenger": passenger_loc,
+        "driver": driver_loc,
+        "nearby": nearby
+    })
+
+# ✅ API to track if passenger reached pickup point
+@app.route('/api/check_arrival', methods=['POST'])
+@login_required
+def check_arrival():
+    data = request.json
+    ride_id = data.get("ride_id")
+    user_lat = data.get("latitude")
+    user_lon = data.get("longitude")
+
+    ride = publish_ride.query.get_or_404(ride_id)
+    pickup_lat, pickup_lon = get_coordinates_from_address(ride.from_location)
+
+    if not pickup_lat or not pickup_lon:
+        return jsonify({"error": "Invalid pickup location"}), 400
+
+    # Calculate distance to pickup point
+    passenger_location = (user_lat, user_lon)
+    pickup_location = (pickup_lat, pickup_lon)
+    distance = geodesic(passenger_location, pickup_location).meters
+
+    if distance <= 50:  # Within 50 meters
+        return jsonify({"arrived": True, "message": "You have arrived at the pickup location!"})
+    else:
+        return jsonify({"arrived": False, "message": "Keep moving towards the pickup location."})
+
+# ✅ Helper Function to Get Coordinates (Uses OpenStreetMap Nominatim)
+def get_coordinates_from_address(address):
+    url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
+    response = requests.get(url, headers={"User-Agent": "CatchMyRide/1.0"})
+
+    if response.status_code == 200:
+        data = response.json()
+        if len(data) > 0:
+            lat = float(data[0]["lat"])
+            lon = float(data[0]["lon"])
+            return lat, lon
+    return None, None
+
+# Route for Journey Status
+@app.route("/api/start_journey", methods=["POST"])
+@login_required
+def start_journey():
+    data = request.json
+    ride_id = data.get("ride_id")
+
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    if ride.driver_id != current_user.id:
+        return jsonify({"error": "Only the driver can start the journey"}), 403
+
+    ride.status = "ongoing"  # Make sure this column exists in your model!
+    db.session.commit()
+    return jsonify({"message": "Journey started!"}), 200
+
+@app.route('/api/update_passenger_pickup_location', methods=['POST'])
+@login_required
+def update_passenger_pickup_location():
+    data = request.json
+    ride_id = data.get('ride_id')
+    lat = data.get('latitude')
+    lon = data.get('longitude')
+
+    print(f"📥 Received update pickup request: ride_id={ride_id}, lat={lat}, lon={lon}")
+
+    # Validate inputs
+    if ride_id is None or lat is None or lon is None:
+        return jsonify({"error": "Missing ride_id or coordinates."}), 400
+
+    # ✅ Update the live location dictionary directly
+    live_locations[f"passenger_{ride_id}"] = (lat, lon)
+    print(f"✅ Updated pickup location for ride_id={ride_id}")
+    return jsonify({"message": "Pickup location updated."}), 200

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let refundMessage = "";
             if (timeDifference < 15) {
+                console.log("time diff is less than 15 ", timeDifference);
                 const cancellationFee = (price * 0.75).toFixed(2);
                 const refundAmount = (price - cancellationFee).toFixed(2);
                 refundMessage = `Alert!! If you cancel now, you will be charged a 75% cancellation fee (£${cancellationFee}). Refund: £${refundAmount}.`;
