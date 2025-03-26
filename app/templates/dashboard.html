@@ -3,7 +3,9 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4 text-center">Welcome, {{ user.username }}!</h2>
+    <br>
     <div class="row">
+
         <!-- Sidebar -->
         <div class="col-md-3">
             <div class="list-group">
@@ -15,6 +17,7 @@
         
         <!-- Content Area -->
         <div class="col-md-9">
+
             <!-- Upcoming Journeys Section -->
             <div id="upcomingSection" class="mb-4">
                 <h4>Upcoming Journeys</h4>
@@ -23,20 +26,18 @@
                         {% for journey in upcoming_journeys %}
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
-                                <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
+                                <h5 class="card-title">{{ journey.from.split(',')[0] }} ➝ {{ journey.to.split(',')[0] }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
                                 <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
-                                        <button class="btn btn-base btn-red cancel-btn" data-booking-id="{{ journey.booking_id }}" 
+                                        <button class="btn btn-base btn-red cancel-btn btn-block" data-booking-id="{{ journey.booking_id }}" 
                                                 data-price="{{ journey.price }}" data-date="{{ journey.date }}">
                                             Cancel
                                         </button>
-
-                                        <!-- View Pickup Location for Passenger -->
-                                        <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-primary mt-2">
+                                        <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-base btn-one mt-2 btn-block">
                                             View Pickup Location
                                         </a>
                                         
@@ -65,7 +66,7 @@
                         {% for journey in inactive_journeys %}
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
-                                <h5 class="card-title">{{ journey.from }} ➝ {{ journey.to }}</h5>
+                                <h5 class="card-title">{{ journey.from.split(',')[0] }} ➝ {{ journey.to.split(',')[0] }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ journey.date }}</p>
                                 <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
@@ -91,7 +92,7 @@
                         {% for ride in published_rides.one_time %}
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
-                                <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
+                                <h5 class="card-title">{{ ride.from.split(',')[0] }} ➝ {{ ride.to.split(',')[0] }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ ride.date }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
@@ -136,9 +137,9 @@
                 {% if published_rides.commuting %}
                     <div class="row">
                         {% for ride in published_rides.commuting %}
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
                             <div class="card p-3">
-                                <h5 class="card-title">{{ ride.from }} ➝ {{ ride.to }}</h5>
+                                <h5 class="card-title">{{ ride.from.split(',')[0] }} ➝ {{ ride.to.split(',')[0] }}</h5>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price per Seat:</span> £{{ ride.price }}</p>
                                 
