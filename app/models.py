@@ -143,3 +143,13 @@ class SavedCard(db.Model):
     # Method to decrypt card number
     def get_card_number(self):
         return cipher.decrypt(self.encrypted_card_number.encode()).decode()
+
+
+class LiveLocation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    role = db.Column(db.String(10), nullable=False)  # 'driver' or 'passenger'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

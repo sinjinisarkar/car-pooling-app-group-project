@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
     flatpickr("#bannerSearchDate", {
         dateFormat: "Y-m-d",
         minDate: "today",
-        defaultDate: "today",
         disableMobile: true
     });
 
