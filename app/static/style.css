@@ -37,6 +37,19 @@ i {
     font-size: 1.2rem;
 }
 
+a {
+    color: #855bbe;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+a:hover,
+a:active {
+    color: #855bbe;
+    text-decoration: underline;
+}
+
 /* ---------------------------------------- Navbar ---------------------------------------- */
 .navbar .container {
     display: flex;
@@ -85,19 +98,6 @@ i {
     box-shadow: 1px 2px 0px #855bbe;
 }
 
-.modal a,
-.modal a {
-    color: #855bbe;
-    font-weight: bold;
-    text-decoration: none;
-    transition: color 0.3s ease-in-out;
-}
-
-.modal a:hover,
-.modal a:hover {
-    text-decoration: underline;
-}
-
 /* modal styling for pickup tracking */
 .modal-pickup .modal-content {
     margin: 15% auto;
@@ -124,21 +124,21 @@ i {
     transition: all 0.2s ease-in-out;
     background-color: white;
     color: var(--text-color);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     box-shadow: 3px 4px 0px var(--shadow-color);
 }
 
 .btn-base:hover,
 .btn-base:focus {
     outline: none;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     background-color: var(--bg-color);
     box-shadow: 3px 4px 0px var(--shadow-color);
 }
 
 .btn-base:active {
     outline: none;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     box-shadow: 1px 1px 0px var(--shadow-color);
     transform: translateY(2px);
 }
@@ -235,6 +235,7 @@ i {
 /* ---------------------------------------- Card Styling ---------------------------------------- */
 .card {
     border-radius: 22px;
+    border-color: #e6d6fc;
     box-shadow: 5px 6px 0px #855bbe;
     transition: transform 0.2s ease-in-out;
 }
@@ -490,4 +491,9 @@ i {
 .sidebar-box .list-group-item:hover {
     background-color: #e6d6fc;
     color: #1f1d21;
+}
+
+#rideDates {
+    outline: none;
+    border: none;
 }

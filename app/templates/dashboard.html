@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="containe-fluid px-5 mt-4">
     <h2 class="mb-4 text-center">Welcome, {{ user.username }}!</h2>
     <br>
     <div class="row">
 
         <!-- Sidebar -->
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3">
             <div class="sidebar-box">
                 <div class="list-group">
                     <a href="#" class="list-group-item list-group-item-action active" id="showUpcoming"><i class='bx bxs-right-arrow'></i>  Upcoming Journeys</a>
@@ -24,6 +24,12 @@
             <div id="upcomingSection" class="mb-4">
                 <h4>Upcoming Journeys</h4>
                 {% if upcoming_journeys %}
+                    <p class="text-muted mb-4">
+                        Here's all your scheduled rides! Track your active journeys and pickup locations, or cancel ride. <br>
+                        Please note that all cancellations after 15 minutes before the ride start time will result in a 75% cancellation fee, 
+                        as per company policy!
+                    </p>
+                    <br>
                     <div class="row">
                         {% for journey in upcoming_journeys %}
                         <div class="col-md-4 mb-3">
@@ -52,7 +58,9 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted">No upcoming journeys booked.</p>
+                    <p class="text-muted">
+                        No upcoming journeys booked. Wanna find a ride? <a href="{{ url_for('view_journeys') }}">Book here.</a>
+                    </p>
                 {% endif %}
                 <!-- Toggle Inactive Bookings Button -->
                 <div class="text-center mt-4">
@@ -64,6 +72,9 @@
             <div id="inactiveSection" class="mb-4" style="display: none;">
                 <h4>Inactive Bookings</h4>
                 {% if inactive_journeys %}
+                <p class="text-muted mb-4">
+                    These bookings have been cancelled. To rebook, head to <a href="{{ url_for('view_journeys') }}">Find a Ride</a> to check availability.
+                </p>
                     <div class="row">
                         {% for journey in inactive_journeys %}
                         <div class="col-md-4 mb-3">
@@ -86,7 +97,10 @@
             <!-- Published Rides Section -->
             <div id="publishedSection" class="mb-4" style="display: none;">
                 <h4>Your Published Rides</h4>
-                
+                <p class="text-muted mb-4">
+                    Here's all the rides you've published! Select 'View Passengers' in the Commuting Rides section to see everyone who's booked your ride!
+                </p>
+                <br>
                 <!-- One-Time Journeys -->
                 <h5>One-Time Journeys</h5>
                 {% if published_rides.one_time %}
@@ -99,32 +113,8 @@
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                 <div class="text-center mt-3">
-                                    <button class="btn-base btn-one" data-bs-toggle="modal" data-bs-target="#passengerModalOneTime{{ ride.ride_id }}">View Passengers</button>
-                                     <!-- Driver Button: Track Passengers -->
-                                    <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-success mt-2">Track Passengers</a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Passenger Modal for One-Time Journeys -->
-                        <div class="modal fade" id="passengerModalOneTime{{ ride.ride_id }}" tabindex="-1" aria-labelledby="passengerModalLabelOneTime{{ ride.ride_id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Passengers for {{ ride.from }} ➝ {{ ride.to }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        {% if ride.passengers %}
-                                            <ul>
-                                                {% for passenger in ride.passengers %}
-                                                    <li>{{ passenger.name }} ({{ passenger.email }})</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <p class="text-muted">No passengers yet.</p>
-                                        {% endif %}
-                                    </div>
+                                    <!-- Driver Button: Track Passengers -->
+                                    <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block">Track Passenger</a>
                                 </div>
                             </div>
                         </div>
@@ -146,18 +136,22 @@
                                 <p class="detail-item"><span class="detail-heading">Price per Seat:</span> £{{ ride.price }}</p>
                                 
                                 <button class="btn-base btn-one mt-3" data-bs-toggle="collapse" data-bs-target="#rideDates{{ ride.ride_id }}" aria-expanded="false">
-                                    View Ride Dates
+                                    View Passengers
                                 </button>
-                                
                                 <div class="collapse mt-2" id="rideDates{{ ride.ride_id }}">
+                                    {% if ride.dates %}
                                     <ul class="list-group">
                                         {% for date, passengers in ride.dates.items() %}
-                                        <li class="list-group-item">
-                                            <strong>{{ date }}</strong>
-                                            <button class="btn-base btn-one float-end" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">View Passengers</button>
+                                        <li class="list-group-item p-0">
+                                            <button class="btn-base btn-one btn-block" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
+                                                {{ date }}
+                                            </button>
                                         </li>
                                         {% endfor %}
                                     </ul>
+                                    {% else %}
+                                    <p class="text-muted mb-0">No passengers yet.</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -168,8 +162,7 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Passengers for {{ ride.from }} ➝ {{ ride.to }} on {{ date }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <h5 class="modal-title">Passengers for {{ ride.from.split(',')[0] }} ➝ {{ ride.to.split(',')[0] }} on {{ date }}</h5>
                                     </div>
                                     <div class="modal-body">
                                         {% if passengers %}
@@ -195,7 +188,7 @@
 
             <!-- Your Saved Cards Section -->
             <div id="savedCardsSection" class="mb-4" style="display: none;">
-                <h4>Your Saved Cards</h4>
+                <h4>Your Saved Cards</h4><br>
                 {% if user.saved_cards %}
                     <ul class="list-group">
                         {% for card in user.saved_cards %}

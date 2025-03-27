@@ -696,7 +696,10 @@ def dashboard():
                 "dates": {}
             }
 
-            ride_dates = db.session.query(book_ride.ride_date).filter_by(ride_id=ride.id).distinct().all()
+            ride_dates = db.session.query(book_ride.ride_date).filter(
+                book_ride.ride_id == ride.id,
+                book_ride.status != "Canceled"
+            ).distinct().all()
             for date_obj in ride_dates:
                 date_str = date_obj[0].strftime('%Y-%m-%d')
                 passengers = book_ride.query.filter(
