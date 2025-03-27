@@ -464,3 +464,30 @@ i {
     height: 400px;
     width: 100%;
 }
+
+
+/* ---------------------------------------- Dashboard ---------------------------------------- */
+.sidebar-box {
+    padding: 20px;
+    height: 100%;
+    border-left: 5px solid #855bbe;
+}
+
+.sidebar-box .list-group-item {
+    font-weight: 500;
+    font-size: 1.05rem;
+    border: none;
+    color: #1f1d21;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-box .list-group-item.active {
+    background-color: #855bbe;
+    color: white;
+    /* border-color: transparent; */
+}
+
+.sidebar-box .list-group-item:hover {
+    background-color: #e6d6fc;
+    color: #1f1d21;
+}
