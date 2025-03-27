@@ -202,7 +202,7 @@
                         {% for card in user.saved_cards %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>**** **** **** {{ card.last_four_digits }} (Exp: {{ card.expiry_date }})</span>
-                            <button class="btn btn-base btn-red delete-card-btn" data-card-id="{{ card.id }}"><i class='bx bx-trash'></i></button>
+                            <button class="btn delete-card-btn" data-card-id="{{ card.id }}"><i class='bx bx-trash'></i></button>
                         </li>
                         {% endfor %}
                     </ul>
