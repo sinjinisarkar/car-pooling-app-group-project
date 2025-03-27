@@ -660,7 +660,8 @@ def dashboard():
                 ),
                 "status": booking.status,
                 "price": price_per_seat,
-                "seats_booked": booking.seats_selected
+                "seats_booked": booking.seats_selected,
+                "category": ride.category
             }
 
             if is_canceled:
@@ -899,14 +900,14 @@ def view_pickup(ride_id):
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
 
 
-# ✅ API to get pickup location for a ride
+# API to get pickup location for a ride
 @app.route('/api/get_pickup_location/<int:ride_id>', methods=['GET'])
 @login_required
 def get_pickup_location(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
     return jsonify({"from_location": ride.from_location}), 200
 
-# ✅ Passenger Updates Their Location
+# Passenger Updates Their Location
 @app.route('/api/track_passenger_location', methods=['POST'])
 @login_required
 def track_passenger_location():
@@ -914,14 +915,18 @@ def track_passenger_location():
     ride_id = data.get("ride_id")
     lat = data.get("latitude")
     lon = data.get("longitude")
+    ride_date = data.get("ride_date")  # ✅ NEW
 
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
 
-    live_locations[f"passenger_{ride_id}"] = (lat, lon)
+    # For commuting rides, we include ride_date in the key
+    key = f"passenger_{ride_id}_{ride_date}" if ride_date else f"passenger_{ride_id}"
+    live_locations[key] = (lat, lon)
+
     return jsonify({"message": "Passenger location updated"}), 200
 
-# ✅ Driver Updates Their Location
+# Driver Updates Their Location
 @app.route('/api/track_driver_location', methods=['POST'])
 @login_required
 def track_driver_location():
@@ -929,11 +934,14 @@ def track_driver_location():
     ride_id = data.get("ride_id")
     lat = data.get("latitude")
     lon = data.get("longitude")
+    ride_date = data.get("ride_date")  # ✅ NEW
 
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
 
-    live_locations[f"driver_{ride_id}"] = (lat, lon)
+    key = f"driver_{ride_id}_{ride_date}" if ride_date else f"driver_{ride_id}"
+    live_locations[key] = (lat, lon)
+
     return jsonify({"message": "Driver location updated"}), 200
 
 # ✅ Fetch Both Passenger & Driver Live Locations
@@ -959,7 +967,7 @@ def get_live_locations(ride_id):
         "nearby": nearby
     })
 
-# ✅ API to track if passenger reached pickup point
+# API to track if passenger reached pickup point
 @app.route('/api/check_arrival', methods=['POST'])
 @login_required
 def check_arrival():
@@ -984,7 +992,7 @@ def check_arrival():
     else:
         return jsonify({"arrived": False, "message": "Keep moving towards the pickup location."})
 
-# ✅ Helper Function to Get Coordinates (Uses OpenStreetMap Nominatim)
+# Helper Function to Get Coordinates (Uses OpenStreetMap Nominatim)
 def get_coordinates_from_address(address):
     url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
     response = requests.get(url, headers={"User-Agent": "CatchMyRide/1.0"})
@@ -1028,6 +1036,61 @@ def update_passenger_pickup_location():
         return jsonify({"error": "Missing ride_id or coordinates."}), 400
 
     # ✅ Update the live location dictionary directly
-    live_locations[f"passenger_{ride_id}"] = (lat, lon)
+    ride_date = data.get("ride_date")
+    key = f"passenger_{ride_id}_{ride_date}" if ride_date else f"passenger_{ride_id}"
+    live_locations[key] = (lat, lon)
     print(f"✅ Updated pickup location for ride_id={ride_id}")
     return jsonify({"message": "Pickup location updated."}), 200
+
+# Route for the commuting journeys
+@app.route('/view_pickup_commute/<int:ride_id>/<date>', methods=['GET'])
+@login_required
+def view_pickup_commute(ride_id, date):
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    is_driver = ride.driver_id == current_user.id
+
+    # ✅ Convert date string to datetime.date for proper comparison
+    try:
+        ride_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        return "<h3><strong>Invalid date format</strong></h3>", 400
+
+    # ✅ Fix the comparison to match date only
+    is_passenger = book_ride.query.filter(
+        book_ride.ride_id == ride_id,
+        book_ride.user_id == current_user.id,
+        db.func.date(book_ride.ride_date) == ride_date_obj
+    ).first() is not None
+
+    if is_driver or is_passenger:
+        template = "pickup_driver.html" if is_driver else "pickup_passenger.html"
+        return render_template(template, ride_id=ride_id, ride_date=date)
+
+    return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
+
+@app.route('/api/get_commute_live_locations/<int:ride_id>/<string:ride_date>', methods=['GET'])
+@login_required
+def get_commute_live_locations(ride_id, ride_date):
+    # Use a composite key for commuting dates
+    passenger_key = f"passenger_{ride_id}_{ride_date}"
+    driver_key = f"driver_{ride_id}_{ride_date}"
+
+    passenger_loc = live_locations.get(passenger_key)
+    driver_loc = live_locations.get(driver_key)
+
+    if not passenger_loc and not driver_loc:
+        return jsonify({"error": "No location data available"}), 404
+
+    nearby = False
+    if passenger_loc and driver_loc:
+        from geopy.distance import geodesic
+        distance = geodesic(passenger_loc, driver_loc).meters
+        if distance <= 100:
+            nearby = True
+
+    return jsonify({
+        "passenger": passenger_loc,
+        "driver": driver_loc,
+        "nearby": nearby
+    })

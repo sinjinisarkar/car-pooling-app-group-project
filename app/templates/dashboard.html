@@ -45,10 +45,15 @@
                                                 data-price="{{ journey.price }}" data-date="{{ journey.date }}">
                                             Cancel
                                         </button>
-                                        <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-base btn-one mt-2 btn-block">
-                                            View Pickup Location
-                                        </a>
-                                        
+                                        {% if journey.category == "one-time" %}
+                                            <a href="{{ url_for('view_pickup', ride_id=journey.ride_id) }}" class="btn btn-base btn-one mt-2 btn-block">
+                                                View Pickup Location
+                                            </a>
+                                        {% elif journey.category == "commuting" %}
+                                            <a href="{{ url_for('view_pickup_commute', ride_id=journey.ride_id, date=journey.date) }}" class="btn btn-base btn-one mt-2 btn-block">
+                                                View Pickup Location
+                                            </a>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -142,10 +147,13 @@
                                     {% if ride.dates %}
                                     <ul class="list-group">
                                         {% for date, passengers in ride.dates.items() %}
-                                        <li class="list-group-item p-0">
-                                            <button class="btn-base btn-one btn-block" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
+                                        <li class="list-group-item p-0 d-flex justify-content-between align-items-center">
+                                            <button class="btn-base btn-one btn-block flex-grow-1" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
                                                 {{ date }}
                                             </button>
+                                            <a class="btn btn-sm btn-secondary ms-2" href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}">
+                                                Track Pickup
+                                            </a>
                                         </li>
                                         {% endfor %}
                                     </ul>

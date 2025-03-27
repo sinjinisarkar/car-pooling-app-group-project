@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("✅ pickup_tracking.js loaded");
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
+    let rideDate = document.getElementById("ride-date")?.value;  // Optional chaining to avoid error for one-time rides
     let map = L.map("map").setView([51.505, -0.09], 13); // Default view
     let modalShown = false;
     let pickupAdjusted = false;
@@ -41,7 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 fetch(apiEndpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ride_id: rideId, latitude: lat, longitude: lon })
+                    body: JSON.stringify({
+                        ride_id: rideId,
+                        ride_date: rideDate,  // ✅ Add this line
+                        latitude: lat,
+                        longitude: lon
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -95,11 +101,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         });
 
+    let rideDateInput = document.getElementById("ride-date");
+    rideDate = rideDateInput ? rideDateInput.value : null;
     /**
      * Function to fetch and display both driver & passenger live locations
      */
     function fetchLiveLocations() {
-        fetch(`/api/get_live_locations/${rideId}`)
+        const endpoint = rideDate 
+            ? `/api/get_commute_live_locations/${rideId}/${rideDate}`
+            : `/api/get_live_locations/${rideId}`;
+        fetch(endpoint)
             .then(response => response.json())
             .then(data => {
                 console.log("Live locations response:", data);
