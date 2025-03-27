@@ -50,6 +50,7 @@ a:active {
     text-decoration: underline;
 }
 
+
 /* ---------------------------------------- Navbar ---------------------------------------- */
 .navbar .container {
     display: flex;
@@ -71,6 +72,9 @@ a:active {
     font-size: 2rem;
 }
 
+.logo-icon {
+    font-size: 2rem;
+}
 
 /* ---------------------------------------- Modal styling ---------------------------------------- */
 .modal-content {
@@ -82,7 +86,6 @@ a:active {
 .modal-header {
     background-color: #e6d6fc;
     color: #1f1d21;
-    font-weight: 700;
     border-top-left-radius: 23px;
     border-top-right-radius: 23px;
 }
@@ -182,7 +185,7 @@ a:active {
 
 .btn-container {
     position: relative;
-    margin-top: 90px !important;
+    /* margin-top: 90px !important; */
     display: flex;
     justify-content: center;
     gap: 60px;
@@ -317,9 +320,9 @@ a:active {
     font-weight: 600;
 }
 
-
 /* ---------------------------------------- Custom Form Class Styling ---------------------------------------- */
 .custom-form {
+    border: 1px solid #e6d6fc;
     border-radius: 22px;
     box-shadow: 5px 6px 0px #855bbe;
     padding: 25px;
@@ -488,7 +491,9 @@ a:active {
     /* border-color: transparent; */
 }
 
-.sidebar-box .list-group-item:hover {
+.sidebar-box .list-group-item:hover,
+.sidebar-box .list-group-item:focus {
+    outline: none;
     background-color: #e6d6fc;
     color: #1f1d21;
 }
@@ -496,4 +501,29 @@ a:active {
 #rideDates {
     outline: none;
     border: none;
+}
+
+.delete-card-btn {
+    color: white;
+    background-color: #BE5B63;
+    outline: none;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.delete-card-btn:hover,
+.delete-card-btn:focus,
+.delete-card-btn:active {
+    color: #BE5B63;
+    background-color: #EEB9B9;
+    outline: none;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
 }

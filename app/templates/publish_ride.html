@@ -19,11 +19,15 @@
         </div>
 
         <!-- Category Dropdown (Detect Change) -->
-        <label for="category">Category:</label>
-        <select id="category" name="category" class="form-control">
-            <option value="one-time">One-Time</option>
-            <option value="commuting">Commuting</option>
-        </select>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label for="category">Category:</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="one-time">One-Time</option>
+                    <option value="commuting">Commuting</option>
+                </select>
+            </div>
+        </div>
 
         <!-- One-Time Ride: Show Date & Time Picker -->
         <div class="row mb-3" id="date_time_div">
@@ -59,16 +63,14 @@
                 <label for="price_per_seat" class="form-label">Price per Seat (£):</label>
                 <input type="number" id="price_per_seat" name="price_per_seat" step="0.01" class="form-control" required>
             </div>
-        </div>
-
-        <div class="row mb-3">
+        
             <div class="col-md-6">
                 <label for="driver_name" class="form-label">Driver Username:</label>
                 <input type="text" id="driver_name" name="driver_name" value="{{ current_user.username }}" class="form-control" readonly required>
             </div>
         </div>
 
-        <div class="text-center">
+        <div class="text-center mt-5">
             <button type="submit" class="btn btn-base btn-one btn-lg">Publish Ride</button>
         </div>
     </form>
