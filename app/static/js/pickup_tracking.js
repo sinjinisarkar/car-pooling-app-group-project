@@ -124,26 +124,41 @@ document.addEventListener("DOMContentLoaded", function () {
                     driverMarker = null;
                 }
     
-                let passengerLatLng = null;
                 let driverLatLng = null;
+                let allMarkers = [];
+
+                // Multiple Passenger Markers (for commuting rides)
+                if (data.passenger && typeof data.passenger === "object") {
+                    const passengerCount = Object.keys(data.passenger).length;
+                    console.log(`👥 Number of passengers found: ${passengerCount}`);
     
-                // 🧍 Passenger Marker
-                if (data.passenger) {
-                    let [pLat, pLon] = data.passenger;
-    
-                    // Check if overlapping with driver
-                    if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
-                        // Slight offset to visually distinguish
-                        pLat += 0.00005;
-                        pLon += 0.00005;
+                    for (const [passengerKey, coords] of Object.entries(data.passenger)) {
+                        let [pLat, pLon] = coords;
+
+                        // Check if overlapping with driver
+                        if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
+                            pLat += 0.00005;
+                            pLon += 0.00005;
+                        }
+
+                        const marker = L.marker([pLat, pLon], { icon: passengerIcon })
+                            .addTo(map)
+                            .bindPopup(userType === "passenger" ? "Your location" : `Passenger: ${passengerKey}`)
+                            .openPopup();
+
+                        allMarkers.push(marker);
                     }
-    
-                    passengerLatLng = [pLat, pLon];
-                    const passengerPopup = userType === "passenger" ? "Your location" : "Passenger's location";
-                    passengerMarker = L.marker(passengerLatLng, { icon: passengerIcon })
-                        .addTo(map)
-                        .bindPopup(passengerPopup)
-                        .openPopup();
+                }
+
+                // Add driver marker to allMarkers array if it exists
+                if (driverMarker) {
+                    allMarkers.push(driverMarker);
+                }
+
+                // Fit all markers on the map
+                if (allMarkers.length > 0) {
+                    const group = new L.featureGroup(allMarkers);
+                    map.fitBounds(group.getBounds().pad(0.3));
                 }
     
                 // 🚗 Driver Marker

@@ -908,6 +908,7 @@ def get_pickup_location(ride_id):
     return jsonify({"from_location": ride.from_location}), 200
 
 # Passenger Updates Their Location
+# Passenger Updates Their Location
 @app.route('/api/track_passenger_location', methods=['POST'])
 @login_required
 def track_passenger_location():
@@ -915,13 +916,18 @@ def track_passenger_location():
     ride_id = data.get("ride_id")
     lat = data.get("latitude")
     lon = data.get("longitude")
-    ride_date = data.get("ride_date")  # ✅ NEW
+    ride_date = data.get("ride_date")  # For commuting rides
+    user_id = current_user.id          # Get current user ID
 
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
 
-    # For commuting rides, we include ride_date in the key
-    key = f"passenger_{ride_id}_{ride_date}" if ride_date else f"passenger_{ride_id}"
+    # 🔑 Updated key format: passenger_<ride_id>_<ride_date>_<user_id>
+    if ride_date:
+        key = f"passenger_{ride_id}_{ride_date}_{user_id}"
+    else:
+        key = f"passenger_{ride_id}_{user_id}"
+
     live_locations[key] = (lat, lon)
 
     return jsonify({"message": "Passenger location updated"}), 200
@@ -1072,25 +1078,32 @@ def view_pickup_commute(ride_id, date):
 @app.route('/api/get_commute_live_locations/<int:ride_id>/<string:ride_date>', methods=['GET'])
 @login_required
 def get_commute_live_locations(ride_id, ride_date):
-    # Use a composite key for commuting dates
-    passenger_key = f"passenger_{ride_id}_{ride_date}"
-    driver_key = f"driver_{ride_id}_{ride_date}"
+    from geopy.distance import geodesic
 
-    passenger_loc = live_locations.get(passenger_key)
+    # Fetch all passenger locations for this ride and date
+    passenger_locs = {
+        key.split("_")[-1]: loc
+        for key, loc in live_locations.items()
+        if key.startswith(f"passenger_{ride_id}_{ride_date}_")
+    }
+    driver_key = f"driver_{ride_id}_{ride_date}"
     driver_loc = live_locations.get(driver_key)
 
-    if not passenger_loc and not driver_loc:
+    if not passenger_locs and not driver_loc:
         return jsonify({"error": "No location data available"}), 404
 
+    # ✅ Check if any passenger is nearby
     nearby = False
-    if passenger_loc and driver_loc:
-        from geopy.distance import geodesic
-        distance = geodesic(passenger_loc, driver_loc).meters
-        if distance <= 100:
-            nearby = True
+    if driver_loc:
+        for passenger_id, loc in passenger_locs.items():
+            if loc:
+                distance = geodesic(loc, driver_loc).meters
+                if distance <= 100:
+                    nearby = True
+                    break
 
     return jsonify({
-        "passenger": passenger_loc,
+        "passenger": passenger_locs,  # now a dict of user_id -> location
         "driver": driver_loc,
         "nearby": nearby
     })
