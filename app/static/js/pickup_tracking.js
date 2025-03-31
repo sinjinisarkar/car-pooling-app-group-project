@@ -135,6 +135,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     for (const [passengerKey, coords] of Object.entries(data.passenger)) {
                         let [pLat, pLon] = coords;
 
+                        // Don't show other passengers to a passenger
+                        if (userType === "passenger" && passengerName !== username) continue;
+
                         // Check if overlapping with driver
                         if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
                             pLat += 0.00005;

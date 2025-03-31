@@ -1080,22 +1080,25 @@ def view_pickup_commute(ride_id, date):
 def get_commute_live_locations(ride_id, ride_date):
     from geopy.distance import geodesic
 
-    # Fetch all passenger locations for this ride and date
-    passenger_locs = {
-        key.split("_")[-1]: loc
-        for key, loc in live_locations.items()
-        if key.startswith(f"passenger_{ride_id}_{ride_date}_")
-    }
+    passenger_loc = {}
+
+    for key, loc in live_locations.items():
+        if key.startswith(f"passenger_{ride_id}_{ride_date}_"):
+            user_id = key.split("_")[-1]
+            user = User.query.get(int(user_id))
+            username = user.username if user else f"Passenger_{user_id}"
+            passenger_loc[username] = loc
+
     driver_key = f"driver_{ride_id}_{ride_date}"
     driver_loc = live_locations.get(driver_key)
 
-    if not passenger_locs and not driver_loc:
+    if not passenger_loc and not driver_loc:
         return jsonify({"error": "No location data available"}), 404
 
-    # ✅ Check if any passenger is nearby
+    # Check if any passenger is nearby
     nearby = False
     if driver_loc:
-        for passenger_id, loc in passenger_locs.items():
+        for passenger_id, loc in passenger_loc.items():
             if loc:
                 distance = geodesic(loc, driver_loc).meters
                 if distance <= 100:
@@ -1103,7 +1106,7 @@ def get_commute_live_locations(ride_id, ride_date):
                     break
 
     return jsonify({
-        "passenger": passenger_locs,  # now a dict of user_id -> location
+        "passenger": passenger_loc,  # now a dict of username -> location
         "driver": driver_loc,
         "nearby": nearby
     })
