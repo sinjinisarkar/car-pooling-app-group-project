@@ -7,6 +7,7 @@ from app.models import User, publish_ride, book_ride, saved_ride, Payment, Saved
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy.sql import func
+from sqlalchemy import func
 from flask_mail import Message
 from geopy.distance import geodesic
 
@@ -791,11 +792,6 @@ def cancel_booking(booking_id):
     return jsonify({"success": True, "message": f"Booking successfully canceled. Refund: £{refund_amount}"}), 200
 
 
-# Route to filter out journeys
-from flask import request, render_template
-from sqlalchemy import func
-import json
-
 @app.route('/filter_journeys', methods=['GET'])
 def filter_journeys():
     from_location = request.args.get("from", "").strip()
@@ -874,7 +870,7 @@ def filter_journeys():
 
 
 # ID 14 here:
-# Store live locations in memory (Consider using a database for production)
+# Store live locations in memory
 live_locations = {}
 
 @app.route('/view_pickup/<int:ride_id>', methods=['GET'])
@@ -882,14 +878,14 @@ live_locations = {}
 def view_pickup(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
 
-    # ✅ Check if the current user has a booking for this ride
+    # Check if the current user has a booking for this ride
     booking = book_ride.query.filter_by(ride_id=ride_id, user_id=current_user.id).first()
     is_passenger = booking is not None
 
-    # ✅ Check if current user is the driver
+    # Check if current user is the driver
     is_driver = (ride.driver_id == current_user.id)
 
-    # 🧠 Now decide which view to show
+    # decide which view to show
     if is_passenger and not is_driver:
         return render_template("pickup_passenger.html", ride_id=ride_id)
     elif is_driver and not is_passenger:
@@ -899,7 +895,6 @@ def view_pickup(ride_id):
     else:
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
 
-
 # API to get pickup location for a ride
 @app.route('/api/get_pickup_location/<int:ride_id>', methods=['GET'])
 @login_required
@@ -907,7 +902,6 @@ def get_pickup_location(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
     return jsonify({"from_location": ride.from_location}), 200
 
-# Passenger Updates Their Location
 # Passenger Updates Their Location
 @app.route('/api/track_passenger_location', methods=['POST'])
 @login_required
@@ -922,7 +916,7 @@ def track_passenger_location():
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
 
-    # 🔑 Updated key format: passenger_<ride_id>_<ride_date>_<user_id>
+    # Updated key format: passenger_<ride_id>_<ride_date>_<user_id>
     if ride_date:
         key = f"passenger_{ride_id}_{ride_date}_{user_id}"
     else:
@@ -950,7 +944,7 @@ def track_driver_location():
 
     return jsonify({"message": "Driver location updated"}), 200
 
-# ✅ Fetch Both Passenger & Driver Live Locations
+# Fetch Both Passenger & Driver Live Locations
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
 def get_live_locations(ride_id):

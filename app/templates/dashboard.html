@@ -151,9 +151,7 @@
                                             <button class="btn-base btn-one btn-block flex-grow-1" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
                                                 {{ date }}
                                             </button>
-                                            <a class="btn btn-sm btn-secondary ms-2" href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}">
-                                                Track Pickup
-                                            </a>
+                                            
                                         </li>
                                         {% endfor %}
                                     </ul>
@@ -174,6 +172,9 @@
                                     </div>
                                     <div class="modal-body">
                                         {% if passengers %}
+                                            <a href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}" class="btn btn-base btn-one btn-block mb-3">
+                                                Track Pickup
+                                            </a>
                                             <ul>
                                                 {% for passenger in passengers %}
                                                     <li>{{ passenger.name }} ({{ passenger.email }})</li>
