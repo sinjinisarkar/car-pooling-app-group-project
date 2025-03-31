@@ -120,6 +120,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 });
         });
+    
+    // helped function
+    function startJourney() {
+        fetch("/api/start_journey", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ride_id: rideId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("status-message").innerText = data.message || "Journey started!";
+            journeyStarted = true;
+        })
+        .catch(err => {
+            alert("Something went wrong.");
+            console.error(err);
+        });
+    }
 
     let rideDateInput = document.getElementById("ride-date");
     rideDate = rideDateInput ? rideDateInput.value : null;
@@ -233,42 +251,51 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
     
                 // Show modal if driver and passenger are nearby (driver only)
-                if (data.nearby && userType === "driver" && !modalShown && !journeyStarted) {
+                if (data.nearby && userType === "driver" && !journeyStarted) {
                     const modal = document.getElementById("startJourneyModal");
                     const closeBtn = document.getElementById("closeModalBtn");
                     const startBtn = document.getElementById("startJourneyBtn");
-
-                    console.log("Nearby detected! Showing modal...");
-                    modal.style.display = "block";
-                    // Move modalShown = true ONLY inside the Start button click
-
-                    if (closeBtn) {
+                    const reminder = document.getElementById("reminder-message");
+                
+                    if (!modalShown) {
+                        console.log("👀 Passenger is nearby. Showing modal...");
+                        modal.style.display = "block";
+                        modalShown = true;
+                    }
+                
+                    if (closeBtn && !closeBtn.dataset.bound) {
+                        closeBtn.dataset.bound = true;
                         closeBtn.addEventListener("click", () => {
                             modal.style.display = "none";
-                            modalShown = true;
+                            if (reminder) {
+                                reminder.style.display = "block";
+                            }
                         });
                     }
-
-                    if (startBtn) {
+                
+                    if (startBtn && !startBtn.dataset.bound) {
+                        startBtn.dataset.bound = true;
                         startBtn.addEventListener("click", () => {
-                            console.log("Start Journey clicked");
-                            fetch("/api/start_journey", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ ride_id: rideId })
-                            })
-                            .then(res => res.json())
-                            .then(data => {
-                                document.getElementById("status-message").innerText = data.message || "Journey started!";
-                                modal.style.display = "none";
-                                modalShown = true;
-                                journeyStarted = true;
-                            })
-                            .catch(err => {
-                                alert("Something went wrong.");
-                                console.error(err);
-                            });
+                            console.log("✅ Start Journey clicked (modal)");
+                            startJourney();
+                            modal.style.display = "none";
                         });
+                    }
+                
+                    // 👇 Handle reminder click (start journey)
+                    if (reminder && !reminder.dataset.bound) {
+                        reminder.dataset.bound = true;
+                        reminder.addEventListener("click", () => {
+                            console.log("✅ Start Journey clicked (reminder)");
+                            startJourney();
+                            reminder.style.display = "none";
+                        });
+                    }
+                } else {
+                    // Hide the reminder if user moves away
+                    const reminder = document.getElementById("reminder-message");
+                    if (reminder) {
+                        reminder.style.display = "none";
                     }
                 }
 

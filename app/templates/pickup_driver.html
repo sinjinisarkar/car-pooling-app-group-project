@@ -11,6 +11,14 @@
     <input type="hidden" id="current-username" value="{{ current_user.username }}">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
+    <!-- Leaflet Map -->
+    <div id="map" style="height: 400px;"></div>
+
+    <!-- Visual Reminder (initially hidden) -->
+    <div id="reminder-message" class="alert alert-warning mt-3" style="display: none; cursor: pointer;">
+        👀 Passenger is nearby. <u>Click here to start the journey</u>
+    </div>
+
     <!-- Ride Details Card -->
     <div class="card mt-4 shadow-sm">
         <div class="card-body">
@@ -34,9 +42,6 @@
             {% endif %}
         </div>
     </div>
-
-    <!-- Leaflet Map -->
-    <div id="map" style="height: 400px;"></div>
 
     <!-- Modal -->
     <div id="startJourneyModal" class="modal modal-pickup" style="display:none;">

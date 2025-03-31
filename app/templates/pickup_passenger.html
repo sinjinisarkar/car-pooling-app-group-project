@@ -11,6 +11,9 @@
     <input type="hidden" id="current-username" value="{{ current_user.username }}">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
+    <!-- Leaflet Map -->
+    <div id="map" style="height: 400px;"></div>
+
      <!-- Ride Details Card -->
      <div class="card mt-4 shadow-sm">
         <div class="card-body">
@@ -22,9 +25,6 @@
             <p><strong>You are logged in as:</strong> {{ current_user.username }}</p>
         </div>
     </div>
-
-    <!-- Leaflet Map -->
-    <div id="map" style="height: 400px;"></div>
 
     <!-- Adjust Pickup Modal -->
     <div id="adjustPickupModal" class="modal modal-pickup" style="display: none;">
