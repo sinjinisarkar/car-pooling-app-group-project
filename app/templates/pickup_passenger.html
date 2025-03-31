@@ -8,7 +8,20 @@
     <input type="hidden" id="ride-id" value="{{ ride_id }}">
     <input type="hidden" id="user-type" value="passenger">
     <input type="hidden" id="ride-date" value="{{ ride_date }}">
+    <input type="hidden" id="current-username" value="{{ current_user.username }}">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
+
+     <!-- Ride Details Card -->
+     <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Ride Details</h4>
+            <p><strong>From:</strong> {{ ride.from_location }}</p>
+            <p><strong>To:</strong> {{ ride.to_location }}</p>
+            <p><strong>Date:</strong> {{ ride_date }}</p>
+            <p><strong>Driver:</strong> {{ driver_name }}</p>   
+            <p><strong>You are logged in as:</strong> {{ current_user.username }}</p>
+        </div>
+    </div>
 
     <!-- Leaflet Map -->
     <div id="map" style="height: 400px;"></div>

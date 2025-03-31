@@ -8,10 +8,34 @@
     <input type="hidden" id="ride-id" value="{{ ride_id }}">
     <input type="hidden" id="user-type" value="driver">
     <input type="hidden" id="ride-date" value="{{ ride_date }}">
-    <input type="hidden" id="username" value="{{ user.username }}">
+    <input type="hidden" id="current-username" value="{{ current_user.username }}">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
-     <!-- Map -->
+    <!-- Ride Details Card -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Ride Details</h4>
+            <p><strong>From:</strong> {{ ride.from_location }}</p>
+            <p><strong>To:</strong> {{ ride.to_location }}</p>
+            <p><strong>Date:</strong> {{ ride_date }}</p>
+            <p><strong>Driver:</strong> {{ driver_name }}</p>
+
+            {% if passenger_name %}
+                <p><strong>Passenger:</strong> {{ passenger_name }}</p>
+            {% elif passenger_names %}
+                <p><strong>Passengers:</strong></p>
+                <ul>
+                    {% for name in passenger_names %}
+                        <li>{{ name }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No passengers assigned yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Leaflet Map -->
     <div id="map" style="height: 400px;"></div>
 
     <!-- Modal -->

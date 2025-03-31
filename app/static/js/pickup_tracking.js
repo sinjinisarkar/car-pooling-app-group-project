@@ -1,12 +1,31 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("✅ pickup_tracking.js loaded");
+    console.log("pickup_tracking.js loaded");
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
+    let currentUsername = document.getElementById("current-username")?.value;
     let rideDate = document.getElementById("ride-date")?.value;  // Optional chaining to avoid error for one-time rides
-    let map = L.map("map").setView([51.505, -0.09], 13); // Default view
+    let map = L.map("map", {
+        maxZoom: 18  
+    }).setView([51.505, -0.09], 13);
+    const markerClusterGroup = L.markerClusterGroup();
+    map.addLayer(markerClusterGroup);
     let modalShown = false;
     let pickupAdjusted = false;
     let journeyStarted = false;
+
+    // Helper: calculate distance between two lat/lon in meters
+    function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // Earth radius in meters
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
     // Add OpenStreetMap Tile Layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -35,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
             navigator.geolocation.getCurrentPosition(position => {
                 let lat = position.coords.latitude;
                 let lon = position.coords.longitude;
+                console.log(`📍 Got passenger location: ${lat}, ${lon}`);
     
                 let apiEndpoint = role === "passenger" ? "/api/track_passenger_location" : "/api/track_driver_location";
     
@@ -54,22 +74,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log(`${role} location updated:`, data.message);
                     document.getElementById("status-message").innerText = data.message;
     
-                    // Update or create marker
-                    if (role === "passenger") {
-                        if (passengerMarker) {
-                            passengerMarker.setLatLng([lat, lon]);
-                        } else {
-                            passengerMarker = L.marker([lat, lon], { icon: passengerIcon }).addTo(map)
-                                .bindPopup("Your location").openPopup();
-                        }
-                    } else {
-                        if (driverMarker) {
-                            driverMarker.setLatLng([lat, lon]);
-                        } else {
-                            driverMarker = L.marker([lat, lon], { icon: driverIcon }).addTo(map)
-                                .bindPopup("Driver's location").openPopup();
-                        }
-                    }
+                    // // Update or create marker
+                    // if (role === "passenger") {
+                    //     if (passengerMarker) {
+                    //         passengerMarker.setLatLng([lat, lon]);
+                    //     } else {
+                    //         passengerMarker = L.marker([lat, lon], { icon: passengerIcon }).addTo(map)
+                    //             .bindPopup("Your location").openPopup();
+                    //     }
+                    // } else {
+                    //     if (driverMarker) {
+                    //         driverMarker.setLatLng([lat, lon]);
+                    //     } else {
+                    //         driverMarker = L.marker([lat, lon], { icon: driverIcon }).addTo(map)
+                    //             .bindPopup("Driver's location").openPopup();
+                    //     }
+                    // }
                 });
             });
         }
@@ -107,6 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
      * Function to fetch and display both driver & passenger live locations
      */
     function fetchLiveLocations() {
+        markerClusterGroup.clearLayers();
         const endpoint = rideDate 
             ? `/api/get_commute_live_locations/${rideId}/${rideDate}`
             : `/api/get_live_locations/${rideId}`;
@@ -127,8 +148,38 @@ document.addEventListener("DOMContentLoaded", function () {
                 let driverLatLng = null;
                 let allMarkers = [];
 
+                if (data.passenger) {
+                    if (Array.isArray(data.passenger)) {
+                        console.log("🕐 One-time ride detected");
+                    } else {
+                        console.log("🛣️ Commuting ride detected");
+                    }
+                }
+
+                // One-time passenger marker
+                if (data.passenger && Array.isArray(data.passenger)) {
+                    let [pLat, pLon] = data.passenger;
+
+                    // Slight offset if overlapping with driver
+                    if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
+                        pLat += 0.00005;
+                        pLon += 0.00005;
+                    }
+
+                    const oneTimePassengerPopup = userType === "passenger" ? "Your location" : "Passenger's location";
+
+                    passengerMarker = L.marker([pLat, pLon], { icon: passengerIcon })
+                        .bindPopup(oneTimePassengerPopup);
+
+                    markerClusterGroup.addLayer(passengerMarker);  // Add to cluster group
+                    allMarkers.push(passengerMarker);              // For map bounds
+
+                    console.log(`📍 Added one-time passenger marker at [${pLat}, ${pLon}] for userType: ${userType}`);
+                }
+
                 // Multiple Passenger Markers (for commuting rides)
-                if (data.passenger && typeof data.passenger === "object") {
+                if (data.passenger && typeof data.passenger === "object" && !Array.isArray(data.passenger)) {
+                    console.log("🛣️ Detected commuting ride mode: rendering multiple passenger markers");
                     const passengerCount = Object.keys(data.passenger).length;
                     console.log(`👥 Number of passengers found: ${passengerCount}`);
     
@@ -136,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         let [pLat, pLon] = coords;
 
                         // Don't show other passengers to a passenger
-                        if (userType === "passenger" && passengerName !== username) continue;
+                        if (userType === "passenger" && passengerKey !== currentUsername) continue;
 
                         // Check if overlapping with driver
                         if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
@@ -145,13 +196,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
 
                         const marker = L.marker([pLat, pLon], { icon: passengerIcon })
-                            .addTo(map)
-                            .bindPopup(userType === "passenger" ? "Your location" : `Passenger: ${passengerKey}`)
-                            .openPopup();
-
+                        .bindPopup(userType === "passenger" ? "Your location" : `Passenger: ${passengerKey}`);
+                    
+                        markerClusterGroup.addLayer(marker);
                         allMarkers.push(marker);
                     }
                 }
+                
 
                 // Add driver marker to allMarkers array if it exists
                 if (driverMarker) {
@@ -228,76 +279,85 @@ document.addEventListener("DOMContentLoaded", function () {
                     data.driver &&
                     !pickupAdjusted &&
                     !modalShown
-                  ) {
-                    console.log("Showing pickup adjust modal for testing...");
-                    modalShown = true;
-                  
-                    const adjustModal = document.getElementById("adjustPickupModal");
-                    const adjustBtn = document.getElementById("adjustPickupBtn");
-                    const closeBtn = document.getElementById("closeAdjustModal");
-                  
-                    adjustModal.style.display = "block";
-                  
-                    if (closeBtn) {
-                      closeBtn.addEventListener("click", () => {
-                        adjustModal.style.display = "none";
-                      });
-                    }
-                  
-                    if (adjustBtn) {
-                      adjustBtn.addEventListener("click", () => {
-                        adjustModal.style.display = "none";
-                  
-                        alert("Click on the map to set your pickup location.");
-                        let tempMarker;
-                        let adjusting = true;
-                  
-                        map.on("click", function (e) {
-                          if (!adjusting) return;
-                  
-                          if (tempMarker) {
-                            map.removeLayer(tempMarker);
-                          }
-                  
-                          const { lat, lng } = e.latlng;
-                          const newPickupIcon = L.icon({
-                            iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854878.png", // Different icon
-                            iconSize: [30, 30]
-                        });
-                        
-                        tempMarker = L.marker([lat, lng], {
-                            icon: newPickupIcon,
-                            draggable: true
-                        }).addTo(map).bindPopup("New Pickup: drag and double-click to confirm").openPopup();
-                  
-                        tempMarker.on("dblclick", () => {
-                            const newCoords = tempMarker.getLatLng();
-                            sendUpdatedPickup(newCoords.lat, newCoords.lng);
-                            adjusting = false;
-                            // map.removeLayer(tempMarker);
-                            map.off("click");
-                          });
-                        });
-                  
-                        function sendUpdatedPickup(lat, lon) {
-                          fetch("/api/update_passenger_pickup_location", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ ride_id: rideId, latitude: lat, longitude: lon })
-                          })
-                            .then(res => res.json())
-                            .then(data => {
-                              alert(data.message || "Pickup location updated.");
-                              pickupAdjusted = true;
-                            })
-                            .catch(err => {
-                              alert("Error updating pickup location.");
-                              console.error(err);
-                            });
+                ) {
+                    const [passLat, passLon] = data.passenger[currentUsername] || [];
+                    const [driverLat, driverLon] = data.driver;
+                
+                    if (passLat && passLon && driverLat && driverLon) {
+                        const distance = getDistanceFromLatLonInMeters(passLat, passLon, driverLat, driverLon);
+                        console.log(`🚗 Distance to driver: ${Math.round(distance)} meters`);
+                
+                        if (distance > 250) {
+                            console.log("Showing pickup adjust modal based on distance...");
+                            modalShown = true;
+                
+                            const adjustModal = document.getElementById("adjustPickupModal");
+                            const adjustBtn = document.getElementById("adjustPickupBtn");
+                            const closeBtn = document.getElementById("closeAdjustModal");
+                
+                            adjustModal.style.display = "block";
+                
+                            if (closeBtn) {
+                                closeBtn.addEventListener("click", () => {
+                                    adjustModal.style.display = "none";
+                                });
+                            }
+                
+                            if (adjustBtn) {
+                                adjustBtn.addEventListener("click", () => {
+                                    adjustModal.style.display = "none";
+                
+                                    alert("Click on the map to set your pickup location.");
+                                    let tempMarker;
+                                    let adjusting = true;
+                
+                                    map.on("click", function (e) {
+                                        if (!adjusting) return;
+                
+                                        if (tempMarker) {
+                                            map.removeLayer(tempMarker);
+                                        }
+                
+                                        const { lat, lng } = e.latlng;
+                                        const newPickupIcon = L.icon({
+                                            iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854878.png",
+                                            iconSize: [30, 30]
+                                        });
+                
+                                        tempMarker = L.marker([lat, lng], {
+                                            icon: newPickupIcon,
+                                            draggable: true
+                                        }).addTo(map).bindPopup("New Pickup: drag and double-click to confirm").openPopup();
+                
+                                        tempMarker.on("dblclick", () => {
+                                            const newCoords = tempMarker.getLatLng();
+                                            sendUpdatedPickup(newCoords.lat, newCoords.lng);
+                                            adjusting = false;
+                                            map.off("click");
+                                        });
+                                    });
+                
+                                    function sendUpdatedPickup(lat, lon) {
+                                        fetch("/api/update_passenger_pickup_location", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ ride_id: rideId, latitude: lat, longitude: lon })
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            alert(data.message || "Pickup location updated.");
+                                            pickupAdjusted = true;
+                                        })
+                                        .catch(err => {
+                                            alert("Error updating pickup location.");
+                                            console.error(err);
+                                        });
+                                    }
+                                });
+                            }
                         }
-                      });
                     }
-                  }
+                }
             })
             .catch(error => console.error("Error fetching live locations:", error));
     }

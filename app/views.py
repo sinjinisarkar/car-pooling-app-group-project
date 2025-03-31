@@ -877,21 +877,35 @@ live_locations = {}
 @login_required
 def view_pickup(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
+    driver = User.query.get(ride.driver_id)
 
-    # Check if the current user has a booking for this ride
     booking = book_ride.query.filter_by(ride_id=ride_id, user_id=current_user.id).first()
     is_passenger = booking is not None
-
-    # Check if current user is the driver
     is_driver = (ride.driver_id == current_user.id)
 
-    # decide which view to show
+    passenger = None
+    if is_passenger:
+        passenger = User.query.get(booking.user_id)
+
     if is_passenger and not is_driver:
-        return render_template("pickup_passenger.html", ride_id=ride_id)
+        return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
+                               driver_name=driver.username if driver else "Unknown",
+                               passenger_name=passenger.username if passenger else None)
+
     elif is_driver and not is_passenger:
-        return render_template("pickup_driver.html", ride_id=ride_id)
+        # ❗ Handle one-time ride: get *any* passenger if exists
+        passenger_booking = book_ride.query.filter_by(ride_id=ride_id).first()
+        passenger = User.query.get(passenger_booking.user_id) if passenger_booking else None
+
+        return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
+                               driver_name=driver.username if driver else "Unknown",
+                               passenger_name=passenger.username if passenger else None)
+
     elif is_passenger and is_driver:
-        return render_template("pickup_passenger.html", ride_id=ride_id)
+        return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
+                               driver_name=driver.username if driver else "Unknown",
+                               passenger_name=passenger.username if passenger else None)
+
     else:
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
 
@@ -944,11 +958,18 @@ def track_driver_location():
 
     return jsonify({"message": "Driver location updated"}), 200
 
-# Fetch Both Passenger & Driver Live Locations
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
 def get_live_locations(ride_id):
-    passenger_loc = live_locations.get(f"passenger_{ride_id}")
+    passenger_loc = None
+
+    # Try to find ANY passenger location for this ride
+    for key in live_locations:
+        if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
+            passenger_loc = live_locations[key]
+            print(f"✅ Found passenger location using key: {key}")
+            break
+
     driver_loc = live_locations.get(f"driver_{ride_id}")
 
     if not passenger_loc and not driver_loc:
@@ -958,15 +979,14 @@ def get_live_locations(ride_id):
     nearby = False
     if passenger_loc and driver_loc:
         distance = geodesic(passenger_loc, driver_loc).meters
-        if distance <= 100:
-            nearby = True
+        nearby = distance <= 100
 
     return jsonify({
         "passenger": passenger_loc,
         "driver": driver_loc,
         "nearby": nearby
     })
-
+    
 # API to track if passenger reached pickup point
 @app.route('/api/check_arrival', methods=['POST'])
 @login_required
@@ -1047,28 +1067,47 @@ def update_passenger_pickup_location():
 @login_required
 def view_pickup_commute(ride_id, date):
     ride = publish_ride.query.get_or_404(ride_id)
+    driver = User.query.get(ride.driver_id)
 
-    is_driver = ride.driver_id == current_user.id
-
-    # ✅ Convert date string to datetime.date for proper comparison
+    # ✅ Convert date string to datetime.date
     try:
         ride_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
         return "<h3><strong>Invalid date format</strong></h3>", 400
 
-    # ✅ Fix the comparison to match date only
+    # ✅ Is current user a passenger for this date?
     is_passenger = book_ride.query.filter(
         book_ride.ride_id == ride_id,
         book_ride.user_id == current_user.id,
         db.func.date(book_ride.ride_date) == ride_date_obj
     ).first() is not None
 
+    # ✅ Is current user the driver?
+    is_driver = ride.driver_id == current_user.id
+
+    passenger_names = []
+    if is_driver:
+        # ✅ Get all passengers who booked for this date
+        bookings = book_ride.query.filter(
+            book_ride.ride_id == ride_id,
+            db.func.date(book_ride.ride_date) == ride_date_obj
+        ).all()
+
+        passenger_names = [User.query.get(b.user_id).username for b in bookings]
+
     if is_driver or is_passenger:
         template = "pickup_driver.html" if is_driver else "pickup_passenger.html"
-        return render_template(template, ride_id=ride_id, ride_date=date)
+        return render_template(
+            template,
+            ride_id=ride_id,
+            ride_date=date,
+            ride=ride,
+            driver_name=driver.username,
+            passenger_names=passenger_names
+        )
 
     return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
-
+    
 @app.route('/api/get_commute_live_locations/<int:ride_id>/<string:ride_date>', methods=['GET'])
 @login_required
 def get_commute_live_locations(ride_id, ride_date):
