@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
     let currentUsername = document.getElementById("current-username")?.value;
-    let rideDate = document.getElementById("ride-date")?.value;  // Optional chaining to avoid error for one-time rides
+    let rideDate = document.getElementById("ride-date")?.value;  // chaining to avoid error for one-time rides
     let map = L.map("map", {
         maxZoom: 18  
     }).setView([51.505, -0.09], 13);
@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", function () {
     map.addLayer(markerClusterGroup);
     let modalShown = false;
     let pickupAdjusted = false;
+    const startedPassengers = new Set();  // Tracks who has already been handled
+    const dismissedPassengers = new Set();  // Tracks who was dismissed
+    const dismissed = new Set();
+    const reminderMap = {}; // username -> location
+    let modalActive = false;
     let journeyStarted = false;
 
     // Helper: calculate distance between two lat/lon in meters
@@ -36,12 +41,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Passenger & Driver icons
     const passengerIcon = L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // A person icon
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // red pointer icon
         iconSize: [30, 30]
     });
 
     const driverIcon = L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/1048/1048314.png", // A car icon
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/1048/1048314.png", // car icon
         iconSize: [30, 30]
     });
 
@@ -64,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         ride_id: rideId,
-                        ride_date: rideDate,  // ✅ Add this line
+                        ride_date: rideDate,  
                         latitude: lat,
                         longitude: lon
                     })
@@ -121,7 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         });
     
-    // helped function
+    // helper function for fetchLiveLocations()
     function startJourney() {
         fetch("/api/start_journey", {
             method: "POST",
@@ -153,7 +158,106 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 console.log("Live locations response:", data);
-                // Clear old markers (optional, based on how you're managing updates)
+
+                // Modal functionality (For commuting only) 
+                if (userType === "driver" && rideDate && typeof data.passenger === "object") {
+
+                    const driverLoc = data.driver;
+                    const passengers = data.passenger;
+
+                    const usernames = Object.keys(passengers);
+
+                    usernames.forEach(username => {
+                        const [pLat, pLon] = passengers[username];
+
+                        // Skip if already dismissed
+                        if (dismissed.has(username)) return;
+
+                        const distance = getDistanceFromLatLonInMeters(pLat, pLon, driverLoc[0], driverLoc[1]);
+                        if (
+                            distance <= 100 &&
+                            !modalActive &&
+                            !dismissedPassengers.has(username) &&
+                            !startedPassengers.has(username)
+                        ) {
+                            modalActive = true;
+
+                            // Update modal content
+                            const modal = document.getElementById("startJourneyModal");
+                            const closeBtn = document.getElementById("closeModalBtn");
+                            const startBtn = document.getElementById("startJourneyBtn");
+                            modal.querySelector("h4").innerText = `${username} is nearby`;
+                            modal.style.display = "block";
+
+                            // Close logic
+                            closeBtn.onclick = () => {
+                                dismissedPassengers.add(username);
+                                modal.style.display = "none";
+                                reminderMap[username] = [pLat, pLon];
+                                modalActive = false;
+
+                                // Show multi-reminder if more than one dismissed
+                                const multiReminder = document.getElementById("multi-reminder");
+                                if (Object.keys(reminderMap).length > 1) {
+                                    multiReminder.style.display = "block";
+                                    // Hide the individual reminder bar
+                                    const reminder = document.getElementById("reminder-message");
+                                    if (reminder) {
+                                        reminder.style.display = "none";
+                                    }
+                                }
+                            };
+
+                            // Start logic (modal)
+                            startBtn.onclick = () => {
+                                startedPassengers.add(username);
+                                modal.style.display = "none";
+                                modalActive = false;
+                                journeyStarted = true;
+
+                                fetch("/api/start_journey", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ ride_id: rideId })
+                                })
+                                .then(res => res.json())
+                                .then(data => {
+                                    document.getElementById("status-message").innerText = data.message;
+                                    document.getElementById("multi-reminder").style.display = "none";
+                                });
+                            };
+                        }
+                    });
+
+                    const multiReminder = document.getElementById("multi-reminder");
+                    if (multiReminder && !multiReminder.dataset.bound) {
+                        multiReminder.dataset.bound = true;
+
+                        multiReminder.addEventListener("click", () => {
+                            multiReminder.style.display = "none";
+
+                            // Mark all dismissed passengers as "started"
+                            for (const username of Object.keys(reminderMap)) {
+                                startedPassengers.add(username);
+                            }
+
+                            fetch("/api/start_journey", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ride_id: rideId })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                document.getElementById("status-message").innerText = data.message;
+                            })
+                            .catch(err => {
+                                alert("Something went wrong.");
+                                console.error(err);
+                            });
+                        });
+                    }
+                }
+                // Clear old markers 
                 if (passengerMarker) {
                     map.removeLayer(passengerMarker);
                     passengerMarker = null;
@@ -168,9 +272,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (data.passenger) {
                     if (Array.isArray(data.passenger)) {
-                        console.log("🕐 One-time ride detected");
+                        console.log("One-time ride detected");
                     } else {
-                        console.log("🛣️ Commuting ride detected");
+                        console.log("Commuting ride detected");
                     }
                 }
 
@@ -197,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Multiple Passenger Markers (for commuting rides)
                 if (data.passenger && typeof data.passenger === "object" && !Array.isArray(data.passenger)) {
-                    console.log("🛣️ Detected commuting ride mode: rendering multiple passenger markers");
+                    console.log("Detected commuting ride mode: rendering multiple passenger markers");
                     const passengerCount = Object.keys(data.passenger).length;
                     console.log(`👥 Number of passengers found: ${passengerCount}`);
     
@@ -233,7 +337,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     map.fitBounds(group.getBounds().pad(0.3));
                 }
     
-                // 🚗 Driver Marker
+                // Driver Marker
                 if (data.driver) {
                     const [dLat, dLon] = data.driver;
                     driverLatLng = [dLat, dLon];
@@ -244,7 +348,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         .openPopup();
                 }
     
-                // 🔍 Fit both markers in view
+                // Fit both markers in view
                 if (driverMarker && passengerMarker) {
                     const group = new L.featureGroup([driverMarker, passengerMarker]);
                     map.fitBounds(group.getBounds().pad(0.3));
@@ -276,17 +380,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (startBtn && !startBtn.dataset.bound) {
                         startBtn.dataset.bound = true;
                         startBtn.addEventListener("click", () => {
-                            console.log("✅ Start Journey clicked (modal)");
+                            console.log("Start Journey clicked (modal)");
                             startJourney();
                             modal.style.display = "none";
                         });
                     }
                 
-                    // 👇 Handle reminder click (start journey)
+                    // Handle reminder click (start journey)
                     if (reminder && !reminder.dataset.bound) {
                         reminder.dataset.bound = true;
                         reminder.addEventListener("click", () => {
-                            console.log("✅ Start Journey clicked (reminder)");
+                            console.log("Start Journey clicked (reminder)");
                             startJourney();
                             reminder.style.display = "none";
                         });
@@ -312,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                     if (passLat && passLon && driverLat && driverLon) {
                         const distance = getDistanceFromLatLonInMeters(passLat, passLon, driverLat, driverLon);
-                        console.log(`🚗 Distance to driver: ${Math.round(distance)} meters`);
+                        console.log(`Distance to driver: ${Math.round(distance)} meters`);
                 
                         if (distance > 250) {
                             console.log("Showing pickup adjust modal based on distance...");
@@ -390,7 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
 
-    // Fix Leaflet map rendering issue
+    // Leaflet map rendering issue
     setTimeout(() => {
         map.invalidateSize();
     }, 500);

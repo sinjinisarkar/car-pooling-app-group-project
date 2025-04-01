@@ -11,8 +11,6 @@ from sqlalchemy import func
 from flask_mail import Message
 from geopy.distance import geodesic
 
-
-
 # Route for home page
 @app.route('/')
 def home():
@@ -869,7 +867,7 @@ def filter_journeys():
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
 
 
-# ID 14 here:
+# ID 14 and 15 routes:
 # Store live locations in memory
 live_locations = {}
 
@@ -893,7 +891,7 @@ def view_pickup(ride_id):
                                passenger_name=passenger.username if passenger else None)
 
     elif is_driver and not is_passenger:
-        # ❗ Handle one-time ride: get *any* passenger if exists
+        # Handle one time ride: get any passenger if exists
         passenger_booking = book_ride.query.filter_by(ride_id=ride_id).first()
         passenger = User.query.get(passenger_booking.user_id) if passenger_booking else None
 
@@ -930,7 +928,6 @@ def track_passenger_location():
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
 
-    # Updated key format: passenger_<ride_id>_<ride_date>_<user_id>
     if ride_date:
         key = f"passenger_{ride_id}_{ride_date}_{user_id}"
     else:
@@ -948,7 +945,7 @@ def track_driver_location():
     ride_id = data.get("ride_id")
     lat = data.get("latitude")
     lon = data.get("longitude")
-    ride_date = data.get("ride_date")  # ✅ NEW
+    ride_date = data.get("ride_date")  
 
     if not ride_id or not lat or not lon:
         return jsonify({"error": "Invalid data"}), 400
@@ -967,7 +964,6 @@ def get_live_locations(ride_id):
     for key in live_locations:
         if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
             passenger_loc = live_locations[key]
-            print(f"✅ Found passenger location using key: {key}")
             break
 
     driver_loc = live_locations.get(f"driver_{ride_id}")
@@ -1037,7 +1033,7 @@ def start_journey():
     if ride.driver_id != current_user.id:
         return jsonify({"error": "Only the driver can start the journey"}), 403
 
-    ride.status = "ongoing"  # Make sure this column exists in your model!
+    ride.status = "ongoing"  
     db.session.commit()
     return jsonify({"message": "Journey started!"}), 200
 
@@ -1049,17 +1045,14 @@ def update_passenger_pickup_location():
     lat = data.get('latitude')
     lon = data.get('longitude')
 
-    print(f"📥 Received update pickup request: ride_id={ride_id}, lat={lat}, lon={lon}")
-
     # Validate inputs
     if ride_id is None or lat is None or lon is None:
         return jsonify({"error": "Missing ride_id or coordinates."}), 400
 
-    # ✅ Update the live location dictionary directly
+    # Update the live location dictionary directly
     ride_date = data.get("ride_date")
     key = f"passenger_{ride_id}_{ride_date}" if ride_date else f"passenger_{ride_id}"
     live_locations[key] = (lat, lon)
-    print(f"✅ Updated pickup location for ride_id={ride_id}")
     return jsonify({"message": "Pickup location updated."}), 200
 
 # Route for the commuting journeys
@@ -1069,25 +1062,25 @@ def view_pickup_commute(ride_id, date):
     ride = publish_ride.query.get_or_404(ride_id)
     driver = User.query.get(ride.driver_id)
 
-    # ✅ Convert date string to datetime.date
+    # Convert date string to datetime.date
     try:
         ride_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
         return "<h3><strong>Invalid date format</strong></h3>", 400
 
-    # ✅ Is current user a passenger for this date?
+    # Is current user a passenger for this date?
     is_passenger = book_ride.query.filter(
         book_ride.ride_id == ride_id,
         book_ride.user_id == current_user.id,
         db.func.date(book_ride.ride_date) == ride_date_obj
     ).first() is not None
 
-    # ✅ Is current user the driver?
+    # Is current user the driver?
     is_driver = ride.driver_id == current_user.id
 
     passenger_names = []
     if is_driver:
-        # ✅ Get all passengers who booked for this date
+        # Get all passengers who booked for this date
         bookings = book_ride.query.filter(
             book_ride.ride_id == ride_id,
             db.func.date(book_ride.ride_date) == ride_date_obj
