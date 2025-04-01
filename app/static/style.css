@@ -527,3 +527,35 @@ a:active {
     box-shadow: none;
     cursor: pointer;
 }
+
+.earnings-number {
+    font-size: 3rem;
+    color: #855bbe;
+    font-weight: bold;
+}
+
+.earnings-table {
+    background-color: transparent;
+    border: 1px solid #855bbe;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.earnings-table thead th {
+    text-align: center;
+    background-color: transparent;
+    border: 1px solid #855bbe;
+    color: #1f1d21;
+}
+
+.earnings-table tbody td {
+    border: 1px solid #855bbe;
+    color: #1f1d21;
+    background-color: transparent;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 2rem;
+}

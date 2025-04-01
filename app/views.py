@@ -5,11 +5,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
 from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, LiveLocation
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.sql import func
 from sqlalchemy import func
 from flask_mail import Message
 from geopy.distance import geodesic
+from collections import defaultdict
 
 # Route for home page
 @app.route('/')
@@ -714,11 +715,50 @@ def dashboard():
 
             published_rides["commuting"].append(ride_data)
 
+    # earnings logic
+    driver_rides = publish_ride.query.filter_by(driver_id=current_user.id).all()
+    driver_ride_ids = [ride.id for ride in driver_rides]
+
+    payments = Payment.query.filter(
+        Payment.ride_id.in_(driver_ride_ids),
+        Payment.status.in_(["Success", "Partially Refunded"])
+    ).all()
+
+    earnings_by_week = defaultdict(float)
+    total_earnings = 0.0
+    for payment in payments:
+        if payment.status == "Success":
+            driver_earning = payment.amount * 0.995
+        elif payment.status == "Partially Refunded":
+            # 75% charged (25% refunded), so driver still gets 75%
+            driver_earning = payment.amount * 0.75 * 0.995
+        else:
+            continue  # skip fully refunded or failed
+        week_str = payment.timestamp.strftime("%Y-W%U")
+        earnings_by_week[week_str] += driver_earning
+        total_earnings += driver_earning
+
+    # Create a list of tuples (week_str, earnings_amount, (start_date, end_date))
+    earnings_list = []
+    for week_str, amount in sorted(earnings_by_week.items()):
+        year, week_num = week_str.split("-W")
+        start_date, end_date = get_week_dates(year, week_num)
+        date_range_str = f"{start_date.strftime('%d %b %Y')} to {end_date.strftime('%d %b %Y')}"
+        earnings_list.append((week_str, amount, date_range_str))
+
     return render_template("dashboard.html",
-                           user=current_user,
-                           upcoming_journeys=upcoming_journeys,
-                           inactive_journeys=inactive_journeys,
-                           published_rides=published_rides)
+                            user=current_user,
+                            upcoming_journeys=upcoming_journeys,
+                            inactive_journeys=inactive_journeys,
+                            published_rides=published_rides,
+                            earnings_data=earnings_list,
+                            total_earnings=total_earnings)
+
+# helper function for /dashboard to get week start and end dates
+def get_week_dates(year, week_num):
+    start = datetime.strptime(f'{year}-W{int(week_num):02d}-1', "%Y-W%W-%w").date()
+    end = start + timedelta(days=6)
+    return start, end
 
 
 @app.route("/delete_saved_card/<int:card_id>", methods=["DELETE"])

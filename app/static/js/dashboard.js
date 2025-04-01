@@ -2,10 +2,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const showUpcoming = document.getElementById("showUpcoming");
     const showPublished = document.getElementById("showPublished");
     const showSavedCards = document.getElementById("showSavedCards");
+    const showEarnings = document.getElementById("showEarnings");
 
     const upcomingSection = document.getElementById("upcomingSection");
     const publishedSection = document.getElementById("publishedSection");
     const savedCardsSection = document.getElementById("savedCardsSection");
+    const earningsSection = document.getElementById("earningsSection");
     
     const toggleInactive = document.getElementById("toggleInactive");
     const inactiveSection = document.getElementById("inactiveSection");
@@ -16,34 +18,56 @@ document.addEventListener("DOMContentLoaded", function () {
     inactiveSection.style.display = "none"; // Ensure inactive section is hidden at start
     showUpcoming.classList.add("active");
 
-    if (showUpcoming && showPublished && showSavedCards) {
+    if (showUpcoming && showPublished && showSavedCards && showEarnings) {
         showUpcoming.addEventListener("click", function () {
             upcomingSection.style.display = "block";
             publishedSection.style.display = "none";
             savedCardsSection.style.display = "none";
+            earningsSection.style.display = "none";
             showUpcoming.classList.add("active");
             showPublished.classList.remove("active");
             showSavedCards.classList.remove("active");
+            showEarnings.classList.remove("active");
         });
 
         showPublished.addEventListener("click", function () {
             upcomingSection.style.display = "none";
             publishedSection.style.display = "block";
             savedCardsSection.style.display = "none";
+            earningsSection.style.display = "none";
             inactiveSection.style.display = "none";
             showPublished.classList.add("active");
             showUpcoming.classList.remove("active");
             showSavedCards.classList.remove("active");
+            showEarnings.classList.remove("active");
         });
 
         showSavedCards.addEventListener("click", function () {
             upcomingSection.style.display = "none";
             publishedSection.style.display = "none";
             savedCardsSection.style.display = "block";
+            earningsSection.style.display = "none";
             inactiveSection.style.display = "none";
             showSavedCards.classList.add("active");
             showUpcoming.classList.remove("active");
             showPublished.classList.remove("active");
+            showEarnings.classList.remove("active");
+        });
+
+        showEarnings.addEventListener("click", function () {
+            upcomingSection.style.display = "none";
+            publishedSection.style.display = "none";
+            savedCardsSection.style.display = "none";
+            earningsSection.style.display = "block";
+            inactiveSection.style.display = "none";
+            showEarnings.classList.add("active");
+            showUpcoming.classList.remove("active");
+            showPublished.classList.remove("active");
+            showSavedCards.classList.remove("active");
+
+            if (typeof animateEarnings === "function") {
+                animateEarnings();
+            }
         });
     }
 
