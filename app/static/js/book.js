@@ -31,6 +31,7 @@ function fetchAvailableSeats(selectedDates) {
 // Fetch available dates for booking
 function fetchAvailableDates() {
     const selectedDatesInput = document.querySelector("#selected_dates");
+    console.log("selected dates are ", selectedDatesInput)
     const rideIdElement = document.getElementById("ride_id");
 
     if (!selectedDatesInput || !rideIdElement) return;
@@ -39,12 +40,19 @@ function fetchAvailableDates() {
         .then(response => response.json())
         .then(data => {
             if (!data.available_dates) return;
+            console.log("available dates are:", data.available_dates)
             flatpickr(selectedDatesInput, {
                 mode: "multiple",
                 dateFormat: "Y-m-d",
                 disableMobile: true,
                 enable: data.available_dates,
-                onChange: (selectedDates) => fetchAvailableSeats(selectedDates)
+                onChange: function (selectedDateObjs) {
+                    const formattedDates = selectedDateObjs.map(date =>
+                        date.toLocaleDateString('en-CA')
+                    );
+                    console.log("Calling fetchAvailableSeats with:", formattedDates);
+                    fetchAvailableSeats(formattedDates);
+                }
             });
         });
 }
@@ -53,7 +61,7 @@ function fetchAvailableDates() {
 function getSelectedDates() {
     const selectedDatesInput = document.querySelector("#selected_dates");
     if (!selectedDatesInput || !selectedDatesInput._flatpickr) return [];
-    return selectedDatesInput._flatpickr.selectedDates.map(date => date.toISOString().split('T')[0]);
+    return selectedDatesInput._flatpickr.selectedDates.map(date => date.toLocaleDateString('en-CA'));
 }
 
 // Handle form submission for booking

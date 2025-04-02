@@ -5,12 +5,18 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
 from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, LiveLocation
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
 from sqlalchemy import func
 from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
+import pytz
+
+# Step 1: Get current UK time (timezone-aware)
+london = pytz.timezone("Europe/London")
+aware_now = datetime.now(london)
+now = aware_now.replace(tzinfo=None)
 
 # Route for home page
 @app.route('/')
@@ -205,18 +211,33 @@ def view_journeys():
     db.session.commit()  
     db.session.expire_all()  
     
-    # Get all rides that still have available seats on any date
-    journeys = publish_ride.query.all()
+    journeys = []
+
+    for ride in publish_ride.query.all():
+        if ride.category == "one-time" and ride.date_time < now:
+            continue  # Skip past one-time rides
+
+        # Filter out past dates from commuting rides (for display only)
+        try:
+            seat_data = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+        except (json.JSONDecodeError, TypeError):
+            seat_data = {}
+
+        if ride.category == "commuting":
+            seat_data = {
+            date: seats for date, seats in seat_data.items()
+            if datetime.strptime(date, "%Y-%m-%d") >= now
+        }
+
+        ride.seat_tracking = seat_data
+        journeys.append(ride)
+    
     booked_journey_ids = set()
     
     if current_user.is_authenticated:
         booked_journey_ids = {booking.ride_id for booking in book_ride.query.filter_by(user_id=current_user.id).all()}
     
     for journey in journeys:
-        try:
-            journey.seat_tracking = json.loads(journey.available_seats_per_date) if journey.available_seats_per_date else {}
-        except (json.JSONDecodeError, TypeError):
-            journey.seat_tracking = {}  # Prevent errors if data is invalid
         journey.user_has_booked = journey.id in booked_journey_ids
     
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
@@ -284,12 +305,23 @@ def book_onetime(ride_id):
 @login_required
 def book_commuting(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
-    print(f"ride is {ride} right on entering commuting route")
-    # Load latest seat tracking data
+    
+    # Load seat data from DB
     db.session.refresh(ride)
-    seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
-    # Get available commuting dates
-    available_dates = ride.recurrence_dates.split(",") if ride.recurrence_dates else []
+    raw_seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
+
+    # Filter seat_tracking to only include future dates
+    seat_tracking = {
+        date: seats for date, seats in raw_seat_tracking.items()
+        if datetime.strptime(date, "%Y-%m-%d") >= now
+    }
+
+    # Also filter available_dates (for calendar display)
+    available_dates = [
+        date.strip() for date in (ride.recurrence_dates.split(",") if ride.recurrence_dates else [])
+        if datetime.strptime(date.strip(), "%Y-%m-%d") >= now
+    ]
+
     seat_data = seat_tracking
     
     if request.method == 'POST':
@@ -327,38 +359,37 @@ def get_available_dates(ride_id):
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
         return jsonify({"available_dates": []})
     # Properly split and clean recurrence dates
-    available_dates = [date.strip() for date in ride.recurrence_dates.split(",")]
+    available_dates = [
+        date.strip() for date in ride.recurrence_dates.split(",")
+        if datetime.strptime(date.strip(), "%Y-%m-%d") >= now
+    ]
     return jsonify({"available_dates": available_dates})
 
 
 # Route to get available seats
 @app.route('/api/get_available_seats/<int:ride_id>', methods=['GET', 'POST'])
 def get_available_seats(ride_id):
+    ride = publish_ride.query.get_or_404(ride_id)
     if request.method == 'POST':
         data = request.json  
         selected_dates = data.get("selected_dates", [])
+        if isinstance(selected_dates, str):
+            selected_dates = [date.strip() for date in selected_dates.split(",") if date.strip()]
     else:
         selected_dates = request.args.get("selected_dates", "").split(",")
-    ride = publish_ride.query.get_or_404(ride_id)
     
-    # Ensure available_seats_per_date exists
-    if not ride.available_seats_per_date or ride.available_seats_per_date.strip() == "":
-        return jsonify({"available_seats": {}})
-    seat_tracking = {}
     try:
-        seat_tracking = json.loads(ride.available_seats_per_date)
+        seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}
     except json.JSONDecodeError:
-        seat_tracking = {}  
-    
-    # Define filtered_seats properly
-    filtered_seats = {}
-    if isinstance(selected_dates, list):
-        for date in selected_dates:
-            date = date.strip()
-            filtered_seats[date] = seat_tracking.get(date, 0)
-    else:
-        selected_dates = selected_dates.strip()
-        filtered_seats[selected_dates] = seat_tracking.get(selected_dates, 0)
+        seat_tracking = {}
+
+    # Filter out past dates and only include selected ones
+    filtered_seats = {
+        date: seat_tracking.get(date, 0)
+        for date in selected_dates
+        if date in seat_tracking and datetime.strptime(date, "%Y-%m-%d") >= now
+    }
+
     return jsonify({"available_seats": filtered_seats})
 
 
@@ -467,7 +498,7 @@ def process_payment():
                 book_ride_id=new_booking.id,
                 amount=per_day_price,  
                 status="Success",
-                timestamp=datetime.utcnow()
+                timestamp=now
             )
             db.session.add(new_payment)
             db.session.commit()
@@ -641,8 +672,6 @@ def dashboard():
     upcoming_journeys = []
     inactive_journeys = []
 
-    current_time = datetime.utcnow()
-
     for booking in booked_rides:
         ride = publish_ride.query.get(booking.ride_id)
         if ride:
@@ -787,10 +816,8 @@ def cancel_booking(booking_id):
     # Find associated payment
     payment = Payment.query.filter_by(book_ride_id=booking.id).first()
 
-    # Get current time and ride time
-    current_time = datetime.utcnow()
     ride_time = booking.ride_date
-    time_difference = (ride_time - current_time).total_seconds() / 60  # Convert to minutes
+    time_difference = (ride_time - now).total_seconds() / 60  # Convert to minutes
 
     # Find associated payment
     payment = Payment.query.filter_by(book_ride_id=booking.id).first()
@@ -815,7 +842,7 @@ def cancel_booking(booking_id):
 
     # Mark the booking as canceled
     booking.status = "Canceled"
-    booking.cancellation_timestamp = current_time
+    booking.cancellation_timestamp = now
 
     # Restore seats for the canceled date
     seat_tracking = json.loads(ride.available_seats_per_date) if ride.available_seats_per_date else {}

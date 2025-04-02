@@ -76,8 +76,8 @@
                                             <div class="detail-item">
                                                 <span class="detail-heading">Commuting Days:</span>
                                                 <ul class="date-list">
-                                                    {% for date in journey.recurrence_dates.split(',') %}
-                                                    <li>{{ date.strip() }}</li>
+                                                    {% for date in journey.seat_tracking.keys() | sort %}
+                                                    <li>{{ date }}</li>
                                                     {% endfor %}
                                                 </ul>
                                             </div>
