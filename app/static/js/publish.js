@@ -54,9 +54,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // price validation
     const priceInput = document.getElementById("price_per_seat");
 
-    priceInput.addEventListener("input", function () {
-        if (priceInput.value < 1) {
-            priceInput.value = 1;
-        }
-    });
 });
