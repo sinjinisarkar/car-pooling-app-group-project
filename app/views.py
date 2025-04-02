@@ -216,6 +216,7 @@ def view_journeys():
     journeys = []
 
     for ride in publish_ride.query.all():
+
         if ride.category == "one-time" and ride.date_time < now:
             continue  # Skip past one-time rides
 
@@ -233,6 +234,12 @@ def view_journeys():
 
         ride.seat_tracking = seat_data
         journeys.append(ride)
+
+        # Remove journeys where no future dates have seats left
+        journeys = [
+            journey for journey in journeys
+            if journey.seat_tracking and any(seats > 0 for seats in journey.seat_tracking.values())
+        ]
     
     booked_journey_ids = set()
     
@@ -362,6 +369,11 @@ def book_commuting(ride_id):
 # Route to get available dates
 @app.route('/api/get_available_dates/<int:ride_id>', methods=['GET'])
 def get_available_dates(ride_id):
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     ride = publish_ride.query.get_or_404(ride_id)
     # Ensure recurrence_dates exists and is not empty
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
