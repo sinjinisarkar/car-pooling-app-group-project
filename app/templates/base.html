@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <meta name="current-user" content="{{ user.username }}">
+
     <title>{% block title %} CatchMyRide {% endblock %}</title>
 
     <!-- Local and Bootstrap CSS -->
@@ -230,7 +232,12 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Chat Notification Stack -->
+    <div id="chat-notification-stack" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
+        <!-- Individual notifications will be injected here by chat.js -->
+    </div>
+    
     <!-- Footer -->
     <br>
     <footer class="bg-dark text-white text-center py-3 mt-5">
@@ -269,7 +276,7 @@
     <script src="{{ url_for('static', filename='js/pickup_tracking.js') }}"></script>
     <script src="{{ url_for('static', filename='js/view_journeys.js') }}"></script>
     <script src="{{ url_for('static', filename='js/earnings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
-    
 </body>
 </html>
