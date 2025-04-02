@@ -161,3 +161,14 @@ class ChatMessage(db.Model):
             "message": self.message,
             "timestamp": self.timestamp.strftime("%H:%M")
         }
+
+# Table for editing ride details
+class EditProposal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('book_ride.id'), nullable=False)
+    sender = db.Column(db.String(80), nullable=False)
+    proposed_pickup = db.Column(db.String(255))
+    proposed_time = db.Column(db.String(20))
+    proposed_cost = db.Column(db.Float)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

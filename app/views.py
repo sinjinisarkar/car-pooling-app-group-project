@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, EditProposal
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
@@ -1275,7 +1275,34 @@ def get_messages(booking_id):
         return jsonify({"error": "Unauthorized"}), 403
 
     messages = ChatMessage.query.filter_by(booking_id=booking_id).order_by(ChatMessage.timestamp).all()
-    return jsonify([msg.to_dict() for msg in messages])
+    proposals = EditProposal.query.filter_by(booking_id=booking_id).order_by(EditProposal.timestamp).all()
+
+    combined = []
+
+    for msg in messages:
+        combined.append({
+            "type": "message",
+            "sender": msg.sender_username,
+            "message": msg.message,
+            "timestamp": msg.timestamp.strftime('%Y-%m-%d %H:%M')
+        })
+
+    for prop in proposals:
+        combined.append({
+            "type": "proposal",
+            "id": prop.id,
+            "sender": prop.sender,
+            "pickup": prop.proposed_pickup,
+            "time": prop.proposed_time,
+            "cost": prop.proposed_cost,
+            "status": prop.status,
+            "timestamp": prop.timestamp.strftime('%Y-%m-%d %H:%M')
+        })
+
+    # Sort by timestamp (assuming both ChatMessage and Proposal have timestamp)
+    combined.sort(key=lambda x: x["timestamp"])
+
+    return jsonify(combined)
 
 # Route to check for new messages
 @app.route('/check_new_messages')
@@ -1316,3 +1343,31 @@ def mark_message_seen(message_id):
         msg.seen_by_receiver = True
         db.session.commit()
     return jsonify(success=True)
+
+# Route to handle edit proposals
+@app.route('/propose_edit', methods=['POST'])
+@login_required
+def propose_edit():
+    data = request.get_json()
+    booking_id = data.get("booking_id")
+    pickup = data.get("pickup")
+    time = data.get("time")
+    cost = data.get("cost")
+
+    booking = book_ride.query.get_or_404(booking_id)
+
+    if current_user.id not in [booking.user_id, booking.ride.driver_id]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    proposal = EditProposal(
+        booking_id=booking_id,
+        sender=current_user.username,
+        proposed_pickup=pickup or None,
+        proposed_time=time or None,
+        proposed_cost=float(cost) if cost else None,
+    )
+
+    db.session.add(proposal)
+    db.session.commit()
+
+    return jsonify({"success": True})
