@@ -227,12 +227,26 @@ def view_journeys():
             seat_data = {}
 
         if ride.category == "commuting":
-            seat_data = {
-            date: seats for date, seats in seat_data.items()
-            if datetime.strptime(date, "%Y-%m-%d") >= now
-        }
+            filtered_seats = {}
+            commute_times = []
+            try:
+                commute_times = [datetime.strptime(t.strip(), "%H:%M").time() for t in ride.commute_times.split(",") if t.strip()]
+            except Exception as e:
+                print(f"error: Failed to parse commute_times: {ride.commute_times} — {e}")
+
+            earliest_time = min(commute_times) if commute_times else time(0, 0)
+
+            for date, seats in seat_data.items():
+                try:
+                    dt = datetime.combine(datetime.strptime(date, "%Y-%m-%d").date(), earliest_time)
+                    if dt >= now:
+                        filtered_seats[date] = seats
+                except Exception as e:
+                    print(f"error: Could not parse datetime for {date}: {e}")
+            seat_data = filtered_seats
 
         ride.seat_tracking = seat_data
+        print(f"appending ride {ride.seat_tracking}")
         journeys.append(ride)
 
         # Remove journeys where no future dates have seats left
@@ -240,6 +254,7 @@ def view_journeys():
             journey for journey in journeys
             if journey.seat_tracking and any(seats > 0 for seats in journey.seat_tracking.values())
         ]
+        print("🎀", journeys)
     
     booked_journey_ids = set()
     
