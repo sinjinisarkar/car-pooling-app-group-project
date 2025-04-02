@@ -152,6 +152,7 @@ class ChatMessage(db.Model):
     sender_username = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    seen_by_receiver = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {

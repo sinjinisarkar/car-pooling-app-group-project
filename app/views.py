@@ -1188,6 +1188,7 @@ def chat_view(booking_id):
     return render_template("chat.html", booking=booking)
 
 
+# Route to send message 
 @app.route('/send_message', methods=['POST'])
 @login_required
 def send_message():
@@ -1212,7 +1213,7 @@ def send_message():
 
     return jsonify(new_msg.to_dict()), 200
 
-
+# Route to get messages 
 @app.route('/get_messages/<int:booking_id>')
 @login_required
 def get_messages(booking_id):
@@ -1222,3 +1223,43 @@ def get_messages(booking_id):
 
     messages = ChatMessage.query.filter_by(booking_id=booking_id).order_by(ChatMessage.timestamp).all()
     return jsonify([msg.to_dict() for msg in messages])
+
+# Route to check for new messages
+@app.route('/check_new_messages')
+@login_required
+def check_new_messages():
+    user_bookings = book_ride.query.filter(
+        (book_ride.user_id == current_user.id) |
+        (book_ride.ride.has(driver_id=current_user.id))
+    ).with_entities(book_ride.id).all()
+
+    booking_ids = [b.id for b in user_bookings]
+
+    recent_messages = ChatMessage.query.filter(
+        ChatMessage.booking_id.in_(booking_ids),
+        ChatMessage.sender_username != current_user.username,
+        ChatMessage.seen_by_receiver == False
+    ).order_by(ChatMessage.timestamp.desc()).limit(5).all()
+
+    if not recent_messages:
+        return jsonify({"new": False})
+
+    messages_data = [
+        {
+            "sender": msg.sender_username,
+            "booking_id": msg.booking_id,
+            "message_id": msg.id
+        } for msg in recent_messages
+    ]
+
+    return jsonify({"new": True, "messages": messages_data})
+
+# Route to check if the messae is seen
+@app.route('/mark_message_seen/<int:message_id>', methods=['POST'])
+@login_required
+def mark_message_seen(message_id):
+    msg = ChatMessage.query.get_or_404(message_id)
+    if current_user.username != msg.sender_username:  # Only receiver can mark it seen
+        msg.seen_by_receiver = True
+        db.session.commit()
+    return jsonify(success=True)
