@@ -13,10 +13,6 @@ from geopy.distance import geodesic
 from collections import defaultdict
 import pytz
 
-# Step 1: Get current UK time (timezone-aware)
-london = pytz.timezone("Europe/London")
-aware_now = datetime.now(london)
-now = aware_now.replace(tzinfo=None)
 
 # Route for home page
 @app.route('/')
@@ -208,6 +204,12 @@ def publish_ride_view():
 # Route for viewing ride by the passenger/user
 @app.route('/view_journeys')
 def view_journeys():
+
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     db.session.commit()  
     db.session.expire_all()  
     
@@ -304,6 +306,12 @@ def book_onetime(ride_id):
 @app.route('/book_commuting/<int:ride_id>', methods=['GET', 'POST'])
 @login_required
 def book_commuting(ride_id):
+
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     ride = publish_ride.query.get_or_404(ride_id)
     
     # Load seat data from DB
@@ -369,7 +377,14 @@ def get_available_dates(ride_id):
 # Route to get available seats
 @app.route('/api/get_available_seats/<int:ride_id>', methods=['GET', 'POST'])
 def get_available_seats(ride_id):
+
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     ride = publish_ride.query.get_or_404(ride_id)
+
     if request.method == 'POST':
         data = request.json  
         selected_dates = data.get("selected_dates", [])
@@ -478,6 +493,11 @@ def process_payment():
             else:
                 print(f"Warning: Ride date {selected_date} not found in seat tracking")
                 return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
+            
+            # get current UK time (timezone-aware)
+            london = pytz.timezone("Europe/London")
+            aware_now = datetime.now(london)
+            now = aware_now.replace(tzinfo=None)
             
             # Save the booking
             new_booking = book_ride(
@@ -808,6 +828,12 @@ def delete_saved_card(card_id):
 @login_required
 def cancel_booking(booking_id):
     booking = book_ride.query.get(booking_id)
+
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     if not booking:
         return jsonify({"success": False, "message": "Booking not found"}), 404
 
