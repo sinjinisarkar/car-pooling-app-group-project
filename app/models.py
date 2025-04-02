@@ -124,6 +124,7 @@ class Payment(db.Model):
 
 cipher = Fernet(app.config["ENCRYPTION_KEY"])
 
+# Table to save card
 class SavedCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -144,12 +145,18 @@ class SavedCard(db.Model):
     def get_card_number(self):
         return cipher.decrypt(self.encrypted_card_number.encode()).decode()
 
-
-class LiveLocation(db.Model):
+# Table for chat 
+class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    role = db.Column(db.String(10), nullable=False)  # 'driver' or 'passenger'
+    booking_id = db.Column(db.Integer, db.ForeignKey("book_ride.id"), nullable=False)
+    sender_username = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "sender": self.sender_username,
+            "message": self.message,
+            "timestamp": self.timestamp.strftime("%H:%M")
+        }

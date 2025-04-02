@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3>Chat with {{ 'Driver' if booking.user_id == user.id else 'Passenger' }} for Ride #{{ booking.ride_id }}</h3>
+    <div class="card shadow-sm">
+        <div class="card-body" id="chat-box" style="height: 400px; overflow-y: auto;">
+            <!-- Messages will load here -->
+        </div>
+        <div class="card-footer">
+            <form id="chat-form">
+                <div class="input-group">
+                    <input type="text" id="message-input" class="form-control" placeholder="Type a message..." autocomplete="off">
+                    <button class="btn btn-primary" type="submit">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

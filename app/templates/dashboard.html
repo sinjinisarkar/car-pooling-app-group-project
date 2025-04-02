@@ -55,6 +55,10 @@
                                                 View Pickup Location
                                             </a>
                                         {% endif %}
+                                        <!-- Chat Button -->
+                                        <a href="{{ url_for('chat_view', booking_id=journey.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
+                                            Chat
+                                        </a>
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -121,6 +125,12 @@
                                 <div class="text-center mt-3">
                                     <!-- Driver Button: Track Passengers -->
                                     <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block">Track Passenger</a>
+                                    {% for passenger in ride.passengers %}
+                                        <div class="mt-2 d-flex justify-content-between align-items-center">
+                                            <span class="text-sm">{{ passenger.name }} ({{ passenger.email }})</span>
+                                            <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-sm btn-chat">Chat</a>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
@@ -178,7 +188,10 @@
                                             </a>
                                             <ul>
                                                 {% for passenger in passengers %}
-                                                    <li>{{ passenger.name }} ({{ passenger.email }})</li>
+                                                    <li class="d-flex justify-content-between align-items-center">
+                                                        <span>{{ passenger.name }} ({{ passenger.email }})</span>
+                                                        <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-sm btn-chat">Chat</a>
+                                                    </li>
                                                 {% endfor %}
                                             </ul>
                                         {% else %}

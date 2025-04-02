@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <meta name="current-user" content="{{ user.username }}">
+
     <title>{% block title %} CatchMyRide {% endblock %}</title>
 
     <!-- Local and Bootstrap CSS -->
@@ -269,7 +271,7 @@
     <script src="{{ url_for('static', filename='js/pickup_tracking.js') }}"></script>
     <script src="{{ url_for('static', filename='js/view_journeys.js') }}"></script>
     <script src="{{ url_for('static', filename='js/earnings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
-    
 </body>
 </html>

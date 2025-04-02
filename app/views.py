@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, LiveLocation
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from sqlalchemy.sql import func
@@ -683,7 +683,7 @@ def dashboard():
                 "time": ride.date_time.strftime('%H:%M'),
                 "price": ride.price_per_seat,
                 "passengers": [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email}
+                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
                     for passenger in book_ride.query.filter_by(ride_id=ride.id).all()
                 ]
             })
@@ -709,7 +709,7 @@ def dashboard():
                     book_ride.status != "Canceled"
                 ).all()
                 ride_data["dates"][date_str] = [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email}
+                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
                     for passenger in passengers
                 ]
 
@@ -1176,3 +1176,49 @@ def get_commute_live_locations(ride_id, ride_date):
         "driver": driver_loc,
         "nearby": nearby
     })
+
+
+# ID 17: chat option between driver and passenger
+@app.route('/chat/<int:booking_id>')
+@login_required
+def chat_view(booking_id):
+    booking = book_ride.query.get_or_404(booking_id)
+    if current_user.id not in [booking.user_id, booking.ride.driver_id]:
+        return "Unauthorized", 403
+    return render_template("chat.html", booking=booking)
+
+
+@app.route('/send_message', methods=['POST'])
+@login_required
+def send_message():
+    data = request.get_json()
+    booking_id = data.get("booking_id")
+    message = data.get("message")
+
+    if not message:
+        return jsonify({"error": "Empty message"}), 400
+
+    booking = book_ride.query.get_or_404(booking_id)
+    if current_user.id not in [booking.user_id, booking.ride.driver_id]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    new_msg = ChatMessage(
+        booking_id=booking_id,
+        sender_username=current_user.username,
+        message=message
+    )
+    db.session.add(new_msg)
+    db.session.commit()
+
+    return jsonify(new_msg.to_dict()), 200
+
+
+@app.route('/get_messages/<int:booking_id>')
+@login_required
+def get_messages(booking_id):
+    booking = book_ride.query.get_or_404(booking_id)
+    if current_user.id not in [booking.user_id, booking.ride.driver_id]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    messages = ChatMessage.query.filter_by(booking_id=booking_id).order_by(ChatMessage.timestamp).all()
+    return jsonify([msg.to_dict() for msg in messages])
