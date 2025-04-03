@@ -51,7 +51,29 @@ document.addEventListener("DOMContentLoaded", function () {
     updateUI();
     categorySelect?.addEventListener("change", updateUI);
 
-    // price validation
+    // form validation for price and available seats
+    const form = document.querySelector(".custom-form");
     const priceInput = document.getElementById("price_per_seat");
+    const seatsInput = document.getElementById("available_seats");
 
+    if (form && priceInput && seatsInput) {
+        form.addEventListener("submit", function (e) {
+            const priceValue = parseFloat(priceInput.value);
+            const seatsValue = parseInt(seatsInput.value);
+
+            if (isNaN(priceValue) || priceValue <= 0) {
+                e.preventDefault();
+                alert("Please enter a price greater than 0.");
+                priceInput.focus();
+                return;
+            }
+
+            if (isNaN(seatsValue) || seatsValue < 1 || seatsValue > 8) {
+                e.preventDefault();
+                alert("Please enter a valid number of seats (1 to 8).");
+                seatsInput.focus();
+                return;
+            }
+        });
+    }
 });

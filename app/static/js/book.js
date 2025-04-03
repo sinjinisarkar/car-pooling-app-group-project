@@ -31,7 +31,6 @@ function fetchAvailableSeats(selectedDates) {
 // Fetch available dates for booking
 function fetchAvailableDates() {
     const selectedDatesInput = document.querySelector("#selected_dates");
-    console.log("selected dates are ", selectedDatesInput)
     const rideIdElement = document.getElementById("ride_id");
 
     if (!selectedDatesInput || !rideIdElement) return;
@@ -50,7 +49,6 @@ function fetchAvailableDates() {
                     const formattedDates = selectedDateObjs.map(date =>
                         date.toLocaleDateString('en-CA')
                     );
-                    console.log("Calling fetchAvailableSeats with:", formattedDates);
                     fetchAvailableSeats(formattedDates);
                 }
             });
