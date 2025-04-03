@@ -560,3 +560,12 @@ a:active {
     margin-top: 2rem;
 }
 
+/* ---------------------------------------- Manager Dashboard ---------------------------------------- */
+.total-earnings-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    text-align: center;
+}

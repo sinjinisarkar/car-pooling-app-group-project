@@ -1,8 +1,73 @@
-<!-- dashboard.html -->
 {% extends "management/manager_base.html" %}
 {% block title %}Manager Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, Manager</h2>
-<p>Select an option from the sidebar to begin.</p>
+<div class="container-fluid px-2 mt-5">
+    <h2 class="mb-4 text-center">Platform Stats</h2>
+    <p class="text-muted mb-4 text-center">Here's a quick view at our platform earnings and ride stats! 
+        Detailed weekly earnings table can be found at the end of this page.</p>
+
+    <!-- Row 1: Pie Chart + Total Earnings -->
+    <div class="row mb-5">
+        <div class="col-md-6 d-flex justify-content-center align-items-center">
+            <div class="chart-container">
+                <canvas
+                    id="ridesChart"
+                    data-published="{{ total_rides_published }}"
+                    data-booked="{{ total_bookings }}"
+                ></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex justify-content-center align-items-center">
+            <div class="total-earnings-box">
+                <h4>Wowie! We've earned a total of</h4>
+                <span id="totalRevenue" data-total="{{ total_revenue }}" class="earnings-number">
+                    £{{ total_revenue }}
+                </span>
+                <h4>with CatchMyRide!</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Earnings Bar Chart -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="chart-container d-flex justify-content-center">
+                <canvas
+                    id="platformEarningsChart"
+                    data-labels='{{ earnings_chart_labels | tojson }}'
+                    data-values='{{ earnings_chart_values | tojson }}'
+                    data-dates='{{ earnings_chart_dates | tojson }}'
+                ></canvas>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <!-- Row 3: Earnings Table -->
+    <div class="row">
+        <div class="col-12 mt-4">
+            <h4 class="text-center mb-3">Platform Earnings Per Week</h4>
+            <table class="table earnings-table">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Date Range</th>
+                        <th>Earnings (£)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week_str, amount, date_range in weekly_earnings %}
+                    <tr>
+                        <td>{{ week_str }}</td>
+                        <td>{{ date_range }}</td>
+                        <td>{{ amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
 {% endblock %}

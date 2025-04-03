@@ -397,14 +397,22 @@ def get_available_dates(ride_id):
     now = aware_now.replace(tzinfo=None)
 
     ride = publish_ride.query.get_or_404(ride_id)
-    # Ensure recurrence_dates exists and is not empty
+    # ensure recurrence_dates exists and is not empty
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
         return jsonify({"available_dates": []})
-    # Properly split and clean recurrence dates
-    available_dates = [
-        date.strip() for date in ride.recurrence_dates.split(",")
-        if datetime.strptime(date.strip(), "%Y-%m-%d") >= now
-    ]
+    
+    commute_time = ride.commute_times.strip() if ride.commute_times else None
+    
+    # every date after today, and today only if time is after current time
+    available_dates = []
+    for date_str in ride.recurrence_dates.split(","):
+        date_str = date_str.strip()
+        try:
+            combined_dt = datetime.strptime(f"{date_str} {commute_time}", "%Y-%m-%d %H:%M")
+            if combined_dt > now:
+                available_dates.append(date_str)
+        except ValueError:
+            continue
     return jsonify({"available_dates": available_dates})
 
 
@@ -1370,4 +1378,43 @@ def make_manager():
 @login_required
 @manager_required
 def manager_dashboard():
-    return render_template('management/manager_dashboard.html')
+    total_bookings = book_ride.query.count()
+    total_rides_published = publish_ride.query.count()
+
+    # Total platform earnings
+    total_revenue = db.session.query(
+        func.sum(Payment.amount * 0.005)
+    ).filter_by(status="Success", refunded=False).scalar() or 0
+
+    # Weekly earnings logic
+    payments = Payment.query.filter_by(status="Success", refunded=False).all()
+    weekly_earnings = defaultdict(float)
+
+    for payment in payments:
+        fee = payment.amount * 0.005
+        week_str = payment.timestamp.strftime("%Y-W%U")
+        weekly_earnings[week_str] += fee
+
+    # Format for table
+    weekly_earnings_list = []
+    for week_str, amount in sorted(weekly_earnings.items()):
+        year, week_num = week_str.split("-W")
+        start_date, end_date = get_week_dates(year, week_num)
+        date_range = f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
+        weekly_earnings_list.append((week_str, round(amount, 2), date_range))
+
+    # Extract for chart.js
+    labels = [entry[0] for entry in weekly_earnings_list]
+    values = [entry[1] for entry in weekly_earnings_list]
+    date_ranges = [entry[2] for entry in weekly_earnings_list]
+
+    return render_template(
+        "management/manager_dashboard.html",
+        total_bookings=total_bookings,
+        total_rides_published=total_rides_published,
+        total_revenue=round(total_revenue, 2),
+        weekly_earnings=weekly_earnings_list,
+        earnings_chart_labels=labels,
+        earnings_chart_values=values,
+        earnings_chart_dates=date_ranges
+    )
