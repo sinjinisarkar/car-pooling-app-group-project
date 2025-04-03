@@ -48,13 +48,10 @@
                 <div class="sidebar-box">
                     <div class="list-group">
                         <a href="{{ url_for('manager_dashboard') }}" class="list-group-item {% if request.endpoint == 'manager_dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                            <i class="fas fa-tachometer-alt"></i> Stats and Revenue
                         </a>
                         <a href="#" class="list-group-item {% if request.endpoint == 'configure_fee' %}active{% endif %}">
                             <i class="fas fa-cogs"></i> Configure Fee
-                        </a>
-                        <a href="#" class="list-group-item {% if request.endpoint == 'view_revenue' %}active{% endif %}">
-                            <i class="fas fa-chart-line"></i> View Revenue
                         </a>
                     </div>
                 </div>
