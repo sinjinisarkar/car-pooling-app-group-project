@@ -57,9 +57,15 @@
                         {{ user.username }}
                     </button>
                     <div class="dropdown-menu">
-                        <a href="{{ url_for('dashboard') }}" class="dropdown-item">
-                            <i class='bx bx-home'></i> Dashboard
-                        </a>
+                        {% if user.is_manager %}
+                            <a href="{{ url_for('manager_dashboard') }}" class="dropdown-item">
+                                <i class='bx bx-briefcase'></i> Manager Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('dashboard') }}" class="dropdown-item">
+                                <i class='bx bx-home'></i> Dashboard
+                            </a>
+                        {% endif %}
                         <form id="logout-form" action="{{ url_for('logout') }}" method="POST">
                             <button type="submit" class="dropdown-item"><i class='bx bx-exit'></i>Logout</button>
                         </form>

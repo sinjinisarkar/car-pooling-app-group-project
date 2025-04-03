@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, EditProposal
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, EditProposal, PlatformSetting
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
@@ -12,6 +12,7 @@ from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
 import pytz
+from app.utils import manager_required, get_platform_fee
 
 
 # Route for home page
@@ -110,7 +111,13 @@ def login():
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
 
-    return jsonify({"message": "Login successful"}), 200
+    # Send role-based redirect path under the key expected by auth.js
+    redirect_path = url_for('manager_dashboard') if user.is_manager else url_for('home')
+
+    return jsonify({
+        "message": "Login successful",
+        "redirect_url": redirect_path
+        }), 200
 
 
 # Route for User Logout
@@ -390,14 +397,22 @@ def get_available_dates(ride_id):
     now = aware_now.replace(tzinfo=None)
 
     ride = publish_ride.query.get_or_404(ride_id)
-    # Ensure recurrence_dates exists and is not empty
+    # ensure recurrence_dates exists and is not empty
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
         return jsonify({"available_dates": []})
-    # Properly split and clean recurrence dates
-    available_dates = [
-        date.strip() for date in ride.recurrence_dates.split(",")
-        if datetime.strptime(date.strip(), "%Y-%m-%d") >= now
-    ]
+    
+    commute_time = ride.commute_times.strip() if ride.commute_times else None
+    
+    # every date after today, and today only if time is after current time
+    available_dates = []
+    for date_str in ride.recurrence_dates.split(","):
+        date_str = date_str.strip()
+        try:
+            combined_dt = datetime.strptime(f"{date_str} {commute_time}", "%Y-%m-%d %H:%M")
+            if combined_dt > now:
+                available_dates.append(date_str)
+        except ValueError:
+            continue
     return jsonify({"available_dates": available_dates})
 
 
@@ -539,13 +554,15 @@ def process_payment():
             db.session.add(new_booking)
             db.session.commit()
             
+            fee_rate = get_platform_fee()
             new_payment = Payment(
                 user_id=current_user.id,
                 ride_id=ride.id,
                 book_ride_id=new_booking.id,
                 amount=per_day_price,  
                 status="Success",
-                timestamp=now
+                timestamp=now,
+                platform_fee=fee_rate
             )
             db.session.add(new_payment)
             db.session.commit()
@@ -851,12 +868,14 @@ def dashboard():
 
     earnings_by_week = defaultdict(float)
     total_earnings = 0.0
+    
     for payment in payments:
+        fee = payment.platform_fee or 0.005  # fallback if None
         if payment.status == "Success":
-            driver_earning = payment.amount * 0.995
+            driver_earning = payment.amount * (1 - fee)
         elif payment.status == "Partially Refunded":
             # 75% charged (25% refunded), so driver still gets 75%
-            driver_earning = payment.amount * 0.75 * 0.995
+            driver_earning = payment.amount * 0.75 * (1 - fee)
         else:
             continue  # skip fully refunded or failed
         week_str = payment.timestamp.strftime("%Y-W%U")
@@ -1478,3 +1497,90 @@ def respond_proposal():
 
     db.session.commit()
     return jsonify({"success": True})
+
+# Routes for management view
+@app.cli.command("make-manager")
+def make_manager():
+    email = input("Enter user email to promote: ")
+    with app.app_context():
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.is_manager = True
+            db.session.commit()
+            print(f"{user.email} is now a manager ✅")
+        else:
+            print("User not found ❌")
+
+
+@app.route('/manager/dashboard')
+@login_required
+@manager_required
+def manager_dashboard():
+    total_bookings = book_ride.query.count()
+    total_rides_published = publish_ride.query.count()
+
+    # Total platform earnings
+    total_revenue = db.session.query(
+        func.sum(Payment.amount * 0.005)
+    ).filter_by(status="Success", refunded=False).scalar() or 0
+
+    # Weekly earnings logic
+    payments = Payment.query.filter_by(status="Success", refunded=False).all()
+    weekly_earnings = defaultdict(float)
+
+    for payment in payments:
+        fee = payment.amount * 0.005
+        week_str = payment.timestamp.strftime("%Y-W%U")
+        weekly_earnings[week_str] += fee
+
+    # Format for table
+    weekly_earnings_list = []
+    for week_str, amount in sorted(weekly_earnings.items()):
+        year, week_num = week_str.split("-W")
+        start_date, end_date = get_week_dates(year, week_num)
+        date_range = f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
+        weekly_earnings_list.append((week_str, round(amount, 2), date_range))
+
+    # Extract for chart.js
+    labels = [entry[0] for entry in weekly_earnings_list]
+    values = [entry[1] for entry in weekly_earnings_list]
+    date_ranges = [entry[2] for entry in weekly_earnings_list]
+
+    return render_template(
+        "management/manager_dashboard.html",
+        total_bookings=total_bookings,
+        total_rides_published=total_rides_published,
+        total_revenue=round(total_revenue, 2),
+        weekly_earnings=weekly_earnings_list,
+        earnings_chart_labels=labels,
+        earnings_chart_values=values,
+        earnings_chart_dates=date_ranges
+    )
+
+
+@app.route("/manager/configure_fee", methods=["GET", "POST"])
+@login_required
+@manager_required
+def configure_fee():
+    setting = PlatformSetting.query.filter_by(key="platform_fee").first()
+
+    if request.method == "POST":
+        new_value = request.form.get("fee")
+        try:
+            new_fee = float(new_value)
+            if not 0 <= new_fee <= 1:
+                return jsonify({"success": False, "message": "Fee must be between 0 and 1."}), 400
+            else:
+                if setting:
+                    setting.value = str(new_fee)
+                else:
+                    setting = PlatformSetting(key="platform_fee", value=str(new_fee))
+                    db.session.add(setting)
+                db.session.commit()
+                return jsonify({"success": True, "message": "Platform fee updated successfully."})
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid input. Please enter a number."}), 400
+
+    # If GET request
+    current_fee = float(setting.value) if setting else 0.005
+    return render_template("management/configure_fee.html", current_fee=current_fee)
