@@ -216,6 +216,7 @@ def view_journeys():
     journeys = []
 
     for ride in publish_ride.query.all():
+
         if ride.category == "one-time" and ride.date_time < now:
             continue  # Skip past one-time rides
 
@@ -226,13 +227,34 @@ def view_journeys():
             seat_data = {}
 
         if ride.category == "commuting":
-            seat_data = {
-            date: seats for date, seats in seat_data.items()
-            if datetime.strptime(date, "%Y-%m-%d") >= now
-        }
+            filtered_seats = {}
+            commute_times = []
+            try:
+                commute_times = [datetime.strptime(t.strip(), "%H:%M").time() for t in ride.commute_times.split(",") if t.strip()]
+            except Exception as e:
+                print(f"error: Failed to parse commute_times: {ride.commute_times} — {e}")
+
+            earliest_time = min(commute_times) if commute_times else time(0, 0)
+
+            for date, seats in seat_data.items():
+                try:
+                    dt = datetime.combine(datetime.strptime(date, "%Y-%m-%d").date(), earliest_time)
+                    if dt >= now:
+                        filtered_seats[date] = seats
+                except Exception as e:
+                    print(f"error: Could not parse datetime for {date}: {e}")
+            seat_data = filtered_seats
 
         ride.seat_tracking = seat_data
+        print(f"appending ride {ride.seat_tracking}")
         journeys.append(ride)
+
+        # Remove journeys where no future dates have seats left
+        journeys = [
+            journey for journey in journeys
+            if journey.seat_tracking and any(seats > 0 for seats in journey.seat_tracking.values())
+        ]
+        print("🎀", journeys)
     
     booked_journey_ids = set()
     
@@ -362,6 +384,11 @@ def book_commuting(ride_id):
 # Route to get available dates
 @app.route('/api/get_available_dates/<int:ride_id>', methods=['GET'])
 def get_available_dates(ride_id):
+    # get current UK time (timezone-aware)
+    london = pytz.timezone("Europe/London")
+    aware_now = datetime.now(london)
+    now = aware_now.replace(tzinfo=None)
+
     ride = publish_ride.query.get_or_404(ride_id)
     # Ensure recurrence_dates exists and is not empty
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
