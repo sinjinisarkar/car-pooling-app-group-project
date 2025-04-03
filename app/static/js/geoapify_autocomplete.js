@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const autocompleteFields = [
         'bannerSearchFrom', 'bannerSearchTo',
         'from_location', 'to_location',
-        'searchFrom', 'searchTo'
+        'searchFrom', 'searchTo',
+        'newPickup'
     ];
 
     autocompleteFields.forEach(fieldId => {

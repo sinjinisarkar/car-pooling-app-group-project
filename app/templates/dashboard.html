@@ -153,7 +153,7 @@
                                             Chat with {{ passenger.name }}
                                         </a>
                                         {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
-                                            <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModalDriver{{ passenger.booking_id }}">
+                                            <button class="btn btn-base btn-one mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModalDriver{{ passenger.booking_id }}">
                                                 View Updated Booking
                                             </button>
 
@@ -229,36 +229,46 @@
                                             <a href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}" class="btn btn-base btn-one btn-block mb-3">
                                                 Track Pickup
                                             </a>
-                                            <ul>
-                                                {% for passenger in passengers %}
-                                                    <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
-                                                        Chat with {{ passenger.name }}
-                                                    </a>
-                                                    {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
-                                                        <button class="btn btn-info btn-sm mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModalCommute{{ passenger.booking_id }}">
-                                                            View Booking Changes
-                                                        </button>
-
-                                                        <div class="modal fade" id="editModalCommute{{ passenger.booking_id }}" tabindex="-1" aria-labelledby="editModalLabelCommute{{ passenger.booking_id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Accepted Edit Proposal</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                {% if passenger.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
-                                                                {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
-                                                                {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
-                                                            </div>
-                                                            </div>
-                                                        </div>
-                                                        </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </ul>
+                                            <!-- View All Booking Changes Button -->
+                                            <button class="btn btn-base btn-one btn-block mb-3" data-bs-toggle="modal" data-bs-target="#combinedChangesModal{{ ride.ride_id }}_{{ date }}">
+                                                View Booking Changes
+                                            </button>
+                                            {% for passenger in passengers %}
+                                                <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
+                                                    Chat with {{ passenger.name }}
+                                                </a>
+                                            {% endfor %}
                                         {% else %}
                                             <p class="text-muted">No passengers yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Combined Modal: All Booking Changes for this date -->
+                        <div class="modal fade" id="combinedChangesModal{{ ride.ride_id }}_{{ date }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }} on {{ date }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% set ns = namespace(has_changes=false) %}
+                                        {% for passenger in passengers %}
+                                            {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                                {% set ns.has_changes = true %}
+                                                <div class="mb-3 border-bottom pb-2">
+                                                    <strong>{{ passenger.name }}</strong><br>
+                                                    {% if passenger.edit_details.pickup %}<p><strong>Pickup:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
+                                                    {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
+                                                    {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if not ns.has_changes %}
+                                            <p class="text-muted">No booking changes to show.</p>
                                         {% endif %}
                                     </div>
                                 </div>
