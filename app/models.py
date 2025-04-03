@@ -21,6 +21,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
+    is_manager = db.Column(db.Boolean, default=False)
 
      # Relationship: A driver can publish multiple rides
     published_rides = db.relationship('publish_ride', backref='driver', lazy=True)

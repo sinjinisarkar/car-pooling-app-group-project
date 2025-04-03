@@ -12,6 +12,7 @@ from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
 import pytz
+from app.utils import manager_required
 
 
 # Route for home page
@@ -110,7 +111,13 @@ def login():
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
 
-    return jsonify({"message": "Login successful"}), 200
+    # Send role-based redirect path under the key expected by auth.js
+    redirect_path = url_for('manager_dashboard') if user.is_manager else url_for('home')
+
+    return jsonify({
+        "message": "Login successful",
+        "redirect_url": redirect_path
+        }), 200
 
 
 # Route for User Logout
@@ -1343,3 +1350,24 @@ def mark_message_seen(message_id):
         msg.seen_by_receiver = True
         db.session.commit()
     return jsonify(success=True)
+
+
+# Routes for management view
+@app.cli.command("make-manager")
+def make_manager():
+    email = input("Enter user email to promote: ")
+    with app.app_context():
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.is_manager = True
+            db.session.commit()
+            print(f"{user.email} is now a manager ✅")
+        else:
+            print("User not found ❌")
+
+
+@app.route('/manager/dashboard')
+@login_required
+@manager_required
+def manager_dashboard():
+    return render_template('management/manager_dashboard.html')
