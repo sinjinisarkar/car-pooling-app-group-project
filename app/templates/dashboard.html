@@ -59,6 +59,29 @@
                                         <a href="{{ url_for('chat_view', booking_id=journey.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
                                             Chat
                                         </a>
+                                        {% if journey.edit_details.pickup or journey.edit_details.time or journey.edit_details.cost %}
+                                            <!-- Modal Trigger -->
+                                            <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModal{{ journey.booking_id }}">
+                                                View Updated Details
+                                            </button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="editModal{{ journey.booking_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ journey.booking_id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editModalLabel{{ journey.booking_id }}">Updated Ride Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% if journey.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ journey.edit_details.pickup }}</p>{% endif %}
+                                                    {% if journey.edit_details.time %}<p><strong>Time:</strong> {{ journey.edit_details.time }}</p>{% endif %}
+                                                    {% if journey.edit_details.cost %}<p><strong>Cost:</strong> £{{ journey.edit_details.cost }}</p>{% endif %}
+                                                </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -129,6 +152,27 @@
                                         <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
                                             Chat with {{ passenger.name }}
                                         </a>
+                                        {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                            <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModalDriver{{ passenger.booking_id }}">
+                                                View Updated Booking
+                                            </button>
+
+                                            <div class="modal fade" id="editModalDriver{{ passenger.booking_id }}" tabindex="-1" aria-labelledby="editModalLabelDriver{{ passenger.booking_id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Accepted Edit Proposal</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% if passenger.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
+                                                    {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
+                                                    {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
+                                                </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        {% endif %}
                                     {% endfor %}
                                 </div>
                             </div>
@@ -190,6 +234,27 @@
                                                     <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
                                                         Chat with {{ passenger.name }}
                                                     </a>
+                                                    {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                                        <button class="btn btn-info btn-sm mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModalCommute{{ passenger.booking_id }}">
+                                                            View Booking Changes
+                                                        </button>
+
+                                                        <div class="modal fade" id="editModalCommute{{ passenger.booking_id }}" tabindex="-1" aria-labelledby="editModalLabelCommute{{ passenger.booking_id }}" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Accepted Edit Proposal</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                {% if passenger.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
+                                                                {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
+                                                                {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
+                                                            </div>
+                                                            </div>
+                                                        </div>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                             </ul>
                                         {% else %}

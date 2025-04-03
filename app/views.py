@@ -698,6 +698,18 @@ def dashboard():
             is_canceled = booking.status == "Canceled"
             price_per_seat = ride.price_per_seat
 
+            # Check for accepted proposal
+            latest_accepted_proposal = EditProposal.query.filter_by(
+                booking_id=booking.id, status="accepted"
+            ).order_by(EditProposal.timestamp.desc()).first()
+
+            # Store changes if any for modal
+            edit_details = {
+                "pickup": latest_accepted_proposal.proposed_pickup if latest_accepted_proposal else None,
+                "time": latest_accepted_proposal.proposed_time if latest_accepted_proposal else None,
+                "cost": latest_accepted_proposal.proposed_cost if latest_accepted_proposal else None
+            }
+
             journey_data = {
                 "booking_id": booking.id,
                 "ride_id": ride.id,
@@ -712,6 +724,8 @@ def dashboard():
                 "seats_booked": booking.seats_selected,
                 "category": ride.category
             }
+            
+            journey_data["edit_details"] = edit_details
 
             if is_canceled:
                 inactive_journeys.append(journey_data)
@@ -732,7 +746,25 @@ def dashboard():
                 "time": ride.date_time.strftime('%H:%M'),
                 "price": ride.price_per_seat,
                 "passengers": [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
+                    {
+                        "name": User.query.get(passenger.user_id).username,
+                        "email": passenger.confirmation_email,
+                        "booking_id": passenger.id,
+                        "edit_details": {
+                            "pickup": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "time": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "cost": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
+                        }
+                    }
                     for passenger in book_ride.query.filter_by(ride_id=ride.id).all()
                 ]
             })
@@ -758,10 +790,27 @@ def dashboard():
                     book_ride.status != "Canceled"
                 ).all()
                 ride_data["dates"][date_str] = [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
+                    {
+                        "name": User.query.get(passenger.user_id).username,
+                        "email": passenger.confirmation_email,
+                        "booking_id": passenger.id,
+                        "edit_details": {
+                            "pickup": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "time": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "cost": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
+                        }
+                    }
                     for passenger in passengers
                 ]
-
             published_rides["commuting"].append(ride_data)
 
     # earnings logic
@@ -1370,4 +1419,35 @@ def propose_edit():
     db.session.add(proposal)
     db.session.commit()
 
+    return jsonify({"success": True})
+
+# Route to respond to the proposals 
+@app.route('/respond_proposal', methods=['POST'])
+@login_required
+def respond_proposal():
+    data = request.get_json()
+    proposal_id = data.get("proposal_id")
+    action = data.get("action")  # accept or reject
+
+    proposal = EditProposal.query.get_or_404(proposal_id)
+    booking = book_ride.query.get_or_404(proposal.booking_id)
+
+    # Only the other party can respond
+    if current_user.username == proposal.sender:
+        return jsonify({"success": False, "error": "Cannot respond to your own proposal"}), 403
+
+    if action == "accept":
+        proposal.status = "accepted"
+        if proposal.proposed_pickup:
+            booking.pickup_point = proposal.proposed_pickup
+        if proposal.proposed_time:
+            booking.time = proposal.proposed_time
+        if proposal.proposed_cost is not None:
+            booking.cost = proposal.proposed_cost
+    elif action == "reject":
+        proposal.status = "rejected"
+    else:
+        return jsonify({"success": False, "error": "Invalid action"}), 400
+
+    db.session.commit()
     return jsonify({"success": True})

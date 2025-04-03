@@ -4,6 +4,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const timeInput = document.getElementById("newTime");
     const costInput = document.getElementById("newCost");
 
+    const openProposalBtn = document.getElementById("openProposalModal");
+
+    if (openProposalBtn) {
+        openProposalBtn.addEventListener("click", function () {
+            const modal = new bootstrap.Modal(document.getElementById("proposalModal"));
+            modal.show();
+        });
+    }
+
     proposalForm.addEventListener("submit", function (e) {
         e.preventDefault();
 
