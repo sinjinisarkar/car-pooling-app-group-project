@@ -116,6 +116,7 @@ class Payment(db.Model):
     ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
     book_ride_id = db.Column(db.Integer, db.ForeignKey('book_ride.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+    platform_fee = db.Column(db.Float, nullable=True)
     status = db.Column(db.String(20), default="Success")  
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     refunded = db.Column(db.Boolean, default=False)
@@ -162,3 +163,13 @@ class ChatMessage(db.Model):
             "message": self.message,
             "timestamp": self.timestamp.strftime("%H:%M")
         }
+
+class PlatformSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    value = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<PlatformSetting {self.key}={self.value}>"
+    
+    

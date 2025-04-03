@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, PlatformSetting
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
@@ -12,7 +12,7 @@ from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
 import pytz
-from app.utils import manager_required
+from app.utils import manager_required, get_platform_fee
 
 
 # Route for home page
@@ -554,13 +554,15 @@ def process_payment():
             db.session.add(new_booking)
             db.session.commit()
             
+            fee_rate = get_platform_fee()
             new_payment = Payment(
                 user_id=current_user.id,
                 ride_id=ride.id,
                 book_ride_id=new_booking.id,
                 amount=per_day_price,  
                 status="Success",
-                timestamp=now
+                timestamp=now,
+                platform_fee=fee_rate
             )
             db.session.add(new_payment)
             db.session.commit()
@@ -817,12 +819,14 @@ def dashboard():
 
     earnings_by_week = defaultdict(float)
     total_earnings = 0.0
+    
     for payment in payments:
+        fee = payment.platform_fee or 0.005  # fallback if None
         if payment.status == "Success":
-            driver_earning = payment.amount * 0.995
+            driver_earning = payment.amount * (1 - fee)
         elif payment.status == "Partially Refunded":
             # 75% charged (25% refunded), so driver still gets 75%
-            driver_earning = payment.amount * 0.75 * 0.995
+            driver_earning = payment.amount * 0.75 * (1 - fee)
         else:
             continue  # skip fully refunded or failed
         week_str = payment.timestamp.strftime("%Y-W%U")
@@ -1418,3 +1422,31 @@ def manager_dashboard():
         earnings_chart_values=values,
         earnings_chart_dates=date_ranges
     )
+
+
+@app.route("/manager/configure_fee", methods=["GET", "POST"])
+@login_required
+@manager_required
+def configure_fee():
+    setting = PlatformSetting.query.filter_by(key="platform_fee").first()
+
+    if request.method == "POST":
+        new_value = request.form.get("fee")
+        try:
+            new_fee = float(new_value)
+            if not 0 <= new_fee <= 1:
+                return jsonify({"success": False, "message": "Fee must be between 0 and 1."}), 400
+            else:
+                if setting:
+                    setting.value = str(new_fee)
+                else:
+                    setting = PlatformSetting(key="platform_fee", value=str(new_fee))
+                    db.session.add(setting)
+                db.session.commit()
+                return jsonify({"success": True, "message": "Platform fee updated successfully."})
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid input. Please enter a number."}), 400
+
+    # If GET request
+    current_fee = float(setting.value) if setting else 0.005
+    return render_template("management/configure_fee.html", current_fee=current_fee)

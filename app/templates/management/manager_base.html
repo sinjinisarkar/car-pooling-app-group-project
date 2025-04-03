@@ -50,7 +50,7 @@
                         <a href="{{ url_for('manager_dashboard') }}" class="list-group-item {% if request.endpoint == 'manager_dashboard' %}active{% endif %}">
                             <i class="fas fa-tachometer-alt"></i> Stats and Revenue
                         </a>
-                        <a href="#" class="list-group-item {% if request.endpoint == 'configure_fee' %}active{% endif %}">
+                        <a href="{{ url_for('configure_fee') }}" class="list-group-item {% if request.endpoint == 'configure_fee' %}active{% endif %}">
                             <i class="fas fa-cogs"></i> Configure Fee
                         </a>
                     </div>
@@ -75,6 +75,7 @@
 
     <!-- Local JS for management -->
     <script src="{{ url_for('static', filename='js/manager_dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/configure_fee.js') }}"></script>
 
 </body>
 </html>
