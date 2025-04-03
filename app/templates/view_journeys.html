@@ -63,47 +63,51 @@
                                     </div>
                                     <!-- journey details -->
                                     <div class="journey-details">
-                                        {% if journey.category == "one-time" %}
-                                            <div class="detail-item">
-                                                <span class="detail-heading">Date:</span>
+
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Date(s):</span>
+                                            {% if journey.category == "one-time" %}
                                                 <span>{{ journey.date_time.strftime('%Y-%m-%d') }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-heading">Time:</span>
-                                                <span>{{ journey.date_time.strftime('%H:%M') }}</span>
-                                            </div>
-                                        {% elif journey.category == "commuting" %}
-                                            <div class="detail-item">
-                                                <span class="detail-heading">Commuting Days:</span>
+                                            {% elif journey.category == "commuting" %}
                                                 <ul class="date-list">
                                                     {% for date in journey.seat_tracking.keys() | sort %}
                                                     <li>{{ date }}</li>
                                                     {% endfor %}
                                                 </ul>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-heading">Available Time Slots:</span>
-                                                <span>
-                                                    {% if journey.commute_times %}
-                                                        {{ journey.commute_times | replace(',', ', ') }}
-                                                    {% else %}
-                                                        N/A
-                                                    {% endif %}
-                                                </span>
-                                            </div>
-                                        {% endif %}
+                                            {% endif %}
+                                        </div>
 
                                         <div class="detail-item">
-                                            <span class="detail-heading">Available Seats:</span>
-                                            <span>{{ journey.seat_tracking.values() | max if journey.seat_tracking else 0 }}</span>
+                                            <span class="detail-heading">Time:</span>
+                                            {% if journey.category == "one-time" %}
+                                                <span>{{ journey.date_time.strftime('%H:%M') }}</span>
+                                            {% elif journey.category == "commuting" %}
+                                                <span>{{ journey.commute_times | replace(',', ', ') }}</span>
+                                            {% endif %}
                                         </div>
+                                    
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Available Seats:</span>
+                                            {% if journey.category == "one-time" %}
+                                                <span>{{ journey.seat_tracking.values() | max if journey.seat_tracking else 0 }}</span>
+                                            {% elif journey.category == "commuting" %}
+                                                <span>Select dates to check availability.</span>
+                                            {% endif %}
+                                        </div>
+
                                         <div class="detail-item">
                                             <span class="detail-heading">Price per Seat:</span>
                                             <span>£{{ journey.price_per_seat }}</span>
                                         </div>
+
                                         <div class="detail-item">
                                             <span class="detail-heading">Driver:</span>
                                             <span>{{ journey.driver_name }}</span>
+                                        </div>
+
+                                        <div class="detail-item">
+                                            <span class="detail-heading">Category:</span>
+                                            <span>{{ 'One-Time' if journey.category == 'one-time' else 'Commuting' }}</span>
                                         </div>
                                     </div>
 
