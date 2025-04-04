@@ -254,7 +254,7 @@ a:active {
     padding-right: 10px;
 }
 
-.card-title { /* remove this after editing the cards everywhere */
+.card-title {
     font-weight: 400;
     color: #1f1d21;
     text-align: center;
@@ -492,7 +492,6 @@ a:active {
 .sidebar-box .list-group-item.active {
     background-color: #855bbe;
     color: white;
-    /* border-color: transparent; */
 }
 
 .sidebar-box .list-group-item:hover,
@@ -572,4 +571,90 @@ a:active {
     justify-content: center;
     height: 350px;
     text-align: center;
+}
+
+
+/* ---------------------------------------- Chat styling ---------------------------------------- */
+
+/* message bubbles */
+.message-bubble {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    word-wrap: break-word;
+    white-space: pre-line;
+    box-shadow: 2px 3px 5px rgba(133, 91, 190, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.sent-message {
+    background-color: transparent;
+    color: #1f1d21;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.received-message {
+    background-color: #e6d6fc;
+    color: #1f1d21;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.timestamp {
+    font-size: 0.7rem;
+    color: #857d8c;
+    margin-top: 5px;
+    align-self: flex-end;
+}
+
+/* input and send button */
+.chat-input-group {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+
+.chat-input-group .chat-input {
+    flex: 1;
+    height: 48px;
+    border-radius: 0;
+    border: 1px solid #855bbe;
+    padding: 0 15px;
+}
+
+.chat-input:focus,
+.chat-input:active {
+    transition: border-color 0.3s ease-in-out;
+    border-color: #855bbe;
+    box-shadow: 1px 2px 0px #855bbe;
+    outline: none;
+}
+
+.chat-input-group .btn-send {
+    height: 48px;
+    background-color: #855bbe;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.chat-input-group .btn-send:hover,
+.chat-input-group .btn-send:focus {
+    background-color: #e6d6fc;
+    color: #855bbe;
+    outline: none;
+}
+
+.chat-input-group .btn-send:active {
+    transform: translateY(2px);
 }
