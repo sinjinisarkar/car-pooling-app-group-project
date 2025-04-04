@@ -165,6 +165,23 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Invalid cardholder name. Only letters and spaces are allowed.");
             return;
         }
+        // check if the manually entered card is already saved
+        if (saveCard) {
+            const lastFour = cardNumber.slice(-4);
+            const savedCardLabels = document.querySelectorAll("#savedCardSection .form-check-label");
+        
+            for (let label of savedCardLabels) {
+                const labelText = label.textContent;
+                if (
+                    labelText.includes(`**** ${lastFour}`) &&
+                    labelText.includes(`Exp: ${expiry}`)
+                ) {
+                    const confirmSave = confirm("A card with the same last 4 digits and expiry is already saved. Do you still want to save this one?");
+                    if (!confirmSave) return;
+                    break; // allow to continue
+                }
+            }
+        }
 
         // go to process payment route
         const paymentData = {

@@ -443,11 +443,19 @@ def get_available_seats(ride_id):
         seat_tracking = {}
 
     # Filter out past dates and only include selected ones
-    filtered_seats = {
-        date: seat_tracking.get(date, 0)
-        for date in selected_dates
-        if date in seat_tracking and datetime.strptime(date, "%Y-%m-%d") >= now
-    }
+    filtered_seats = {}
+
+    for date in selected_dates:
+        if date in seat_tracking:
+            try:
+                # Combine the date with the earliest commute time (default to 00:00)
+                commute_time = ride.commute_times.strip().split(",")[0] if ride.commute_times else "00:00"
+                commute_dt = datetime.strptime(f"{date} {commute_time}", "%Y-%m-%d %H:%M")
+                if commute_dt >= now:
+                    filtered_seats[date] = seat_tracking[date]
+            except Exception as e:
+                print(f"Failed to parse commute time for {date}: {e}")
+    print(filtered_seats)
 
     return jsonify({"available_seats": filtered_seats})
 
@@ -515,9 +523,6 @@ def process_payment():
 
             if not card_number or not expiry or not cardholder_name:
                 return jsonify({"success": False, "message": "Card details missing."}), 400
-            
-            # Extract last four digits for reference
-            last_four_digits = card_number[-4:]
 
             # Save the card if requested
             if save_card:
