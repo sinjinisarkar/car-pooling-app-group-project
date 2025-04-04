@@ -519,12 +519,21 @@ def process_payment():
 
             if not card_number or not expiry or not cardholder_name:
                 return jsonify({"success": False, "message": "Card details missing."}), 400
-            
-            # Extract last four digits for reference
-            last_four_digits = card_number[-4:]
 
             # Save the card if requested
             if save_card:
+
+                # checking if the card already exists in saved cards
+                last_four_digits = card_number[-4:]
+                existing_card = SavedCard.query.filter_by(
+                    user_id=current_user.id,
+                    last_four_digits=last_four_digits,
+                    expiry_date=expiry
+                ).first()
+
+                if existing_card:
+                    return jsonify({"success": False, "message": "You’ve already saved this card."}), 400
+                
                 new_card = SavedCard(
                     user_id=current_user.id,
                     expiry_date=expiry,
