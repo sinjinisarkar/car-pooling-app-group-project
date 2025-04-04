@@ -21,6 +21,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=True) # to check if the user activation (user authentication)
+    is_manager = db.Column(db.Boolean, default=False)
 
      # Relationship: A driver can publish multiple rides
     published_rides = db.relationship('publish_ride', backref='driver', lazy=True)
@@ -115,6 +116,7 @@ class Payment(db.Model):
     ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
     book_ride_id = db.Column(db.Integer, db.ForeignKey('book_ride.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+    platform_fee = db.Column(db.Float, nullable=True)
     status = db.Column(db.String(20), default="Success")  
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     refunded = db.Column(db.Boolean, default=False)
@@ -161,3 +163,25 @@ class ChatMessage(db.Model):
             "message": self.message,
             "timestamp": self.timestamp.strftime("%H:%M")
         }
+
+# Table for editing ride details
+class EditProposal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('book_ride.id'), nullable=False)
+    sender = db.Column(db.String(80), nullable=False)
+    proposed_pickup = db.Column(db.String(255))
+    proposed_time = db.Column(db.String(20))
+    proposed_cost = db.Column(db.Float)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Table for management view
+class PlatformSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    value = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<PlatformSetting {self.key}={self.value}>"
+    
+    

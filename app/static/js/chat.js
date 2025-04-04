@@ -9,10 +9,10 @@ function checkForNewMessages() {
                 const stack = document.getElementById('chat-notification-stack');
 
                 data.messages.forEach(msg => {
-                    // If already dismissed, skip
+                    // If already dismissed then skip
                     if (dismissedBookingIds.has(msg.booking_id)) return;
 
-                    // If already shown, skip
+                    // If already shown then skip
                     if (document.getElementById(`notif-${msg.booking_id}`)) return;
 
                     const banner = document.createElement("div");
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParts = window.location.pathname.split("/");
     const bookingId = urlParts[urlParts.length - 1]; // last segment in /chat/<booking_id>
 
-    // You could store this in a hidden element via Jinja in future, but for now:
+    // You can store this in a hidden element via Jinja in future
     const currentUser = document.querySelector("meta[name='current-user']").content;
 
     // Load existing messages
@@ -92,22 +92,53 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(res => res.json())
             .then(data => {
                 chatBox.innerHTML = "";
-                data.forEach(msg => {
+    
+                data.forEach(item => {
                     const messageDiv = document.createElement("div");
                     messageDiv.classList.add("mb-2");
-
-                    const senderClass = msg.sender === currentUser ? "text-end" : "text-start";
-                    messageDiv.classList.add(senderClass);
-
-                    messageDiv.innerHTML = `
-                        <div class="p-2 rounded ${msg.sender === currentUser ? 'bg-primary text-white' : 'bg-light'}">
-                            <strong>${msg.sender}</strong><br>
-                            ${msg.message}
-                            <div class="small text-muted text-end">${msg.timestamp}</div>
-                        </div>
-                    `;
+    
+                    if (item.type === "message") {
+                        const senderClass = item.sender === currentUser ? "text-end" : "text-start";
+                        messageDiv.classList.add(senderClass);
+    
+                        messageDiv.innerHTML = `
+                            <div class="p-2 rounded ${item.sender === currentUser ? 'bg-primary text-white' : 'bg-light'}">
+                                <strong>${item.sender}</strong><br>
+                                ${item.message}
+                                <div class="small text-muted text-end">${item.timestamp}</div>
+                            </div>
+                        `;
+                    } else if (item.type === "proposal") {
+                        const isSender = item.sender === currentUser;
+                        const borderClass = isSender ? "border-primary" : "border-warning";
+    
+                        let proposalHTML = `
+                            <div class="p-2 border ${borderClass} rounded bg-white">
+                                <strong>📌 Edit Proposal from ${item.sender}</strong><br>
+                                <ul style="margin-bottom: 4px;">
+                                    ${item.pickup ? `<li>Pickup Point: ${item.pickup}</li>` : ""}
+                                    ${item.time ? `<li>Time: ${item.time}</li>` : ""}
+                                    ${item.cost ? `<li>Cost: £${item.cost}</li>` : ""}
+                                </ul>
+                                <div class="small text-muted">${item.timestamp}</div>
+                        `;
+    
+                        if (!isSender && item.status === "pending") {
+                            proposalHTML += `
+                                <button class="btn btn-sm btn-success mt-1 me-1 accept-proposal" data-id="${item.id}">Accept</button>
+                                <button class="btn btn-sm btn-danger mt-1 reject-proposal" data-id="${item.id}">Reject</button>
+                            `;
+                        } else {
+                            proposalHTML += `<span class="badge bg-secondary">${item.status.toUpperCase()}</span>`;
+                        }
+    
+                        proposalHTML += `</div>`;
+                        messageDiv.innerHTML = proposalHTML;
+                    }
+    
                     chatBox.appendChild(messageDiv);
                 });
+    
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
     }
@@ -130,6 +161,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 messageInput.value = "";
                 loadMessages();
             });
+    });
+
+    // Handle Accept/Reject of Proposals 
+    document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("accept-proposal") || e.target.classList.contains("reject-proposal")) {
+            const proposalId = e.target.getAttribute("data-id");
+            const action = e.target.classList.contains("accept-proposal") ? "accept" : "reject";
+
+            fetch("/respond_proposal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ proposal_id: proposalId, action: action }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadMessages();  // Refresh to update status
+                } else {
+                    alert("Error processing proposal.");
+                }
+            });
+        }
     });
 
     // Refresh messages every few seconds

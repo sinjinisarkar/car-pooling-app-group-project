@@ -57,8 +57,31 @@
                                         {% endif %}
                                         <!-- Chat Button -->
                                         <a href="{{ url_for('chat_view', booking_id=journey.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
-                                            Chat
+                                            Chat with driver
                                         </a>
+                                        {% if journey.edit_details.pickup or journey.edit_details.time or journey.edit_details.cost %}
+                                            <!-- Modal Trigger -->
+                                            <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModal{{ journey.booking_id }}">
+                                                View Booking Changes
+                                            </button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="editModal{{ journey.booking_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ journey.booking_id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editModalLabel{{ journey.booking_id }}">Updated Ride Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% if journey.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ journey.edit_details.pickup }}</p>{% endif %}
+                                                    {% if journey.edit_details.time %}<p><strong>Time:</strong> {{ journey.edit_details.time }}</p>{% endif %}
+                                                    {% if journey.edit_details.cost %}<p><strong>Cost:</strong> £{{ journey.edit_details.cost }}</p>{% endif %}
+                                                </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -123,13 +146,57 @@
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                 <div class="text-center mt-3">
-                                    <!-- Driver Button: Track Passengers -->
-                                    <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block">Track Passenger</a>
+                                    <!-- Track Button -->
+                                    <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block mb-2">
+                                        Track Passenger
+                                    </a>
+                                
+                                    <!-- Single "View Booking Changes" Button -->
+                                    <button class="btn btn-base btn-one btn-block mb-2" data-bs-toggle="modal" data-bs-target="#editModalOneTime{{ ride.ride_id }}">
+                                        View Booking Changes
+                                    </button>
+                                
+                                    <!-- Chat Buttons for Each Passenger -->
                                     {% for passenger in ride.passengers %}
-                                        <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
+                                        <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat btn-block mb-2">
                                             Chat with {{ passenger.name }}
                                         </a>
                                     {% endfor %}
+                                </div>
+                                
+                                <!-- Modal for Combined Edit Changes -->
+                                <div class="modal fade" id="editModalOneTime{{ ride.ride_id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }} on {{ ride.date }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% set ns = namespace(has_changes=false) %}
+                                                {% for passenger in ride.passengers %}
+                                                    {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                                        {% set ns.has_changes = true %}
+                                                        <div class="mb-3 border-bottom pb-2">
+                                                            <strong>{{ passenger.name }}</strong><br>
+                                                            {% if passenger.edit_details.pickup %}
+                                                                <p><strong>Pickup:</strong> {{ passenger.edit_details.pickup }}</p>
+                                                            {% endif %}
+                                                            {% if passenger.edit_details.time %}
+                                                                <p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>
+                                                            {% endif %}
+                                                            {% if passenger.edit_details.cost %}
+                                                                <p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if not ns.has_changes %}
+                                                    <p class="text-muted">No booking changes to show.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -185,15 +252,46 @@
                                             <a href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}" class="btn btn-base btn-one btn-block mb-3">
                                                 Track Pickup
                                             </a>
-                                            <ul>
-                                                {% for passenger in passengers %}
-                                                    <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
-                                                        Chat with {{ passenger.name }}
-                                                    </a>
-                                                {% endfor %}
-                                            </ul>
+                                            <!-- View All Booking Changes Button -->
+                                            <button class="btn btn-base btn-one btn-block mb-3" data-bs-toggle="modal" data-bs-target="#combinedChangesModal{{ ride.ride_id }}_{{ date }}">
+                                                View Booking Changes
+                                            </button>
+                                            {% for passenger in passengers %}
+                                                <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
+                                                    Chat with {{ passenger.name }}
+                                                </a>
+                                            {% endfor %}
                                         {% else %}
                                             <p class="text-muted">No passengers yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Combined Modal: All Booking Changes for this date -->
+                        <div class="modal fade" id="combinedChangesModal{{ ride.ride_id }}_{{ date }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }} on {{ date }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% set ns = namespace(has_changes=false) %}
+                                        {% for passenger in passengers %}
+                                            {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                                {% set ns.has_changes = true %}
+                                                <div class="mb-3 border-bottom pb-2">
+                                                    <strong>{{ passenger.name }}</strong><br>
+                                                    {% if passenger.edit_details.pickup %}<p><strong>Pickup:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
+                                                    {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
+                                                    {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if not ns.has_changes %}
+                                            <p class="text-muted">No booking changes to show.</p>
                                         {% endif %}
                                     </div>
                                 </div>

@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage
+from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, EditProposal, PlatformSetting
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
@@ -12,6 +12,7 @@ from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
 import pytz
+from app.utils import manager_required, get_platform_fee
 
 
 # Route for home page
@@ -110,7 +111,13 @@ def login():
         return jsonify({"message": "Invalid email or password"}), 401
     login_user(user)
 
-    return jsonify({"message": "Login successful"}), 200
+    # Send role-based redirect path under the key expected by auth.js
+    redirect_path = url_for('manager_dashboard') if user.is_manager else url_for('home')
+
+    return jsonify({
+        "message": "Login successful",
+        "redirect_url": redirect_path
+        }), 200
 
 
 # Route for User Logout
@@ -388,14 +395,22 @@ def get_available_dates(ride_id):
     now = aware_now.replace(tzinfo=None)
 
     ride = publish_ride.query.get_or_404(ride_id)
-    # Ensure recurrence_dates exists and is not empty
+    # ensure recurrence_dates exists and is not empty
     if not ride.recurrence_dates or ride.recurrence_dates.strip() == "":
         return jsonify({"available_dates": []})
-    # Properly split and clean recurrence dates
-    available_dates = [
-        date.strip() for date in ride.recurrence_dates.split(",")
-        if datetime.strptime(date.strip(), "%Y-%m-%d") >= now
-    ]
+    
+    commute_time = ride.commute_times.strip() if ride.commute_times else None
+    
+    # every date after today, and today only if time is after current time
+    available_dates = []
+    for date_str in ride.recurrence_dates.split(","):
+        date_str = date_str.strip()
+        try:
+            combined_dt = datetime.strptime(f"{date_str} {commute_time}", "%Y-%m-%d %H:%M")
+            if combined_dt > now:
+                available_dates.append(date_str)
+        except ValueError:
+            continue
     return jsonify({"available_dates": available_dates})
 
 
@@ -537,13 +552,15 @@ def process_payment():
             db.session.add(new_booking)
             db.session.commit()
             
+            fee_rate = get_platform_fee()
             new_payment = Payment(
                 user_id=current_user.id,
                 ride_id=ride.id,
                 book_ride_id=new_booking.id,
                 amount=per_day_price,  
                 status="Success",
-                timestamp=now
+                timestamp=now,
+                platform_fee=fee_rate
             )
             db.session.add(new_payment)
             db.session.commit()
@@ -723,6 +740,18 @@ def dashboard():
             is_canceled = booking.status == "Canceled"
             price_per_seat = ride.price_per_seat
 
+            # Check for accepted proposal
+            latest_accepted_proposal = EditProposal.query.filter_by(
+                booking_id=booking.id, status="accepted"
+            ).order_by(EditProposal.timestamp.desc()).first()
+
+            # Store changes if any for modal
+            edit_details = {
+                "pickup": latest_accepted_proposal.proposed_pickup if latest_accepted_proposal else None,
+                "time": latest_accepted_proposal.proposed_time if latest_accepted_proposal else None,
+                "cost": latest_accepted_proposal.proposed_cost if latest_accepted_proposal else None
+            }
+
             journey_data = {
                 "booking_id": booking.id,
                 "ride_id": ride.id,
@@ -737,6 +766,8 @@ def dashboard():
                 "seats_booked": booking.seats_selected,
                 "category": ride.category
             }
+            
+            journey_data["edit_details"] = edit_details
 
             if is_canceled:
                 inactive_journeys.append(journey_data)
@@ -757,7 +788,25 @@ def dashboard():
                 "time": ride.date_time.strftime('%H:%M'),
                 "price": ride.price_per_seat,
                 "passengers": [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
+                    {
+                        "name": User.query.get(passenger.user_id).username,
+                        "email": passenger.confirmation_email,
+                        "booking_id": passenger.id,
+                        "edit_details": {
+                            "pickup": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "time": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "cost": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
+                        }
+                    }
                     for passenger in book_ride.query.filter_by(ride_id=ride.id).all()
                 ]
             })
@@ -783,10 +832,27 @@ def dashboard():
                     book_ride.status != "Canceled"
                 ).all()
                 ride_data["dates"][date_str] = [
-                    {"name": User.query.get(passenger.user_id).username, "email": passenger.confirmation_email, "booking_id": passenger.id}
+                    {
+                        "name": User.query.get(passenger.user_id).username,
+                        "email": passenger.confirmation_email,
+                        "booking_id": passenger.id,
+                        "edit_details": {
+                            "pickup": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "time": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
+                            "cost": (EditProposal.query
+                                .filter_by(booking_id=passenger.id, status="accepted")
+                                .order_by(EditProposal.timestamp.desc())
+                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
+                        }
+                    }
                     for passenger in passengers
                 ]
-
             published_rides["commuting"].append(ride_data)
 
     # earnings logic
@@ -800,12 +866,14 @@ def dashboard():
 
     earnings_by_week = defaultdict(float)
     total_earnings = 0.0
+    
     for payment in payments:
+        fee = payment.platform_fee or 0.005  # fallback if None
         if payment.status == "Success":
-            driver_earning = payment.amount * 0.995
+            driver_earning = payment.amount * (1 - fee)
         elif payment.status == "Partially Refunded":
             # 75% charged (25% refunded), so driver still gets 75%
-            driver_earning = payment.amount * 0.75 * 0.995
+            driver_earning = payment.amount * 0.75 * (1 - fee)
         else:
             continue  # skip fully refunded or failed
         week_str = payment.timestamp.strftime("%Y-W%U")
@@ -1009,13 +1077,13 @@ def view_pickup(ride_id):
                                passenger_name=passenger.username if passenger else None)
 
     elif is_driver and not is_passenger:
-        # Handle one time ride: get any passenger if exists
-        passenger_booking = book_ride.query.filter_by(ride_id=ride_id).first()
-        passenger = User.query.get(passenger_booking.user_id) if passenger_booking else None
+        # Handle one-time ride: get all passengers
+        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id, status="Booked").all()
+        passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
 
         return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
-                               driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None)
+                            driver_name=driver.username if driver else "Unknown",
+                            passenger_names=passenger_names)
 
     elif is_passenger and is_driver:
         return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
@@ -1076,27 +1144,31 @@ def track_driver_location():
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
 def get_live_locations(ride_id):
-    passenger_loc = None
-
-    # Try to find ANY passenger location for this ride
-    for key in live_locations:
-        if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
-            passenger_loc = live_locations[key]
-            break
-
     driver_loc = live_locations.get(f"driver_{ride_id}")
 
-    if not passenger_loc and not driver_loc:
-        return jsonify({"error": "No location data available"}), 404
+    # Collect all passenger locations for one-time ride
+    passenger_locs = {}
+    for key, value in live_locations.items():
+        if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
+            # Extract user_id or username from key
+            parts = key.split("_")
+            if len(parts) == 3:
+                user_id = parts[2]
+                user = User.query.get(int(user_id))
+                if user:
+                    passenger_locs[user.username] = value
+            elif len(parts) == 2:
+                passenger_locs[current_user.username] = value
 
-    # Check if they are within 100 meters
+    # Check if they are within 100 meters (only if there's one passenger)
     nearby = False
-    if passenger_loc and driver_loc:
-        distance = geodesic(passenger_loc, driver_loc).meters
+    if len(passenger_locs) == 1 and driver_loc:
+        only_passenger_coords = list(passenger_locs.values())[0]
+        distance = geodesic(only_passenger_coords, driver_loc).meters
         nearby = distance <= 100
 
     return jsonify({
-        "passenger": passenger_loc,
+        "passenger": passenger_locs,
         "driver": driver_loc,
         "nearby": nearby
     })
@@ -1300,7 +1372,34 @@ def get_messages(booking_id):
         return jsonify({"error": "Unauthorized"}), 403
 
     messages = ChatMessage.query.filter_by(booking_id=booking_id).order_by(ChatMessage.timestamp).all()
-    return jsonify([msg.to_dict() for msg in messages])
+    proposals = EditProposal.query.filter_by(booking_id=booking_id).order_by(EditProposal.timestamp).all()
+
+    combined = []
+
+    for msg in messages:
+        combined.append({
+            "type": "message",
+            "sender": msg.sender_username,
+            "message": msg.message,
+            "timestamp": msg.timestamp.strftime('%Y-%m-%d %H:%M')
+        })
+
+    for prop in proposals:
+        combined.append({
+            "type": "proposal",
+            "id": prop.id,
+            "sender": prop.sender,
+            "pickup": prop.proposed_pickup,
+            "time": prop.proposed_time,
+            "cost": prop.proposed_cost,
+            "status": prop.status,
+            "timestamp": prop.timestamp.strftime('%Y-%m-%d %H:%M')
+        })
+
+    # Sort by timestamp (assuming both ChatMessage and Proposal have timestamp)
+    combined.sort(key=lambda x: x["timestamp"])
+
+    return jsonify(combined)
 
 # Route to check for new messages
 @app.route('/check_new_messages')
@@ -1341,3 +1440,157 @@ def mark_message_seen(message_id):
         msg.seen_by_receiver = True
         db.session.commit()
     return jsonify(success=True)
+
+# Route to handle edit proposals
+@app.route('/propose_edit', methods=['POST'])
+@login_required
+def propose_edit():
+    data = request.get_json()
+    booking_id = data.get("booking_id")
+    pickup = data.get("pickup")
+    time = data.get("time")
+    cost = data.get("cost")
+
+    booking = book_ride.query.get_or_404(booking_id)
+
+    if current_user.id not in [booking.user_id, booking.ride.driver_id]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    proposal = EditProposal(
+        booking_id=booking_id,
+        sender=current_user.username,
+        proposed_pickup=pickup or None,
+        proposed_time=time or None,
+        proposed_cost=float(cost) if cost else None,
+    )
+
+    db.session.add(proposal)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+# Route to respond to the proposals 
+@app.route('/respond_proposal', methods=['POST'])
+@login_required
+def respond_proposal():
+    data = request.get_json()
+    proposal_id = data.get("proposal_id")
+    action = data.get("action")  # accept or reject
+
+    proposal = EditProposal.query.get_or_404(proposal_id)
+    booking = book_ride.query.get_or_404(proposal.booking_id)
+
+    # Only the other party can respond
+    if current_user.username == proposal.sender:
+        return jsonify({"success": False, "error": "Cannot respond to your own proposal"}), 403
+
+    if action == "accept":
+        proposal.status = "accepted"
+        if proposal.proposed_pickup:
+            booking.pickup_point = proposal.proposed_pickup
+        if proposal.proposed_time:
+            booking.time = proposal.proposed_time
+        if proposal.proposed_cost is not None:
+            booking.cost = proposal.proposed_cost
+    elif action == "reject":
+        proposal.status = "rejected"
+    else:
+        return jsonify({"success": False, "error": "Invalid action"}), 400
+
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+
+
+
+
+
+
+
+# Routes for management view
+@app.cli.command("make-manager")
+def make_manager():
+    email = input("Enter user email to promote: ")
+    with app.app_context():
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.is_manager = True
+            db.session.commit()
+            print(f"{user.email} is now a manager ")
+        else:
+            print("User not found ❌")
+
+
+@app.route('/manager/dashboard')
+@login_required
+@manager_required
+def manager_dashboard():
+    total_bookings = book_ride.query.count()
+    total_rides_published = publish_ride.query.count()
+
+    # Total platform earnings
+    total_revenue = db.session.query(
+        func.sum(Payment.amount * 0.005)
+    ).filter_by(status="Success", refunded=False).scalar() or 0
+
+    # Weekly earnings logic
+    payments = Payment.query.filter_by(status="Success", refunded=False).all()
+    weekly_earnings = defaultdict(float)
+
+    for payment in payments:
+        fee = payment.amount * 0.005
+        week_str = payment.timestamp.strftime("%Y-W%U")
+        weekly_earnings[week_str] += fee
+
+    # Format for table
+    weekly_earnings_list = []
+    for week_str, amount in sorted(weekly_earnings.items()):
+        year, week_num = week_str.split("-W")
+        start_date, end_date = get_week_dates(year, week_num)
+        date_range = f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
+        weekly_earnings_list.append((week_str, round(amount, 2), date_range))
+
+    # Extract for chart.js
+    labels = [entry[0] for entry in weekly_earnings_list]
+    values = [entry[1] for entry in weekly_earnings_list]
+    date_ranges = [entry[2] for entry in weekly_earnings_list]
+
+    return render_template(
+        "management/manager_dashboard.html",
+        total_bookings=total_bookings,
+        total_rides_published=total_rides_published,
+        total_revenue=round(total_revenue, 2),
+        weekly_earnings=weekly_earnings_list,
+        earnings_chart_labels=labels,
+        earnings_chart_values=values,
+        earnings_chart_dates=date_ranges
+    )
+
+
+@app.route("/manager/configure_fee", methods=["GET", "POST"])
+@login_required
+@manager_required
+def configure_fee():
+    setting = PlatformSetting.query.filter_by(key="platform_fee").first()
+
+    if request.method == "POST":
+        new_value = request.form.get("fee")
+        try:
+            new_fee = float(new_value)
+            if not 0 <= new_fee <= 1:
+                return jsonify({"success": False, "message": "Fee must be between 0 and 1."}), 400
+            else:
+                if setting:
+                    setting.value = str(new_fee)
+                else:
+                    setting = PlatformSetting(key="platform_fee", value=str(new_fee))
+                    db.session.add(setting)
+                db.session.commit()
+                return jsonify({"success": True, "message": "Platform fee updated successfully."})
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid input. Please enter a number."}), 400
+
+    # If GET request
+    current_fee = float(setting.value) if setting else 0.005
+    return render_template("management/configure_fee.html", current_fee=current_fee)

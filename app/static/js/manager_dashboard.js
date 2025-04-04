@@ -1,6 +1,38 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // displaying the graph
-    const canvas = document.getElementById("earningsChart");
+    // rides published vs bookec chart
+    const ridesChartElement = document.getElementById('ridesChart');
+    if (!ridesChartElement) return;
+
+    const published = parseInt(ridesChartElement.dataset.published);
+    const booked = parseInt(ridesChartElement.dataset.booked);
+
+    const chart = new Chart(ridesChartElement.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Rides Published', 'Rides Booked'],
+            datasets: [{
+                data: [published, booked],
+                backgroundColor: ['#C8E9E7', '#e6d6fc'],
+                borderColor: ['#5BBEB7', '#855bbe'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#1f1d21',
+                        font: { family: 'Oxanium' }
+                    }
+                }
+            }
+        }
+    });
+
+    // platform earnings chart
+    const canvas = document.getElementById("platformEarningsChart");
     if (!canvas) return;
 
     const labels = JSON.parse(canvas.dataset.labels);
@@ -13,12 +45,12 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Weekly Earnings (£)',
+                label: 'Weekly Platform Earnings (£)',
                 data: data,
                 borderWidth: 1,
-                backgroundColor: '#e6d6fc',
-                borderColor: '#855bbe',
-                borderWidth: 2  
+                backgroundColor: '#C8E9E7',
+                borderColor: '#5BBEB7',
+                borderWidth: 2      
             }]
         },
         options: {
@@ -46,12 +78,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // number animation
-    window.animateEarnings = function () {
-        const element = document.getElementById("totalEarnings");
-        if (!element) return;
-
-        const target = parseFloat(element.dataset.total);
+    // number animation for total revenue
+    const earningsElement = document.getElementById("totalRevenue");
+    if (earningsElement) {
+        const target = parseFloat(earningsElement.dataset.total);
         let current = 0;
         const duration = 1000;
         const fps = 60;
@@ -63,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 current = target;
                 clearInterval(interval);
             }
-            element.textContent = `£${current.toFixed(2)}`;
+            earningsElement.textContent = `£${current.toFixed(2)}`;
         }, 1000 / fps);
-    };
-}); 
+    }
+});
