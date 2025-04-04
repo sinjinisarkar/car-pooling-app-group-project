@@ -98,14 +98,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     messageDiv.classList.add("mb-2");
     
                     if (item.type === "message") {
-                        const senderClass = item.sender === currentUser ? "text-end" : "text-start";
-                        messageDiv.classList.add(senderClass);
-    
+                        const isSender = item.sender === currentUser;
+                        const wrapperClass = isSender ? "justify-content-end" : "justify-content-start";
+                    
+                        messageDiv.className = `d-flex ${wrapperClass} mb-3`;
+                    
                         messageDiv.innerHTML = `
-                            <div class="p-2 rounded ${item.sender === currentUser ? 'bg-primary text-white' : 'bg-light'}">
-                                <strong>${item.sender}</strong><br>
-                                ${item.message}
-                                <div class="small text-muted text-end">${item.timestamp}</div>
+                            <div class="message-bubble ${isSender ? 'sent-message' : 'received-message'}">
+                                <div>${item.message}</div>
+                                <div class="timestamp">${item.timestamp}</div>
                             </div>
                         `;
                     } else if (item.type === "proposal") {
