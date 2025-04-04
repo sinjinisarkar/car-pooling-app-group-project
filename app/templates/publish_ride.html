@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <!-- Category Dropdown (Detect Change) -->
+        <!-- category dropdown (detect change) -->
         <div class="row mb-3">
             <div class="col-md-12">
                 <label for="category">Category:</label>
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <!-- One-Time Ride: Show Date & Time Picker -->
+        <!-- one-time ride: show date and time picker -->
         <div class="row mb-3" id="date_time_div">
             <div class="col-md-12">
                 <label for="date_time">Date & Time:</label>
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- Commuting Ride: Show Recurrence Dates & Time Slots -->
+        <!-- commuting ride: show recurrence dates and time slots -->
         <div class="row mb-3" id="recurrence_section" style="display: none;">
             <div class="col-md-12">
                 <label for="recurrence_dates">Select Recurring Commute Dates:</label>
@@ -50,7 +50,7 @@
             <div class="col-md-12">
                 <label for="commute_times">Select Available Commute Time Slots:</label>
                 <input type="text" id="commute_times" name="commute_times" class="form-control" placeholder="Select time slots">
-                <small>Select multiple time slots (e.g., 08:00, 17:30).</small>
+                <small>The same time slots apply to all commute dates.</small>
             </div>
         </div>
 
@@ -58,10 +58,11 @@
             <div class="col-md-3">
                 <label for="available_seats" class="form-label">Available Seats:</label>
                 <input type="number" id="available_seats" name="available_seats" min="1" class="form-control" required>
+                <small>A maximum of 8 seats are allowed.</small>
             </div>
             <div class="col-md-3">
                 <label for="price_per_seat" class="form-label">Price per Seat (£):</label>
-                <input type="number" id="price_per_seat" name="price_per_seat" step="0.01" class="form-control" required>
+                <input type="number" id="price_per_seat" name="price_per_seat" step="0.5" class="form-control" required>
             </div>
         
             <div class="col-md-6">

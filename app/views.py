@@ -253,7 +253,6 @@ def view_journeys():
             seat_data = filtered_seats
 
         ride.seat_tracking = seat_data
-        print(f"appending ride {ride.seat_tracking}")
         journeys.append(ride)
 
         # Remove journeys where no future dates have seats left
@@ -261,7 +260,6 @@ def view_journeys():
             journey for journey in journeys
             if journey.seat_tracking and any(seats > 0 for seats in journey.seat_tracking.values())
         ]
-        print("🎀", journeys)
     
     booked_journey_ids = set()
     
