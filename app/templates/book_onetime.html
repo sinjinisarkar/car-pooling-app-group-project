@@ -16,16 +16,16 @@
     </div>
     
 
-    <!-- Booking form -->
+    <!-- booking form -->
     <form method="POST" action="{{ url_for('book_onetime', ride_id=ride.id) }}" class="custom-form">
-         <!-- (A) HIDDEN INPUTS FOR RIDE & PRICE -->
+         <!-- hidden inputs -->
          <input type="hidden" id="ride_id" value="{{ ride.id }}">
          <input type="hidden" id="price_per_seat" data-price="{{ ride.price_per_seat }}">
          <input type="hidden" id="category" value="{{ ride.category }}">
          <input type="hidden" id="selected_date_input" name="selected_date" value="{{ selected_date }}">
 
         
-        <!-- Number of Seats -->
+        <!-- number of seats and total price -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="seats" class="form-label">Number of Seats:</label>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <!-- Date Selection for One-time Rides -->
+        <!-- date selection -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="ride_date" class="form-label">Journey Date & Time:</label>
@@ -57,7 +57,7 @@
         </div>
 
 
-        <!-- Email -->
+        <!-- email -->
         <div class="row mb-3">      
             <div class="col-md-6">
                 <label for="email" class="form-label">Email for Confirmation:</label>

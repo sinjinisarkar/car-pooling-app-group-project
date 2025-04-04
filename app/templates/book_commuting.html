@@ -5,7 +5,7 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">Book Your Commuting Ride</h2>
 
-    <!-- Display the From and To locations -->
+    <!-- display to and from locations -->
     <div class="row mb-4">
         <div class="col-md-6">
             <h5><strong>From:</strong> {{ ride.from_location }}</h5>
@@ -16,16 +16,15 @@
     </div>
     
 
-    <!-- Booking form -->
+    <!-- booking form -->
     <form id="bookingForm" method="POST" action="{{ url_for('book_commuting', ride_id=ride.id) }}" class="custom-form">
-         <!-- (A) HIDDEN INPUTS FOR RIDE & PRICE -->
+         <!-- hidden inputs -->
          <input type="hidden" id="ride_id" value="{{ ride.id }}">
          <input type="hidden" id="price_per_seat" data-price="{{ ride.price_per_seat }}">
          <input type="hidden" id="category" value="{{ ride.category }}">
          <input type="hidden" id="selected_date_input" name="selected_date" value="{{ selected_date }}">
-
         
-        <!-- Number of Seats -->
+        <!-- commute dates selection and total price -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="selected_dates" class="form-label">Select Commute Dates:</label>
@@ -38,6 +37,7 @@
             </div>
         </div>
 
+        <!-- number of seats -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="seats" class="form-label">Number of Seats:</label>
@@ -50,7 +50,7 @@
         </div>
 
 
-        <!-- Email -->
+        <!-- email -->
         <div class="row mb-3">      
             <div class="col-md-6">
                 <label for="email" class="form-label">Email for Confirmation:</label>
