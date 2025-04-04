@@ -70,6 +70,10 @@ def register():
     # Checks if the 'username' is empty
     if not data.get('username'):
         return jsonify({"error": "Username is required"}), 400
+
+    # Checks for username duplication
+    if User.query.filter_by(username=username).first():
+        return jsonify({"message": "Username already exists"}), 400
     
     # Check if 'email' is empty 
     if not data.get('email'):

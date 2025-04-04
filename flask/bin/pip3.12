@@ -1,4 +1,4 @@
-#!/workspaces/software-engineering-project-team-19/flask/bin/python3
+#!/workspaces/software-engineering-project-team-19/flask/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
