@@ -171,9 +171,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const savedCardLabels = document.querySelectorAll("#savedCardSection .form-check-label");
         
             for (let label of savedCardLabels) {
-                if (label.textContent.includes(`**** ${lastFour}`) && label.textContent.includes(`Exp: ${expiry}`)) {
-                    alert("You’ve already saved this card.");
-                    return;
+                const labelText = label.textContent;
+                if (
+                    labelText.includes(`**** ${lastFour}`) &&
+                    labelText.includes(`Exp: ${expiry}`)
+                ) {
+                    const confirmSave = confirm("A card with the same last 4 digits and expiry is already saved. Do you still want to save this one?");
+                    if (!confirmSave) return;
+                    break; // allow to continue
                 }
             }
         }
