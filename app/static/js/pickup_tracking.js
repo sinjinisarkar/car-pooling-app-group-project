@@ -78,23 +78,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     console.log(`${role} location updated:`, data.message);
                     document.getElementById("status-message").innerText = data.message;
-    
-                    // // Update or create marker
-                    // if (role === "passenger") {
-                    //     if (passengerMarker) {
-                    //         passengerMarker.setLatLng([lat, lon]);
-                    //     } else {
-                    //         passengerMarker = L.marker([lat, lon], { icon: passengerIcon }).addTo(map)
-                    //             .bindPopup("Your location").openPopup();
-                    //     }
-                    // } else {
-                    //     if (driverMarker) {
-                    //         driverMarker.setLatLng([lat, lon]);
-                    //     } else {
-                    //         driverMarker = L.marker([lat, lon], { icon: driverIcon }).addTo(map)
-                    //             .bindPopup("Driver's location").openPopup();
-                    //     }
-                    // }
                 });
             });
         }
@@ -160,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log("Live locations response:", data);
 
                 // Modal functionality (For commuting only) 
-                if (userType === "driver" && rideDate && typeof data.passenger === "object") {
+                if (userType === "driver" && typeof data.passenger === "object") {
 
                     const driverLoc = data.driver;
                     const passengers = data.passenger;
@@ -196,16 +179,29 @@ document.addEventListener("DOMContentLoaded", function () {
                                 reminderMap[username] = [pLat, pLon];
                                 modalActive = false;
 
-                                // Show multi-reminder if more than one dismissed
-                                const multiReminder = document.getElementById("multi-reminder");
-                                if (Object.keys(reminderMap).length > 1) {
-                                    multiReminder.style.display = "block";
-                                    // Hide the individual reminder bar
-                                    const reminder = document.getElementById("reminder-message");
-                                    if (reminder) {
-                                        reminder.style.display = "none";
-                                    }
-                                }
+                                // Create a reminder bar for this passenger
+                                let reminderBar = document.createElement("div");
+                                reminderBar.className = "alert alert-warning mt-2";
+                                reminderBar.style.cursor = "pointer";
+                                reminderBar.innerHTML = `${username} is still nearby. <u>Click to start journey</u>`;
+                                reminderBar.id = `reminder-${username}`;
+                                document.getElementById("reminder-container").appendChild(reminderBar);
+
+                                // On click, start journey for that passenger
+                                reminderBar.addEventListener("click", () => {
+                                    startedPassengers.add(username);
+                                    reminderBar.remove();
+
+                                    fetch("/api/start_journey", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ ride_id: rideId })
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        document.getElementById("status-message").innerText = data.message;
+                                    });
+                                });
                             };
 
                             // Start logic (modal)
@@ -228,34 +224,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             };
                         }
                     });
-
-                    const multiReminder = document.getElementById("multi-reminder");
-                    if (multiReminder && !multiReminder.dataset.bound) {
-                        multiReminder.dataset.bound = true;
-
-                        multiReminder.addEventListener("click", () => {
-                            multiReminder.style.display = "none";
-
-                            // Mark all dismissed passengers as "started"
-                            for (const username of Object.keys(reminderMap)) {
-                                startedPassengers.add(username);
-                            }
-
-                            fetch("/api/start_journey", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ ride_id: rideId })
-                            })
-                            .then(res => res.json())
-                            .then(data => {
-                                document.getElementById("status-message").innerText = data.message;
-                            })
-                            .catch(err => {
-                                alert("Something went wrong.");
-                                console.error(err);
-                            });
-                        });
-                    }
                 }
                 // Clear old markers 
                 if (passengerMarker) {
@@ -278,28 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                // One-time passenger marker
-                if (data.passenger && Array.isArray(data.passenger)) {
-                    let [pLat, pLon] = data.passenger;
-
-                    // Slight offset if overlapping with driver
-                    if (data.driver && Math.abs(pLat - data.driver[0]) < 0.00001 && Math.abs(pLon - data.driver[1]) < 0.00001) {
-                        pLat += 0.00005;
-                        pLon += 0.00005;
-                    }
-
-                    const oneTimePassengerPopup = userType === "passenger" ? "Your location" : "Passenger's location";
-
-                    passengerMarker = L.marker([pLat, pLon], { icon: passengerIcon })
-                        .bindPopup(oneTimePassengerPopup);
-
-                    markerClusterGroup.addLayer(passengerMarker);  // Add to cluster group
-                    allMarkers.push(passengerMarker);              // For map bounds
-
-                    console.log(`📍 Added one-time passenger marker at [${pLat}, ${pLon}] for userType: ${userType}`);
-                }
-
-                // Multiple Passenger Markers (for commuting rides)
+                // Multiple Passenger Markers (for both one time and commuting)
                 if (data.passenger && typeof data.passenger === "object" && !Array.isArray(data.passenger)) {
                     console.log("Detected commuting ride mode: rendering multiple passenger markers");
                     const passengerCount = Object.keys(data.passenger).length;

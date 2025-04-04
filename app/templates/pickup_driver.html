@@ -14,16 +14,9 @@
     <!-- Leaflet Map -->
     <div id="map" style="height: 400px;"></div>
 
-    <!-- Visual Reminder (initially hidden) -->
-    <div id="reminder-message" class="alert alert-warning mt-3" style="display: none; cursor: pointer;">
-        👀 Passenger is nearby. <u>Click here to start the journey</u>
-    </div>
-
-    <!-- Reminder bar for multiple passengers (commuting) -->
-    <div id="multi-reminder" class="alert alert-warning mt-3" style="display: none; cursor: pointer;">
-        👥 Some passengers are nearby. <u>Click here to start their journeys</u>
-    </div>
-
+    <!-- Reminder stack for individual passenger alerts -->
+    <div id="reminder-container" style="position: fixed; top: 70px; right: 20px; z-index: 9999;"></div>
+    
     <!-- Ride Details Card -->
     <div class="card mt-4 shadow-sm">
         <div class="card-body">

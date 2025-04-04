@@ -1079,13 +1079,13 @@ def view_pickup(ride_id):
                                passenger_name=passenger.username if passenger else None)
 
     elif is_driver and not is_passenger:
-        # Handle one time ride: get any passenger if exists
-        passenger_booking = book_ride.query.filter_by(ride_id=ride_id).first()
-        passenger = User.query.get(passenger_booking.user_id) if passenger_booking else None
+        # Handle one-time ride: get all passengers
+        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id, status="Booked").all()
+        passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
 
         return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
-                               driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None)
+                            driver_name=driver.username if driver else "Unknown",
+                            passenger_names=passenger_names)
 
     elif is_passenger and is_driver:
         return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
@@ -1146,27 +1146,31 @@ def track_driver_location():
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
 def get_live_locations(ride_id):
-    passenger_loc = None
-
-    # Try to find ANY passenger location for this ride
-    for key in live_locations:
-        if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
-            passenger_loc = live_locations[key]
-            break
-
     driver_loc = live_locations.get(f"driver_{ride_id}")
 
-    if not passenger_loc and not driver_loc:
-        return jsonify({"error": "No location data available"}), 404
+    # Collect all passenger locations for one-time ride
+    passenger_locs = {}
+    for key, value in live_locations.items():
+        if key.startswith(f"passenger_{ride_id}_") or key == f"passenger_{ride_id}":
+            # Extract user_id or username from key
+            parts = key.split("_")
+            if len(parts) == 3:
+                user_id = parts[2]
+                user = User.query.get(int(user_id))
+                if user:
+                    passenger_locs[user.username] = value
+            elif len(parts) == 2:
+                passenger_locs[current_user.username] = value
 
-    # Check if they are within 100 meters
+    # Check if they are within 100 meters (only if there's one passenger)
     nearby = False
-    if passenger_loc and driver_loc:
-        distance = geodesic(passenger_loc, driver_loc).meters
+    if len(passenger_locs) == 1 and driver_loc:
+        only_passenger_coords = list(passenger_locs.values())[0]
+        distance = geodesic(only_passenger_coords, driver_loc).meters
         nearby = distance <= 100
 
     return jsonify({
-        "passenger": passenger_loc,
+        "passenger": passenger_locs,
         "driver": driver_loc,
         "nearby": nearby
     })
