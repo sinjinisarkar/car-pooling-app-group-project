@@ -1498,6 +1498,14 @@ def respond_proposal():
     db.session.commit()
     return jsonify({"success": True})
 
+
+
+
+
+
+
+
+
 # Routes for management view
 @app.cli.command("make-manager")
 def make_manager():
@@ -1507,7 +1515,7 @@ def make_manager():
         if user:
             user.is_manager = True
             db.session.commit()
-            print(f"{user.email} is now a manager ✅")
+            print(f"{user.email} is now a manager ")
         else:
             print("User not found ❌")
 
