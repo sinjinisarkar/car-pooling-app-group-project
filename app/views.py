@@ -144,11 +144,31 @@ def load_user(user_id):
 @login_required
 def publish_ride_view():
     if request.method == 'POST':
-        from_location = request.form['from_location']
-        to_location = request.form['to_location']
-        category = request.form['category']
+        from_location = request.form.get('from_location')
+        to_location = request.form.get('to_location')
+        category = request.form.get('category')
         driver_name = current_user.username
-        price_per_seat = float(request.form['price_per_seat'])
+        price_input = request.form.get('price_per_seat')
+        if not price_input:
+            flash("Price per seat is required.", "danger")
+            return redirect(url_for('publish_ride_view'))
+        
+        try:
+            price_per_seat = float(price_input)
+        except ValueError:
+            flash("Invalid price format.", "danger")
+            return redirect(url_for('publish_ride_view'))
+
+         # Validation messages for testing
+        if not from_location or not to_location or not category or not request.form.get('price_per_seat'):
+            return jsonify({"error": "All fields are required."}), 400
+
+        if price_per_seat < 1:
+            return jsonify({"error": "Price per seat must be at least 1."}), 400
+
+        available_seats = int(request.form.get('available_seats', 0))
+        if available_seats < 1:
+            return jsonify({"error": "Available seats must be at least 1."}), 400
         
         # Initialize variables
         date_time = None
@@ -306,17 +326,26 @@ def book_onetime(ride_id):
     if request.method == 'POST':
         num_seats = request.form.get('seats')
         confirmation_email = request.form.get('email')
+
+        # Validation messages for testing 
         if not num_seats:
-            flash("Please enter the number of seats.", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": "Number of seats is required"}), 400
         try:
             num_seats = int(num_seats)
+
         except ValueError:
-            flash("Invalid seat number!", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": "Invalid seat number"}), 400
+
+        if num_seats < 1:
+            return jsonify({"error": "Invalid seat number"}), 400
+        
+        if not confirmation_email:
+            return jsonify({"error": "Email is required"}), 400
+        
+
         if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
-            flash(f"Not enough seats available on {selected_date}.", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": f"Not enough seats available on {selected_date}"}), 400
+        
         total_price = num_seats * ride.price_per_seat
         # Redirect to Payment Page with selected_date included
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_dates=selected_date, email=confirmation_email))
@@ -367,15 +396,28 @@ def book_commuting(ride_id):
         num_seats = request.form.get('seats')
         selected_dates = request.form.getlist("selected_dates")
         confirmation_email = request.form.get('email')
-        
+
+        # Validation messages for testing
         if not num_seats or not selected_dates:
-            flash("Please enter all required fields.", "danger")
-            return redirect(url_for('book_commuting', ride_id=ride_id))
+            return jsonify({"error": "Required fields are missing"}), 400
         try:
             num_seats = int(num_seats)
         except ValueError:
-            flash("Invalid seat number!", "danger")
-            return redirect(url_for('book_commuting', ride_id=ride_id))
+            return jsonify({"error": "Invalid seat number"}), 400
+        if num_seats < 1:
+            return jsonify({"error": "Invalid seat number"}), 400
+
+        if not confirmation_email:
+            return jsonify({"error": "Email is required"}), 400
+        
+        if not confirmation_email or not re.match(r"[^@]+@[^@]+\.[^@]+", confirmation_email):
+            return jsonify({"error": "Invalid email format"}), 400
+        
+        # Check seat availability for each date
+        for date in selected_dates:
+            if seat_tracking.get(date.strip(), 0) < num_seats:
+                return jsonify({"error": f"Not enough seats available on {date}"}), 400
+                
         total_price=request.form.get('total_price')
         
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=",".join(selected_dates), email=confirmation_email))
