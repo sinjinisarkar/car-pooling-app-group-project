@@ -147,23 +147,49 @@
                                 <p class="detail-item"><span class="detail-heading">Date:</span> {{ ride.date }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ ride.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
+                               
                                 <div class="text-center mt-3">
-                                    <!-- Track Button -->
+
+                                    <!-- Button to trigger modal -->
+                                    <button class="btn btn-base btn-one btn-block mt-3 mb-2" data-bs-toggle="modal" data-bs-target="#chatModal{{ ride.ride_id }}">
+                                        Chat with Passengers
+                                    </button>
+
+                                    <!-- Modal for chatting with passengers -->
+                                    <div class="modal fade" id="chatModal{{ ride.ride_id }}" tabindex="-1" aria-labelledby="chatModalLabel{{ ride.ride_id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="chatModalLabel{{ ride.ride_id }}">
+                                                        Chat with Passengers for {{ ride.from.split(',')[0] }} ➝ {{ ride.to.split(',')[0] }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% if ride.passengers %}
+                                                        {% for passenger in ride.passengers %}
+                                                            <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat btn-block mb-2">
+                                                                Chat with {{ passenger.name }}
+                                                            </a>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <p class="text-muted">No passengers yet.</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                     <!-- Track Button -->
                                     <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block mb-2">
-                                        Track Passenger
+                                        Track Passengers
                                     </a>
                                 
                                     <!-- Single "View Booking Changes" Button -->
                                     <button class="btn btn-base btn-one btn-block mb-2" data-bs-toggle="modal" data-bs-target="#editModalOneTime{{ ride.ride_id }}">
                                         View Booking Changes
                                     </button>
-                                
-                                    <!-- Chat Buttons for Each Passenger -->
-                                    {% for passenger in ride.passengers %}
-                                        <a href="{{ url_for('chat_view', booking_id=passenger.booking_id) }}" class="btn btn-base btn-one btn-chat btn-block mb-2">
-                                            Chat with {{ passenger.name }}
-                                        </a>
-                                    {% endfor %}
+                                    
                                 </div>
                                 
                                 <!-- Modal for Combined Edit Changes -->

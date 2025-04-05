@@ -815,7 +815,7 @@ def dashboard():
                                 .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
                         }
                     }
-                    for passenger in book_ride.query.filter_by(ride_id=ride.id).all()
+                    for passenger in book_ride.query.filter_by(ride_id=ride.id).filter(book_ride.status != "Canceled").all()
                 ]
             })
         else:  # Commuting rides
