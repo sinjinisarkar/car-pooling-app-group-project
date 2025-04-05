@@ -1430,6 +1430,7 @@ def get_messages(booking_id):
     for msg in messages:
         combined.append({
             "type": "message",
+            "id": msg.id,
             "sender": msg.sender_username,
             "message": msg.message,
             "timestamp": msg.timestamp.strftime('%Y-%m-%d %H:%M')
