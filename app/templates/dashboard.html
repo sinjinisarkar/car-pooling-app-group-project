@@ -41,6 +41,7 @@
                                 <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
+                                <p class="detail-item"><span class="detail-heading">Category:</span> {{ journey.category }}</p>
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
                                         <button class="btn btn-base btn-red cancel-btn btn-block" data-booking-id="{{ journey.booking_id }}" 
@@ -226,7 +227,7 @@
                                     <ul class="list-group">
                                         {% for date, passengers in ride.dates.items() %}
                                         <li class="list-group-item p-0 d-flex justify-content-between align-items-center">
-                                            <button class="btn-base btn-one btn-block flex-grow-1" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
+                                            <button class="btn-base btn-one btn-block flex-grow-1 mb-2" data-bs-toggle="modal" data-bs-target="#passengerModalCommute{{ ride.ride_id }}_{{ date }}">
                                                 {{ date }}
                                             </button>
                                             

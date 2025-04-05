@@ -778,6 +778,9 @@ def dashboard():
                 inactive_journeys.append(journey_data)
             else:
                 upcoming_journeys.append(journey_data)
+    
+    # Sort upcoming journeys by date and time
+    upcoming_journeys.sort(key=lambda j: (j["date"], j["time"]))
 
     # Get published rides (separate one-time and commuting)
     user_published_rides = publish_ride.query.filter_by(driver_id=current_user.id).all()
