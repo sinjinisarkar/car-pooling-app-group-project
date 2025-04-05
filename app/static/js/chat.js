@@ -1,6 +1,6 @@
 
 // Notification Logic
-let dismissedBookingIds = new Set();
+let dismissedMessageIds = new Set();
 function checkForNewMessages() {
     fetch('/check_new_messages')
         .then(response => response.json())
@@ -10,13 +10,13 @@ function checkForNewMessages() {
 
                 data.messages.forEach(msg => {
                     // If already dismissed then skip
-                    if (dismissedBookingIds.has(msg.booking_id)) return;
+                    if (dismissedMessageIds.has(msg.message_id)) return;
 
                     // If already shown then skip
-                    if (document.getElementById(`notif-${msg.booking_id}`)) return;
+                    if (document.getElementById(`notif-${msg.message_id}`)) return;
 
                     const banner = document.createElement("div");
-                    banner.id = `notif-${msg.booking_id}`;
+                    banner.id = `notif-${msg.message_id}`;
                     banner.className = "chat-banner shadow-sm rounded p-2 bg-light border mb-2";
                     banner.style.backgroundColor = "#f8f9fa";
                     banner.style.color = "#212529";
@@ -38,6 +38,9 @@ function checkForNewMessages() {
                         // Send a POST request to mark the message as seen in the database
                         fetch(`/mark_message_seen/${msg.message_id}`, {
                             method: "POST"
+                        }).then(() => {
+                            banner.remove();
+                            dismissedMessageIds.add(msg.message_id);
                         });
                     
                         dismissedBookingIds.add(msg.booking_id);  
@@ -60,8 +63,11 @@ document.addEventListener("click", function (e) {
         dismissedBookingIds.add(bid);
 
         // Mark message seen in the database
-        fetch(`/mark_message_seen/${mid}`, {
+        fetch(`/mark_message_seen/${msg.message_id}`, {
             method: "POST"
+        }).then(() => {
+            banner.remove();
+            dismissedMessageIds.add(msg.message_id);
         });
 
         const banner = document.getElementById(`notif-${bid}`);
@@ -138,6 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
     
                     chatBox.appendChild(messageDiv);
+
+                    // auto-mark messages as seen when loading chat
+                    if (item.type === "message" && item.sender !== currentUser) {
+                        fetch(`/mark_message_seen/${item.id}`, {
+                            method: "POST"
+                        });
+                    }
                 });
     
                 chatBox.scrollTop = chatBox.scrollHeight;
