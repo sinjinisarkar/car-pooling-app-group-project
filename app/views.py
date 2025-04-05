@@ -944,6 +944,7 @@ def cancel_booking(booking_id):
     payment = Payment.query.filter_by(book_ride_id=booking.id).first()
 
     ride_time = booking.ride_date
+    print(f"ride time is {ride_time} and now is {now}")
     time_difference = (ride_time - now).total_seconds() / 60  # Convert to minutes
 
     # Find associated payment

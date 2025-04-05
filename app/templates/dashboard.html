@@ -45,7 +45,7 @@
                                 <div class="text-center mt-3">
                                     {% if journey.status == "Booked" %}
                                         <button class="btn btn-base btn-red cancel-btn btn-block" data-booking-id="{{ journey.booking_id }}" 
-                                                data-price="{{ journey.price }}" data-date="{{ journey.date }}">
+                                                data-price="{{ journey.price }}" data-date="{{ journey.date }}" data-time="{{ journey.time }}">
                                             Cancel
                                         </button>
                                         {% if journey.category == "one-time" %}
