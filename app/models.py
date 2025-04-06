@@ -126,6 +126,7 @@ class Payment(db.Model):
 
 cipher = Fernet(app.config["ENCRYPTION_KEY"])
 
+
 # Table to save card
 class SavedCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -147,6 +148,7 @@ class SavedCard(db.Model):
     def get_card_number(self):
         return cipher.decrypt(self.encrypted_card_number.encode()).decode()
 
+
 # Table for chat 
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -164,6 +166,7 @@ class ChatMessage(db.Model):
             "timestamp": self.timestamp.strftime("%H:%M")
         }
 
+
 # Table for editing ride details
 class EditProposal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -174,6 +177,7 @@ class EditProposal(db.Model):
     proposed_cost = db.Column(db.Float)
     status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 # Table for management view
 class PlatformSetting(db.Model):
