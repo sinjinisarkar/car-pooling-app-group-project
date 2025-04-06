@@ -108,7 +108,7 @@
                 <h4>Inactive Bookings</h4>
                 {% if inactive_journeys %}
                 <p class="text-muted mb-4">
-                    These bookings have been cancelled. To rebook, head to <a href="{{ url_for('view_journeys') }}">Find a Ride</a> to check availability.
+                    These bookings have been either finished or cancelled. To rebook, head to <a href="{{ url_for('view_journeys') }}">Find a Ride</a> to check availability.
                 </p>
                     <div class="row">
                         {% for journey in inactive_journeys %}
@@ -119,7 +119,15 @@
                                 <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
-                                <p class="detail-item text-danger"><span class="detail-heading">Status:</span> {{ journey.status }}</p>
+                                <p class="detail-item {% if journey.status == 'done' %}text-success{% elif journey.status == 'Canceled' %}text-danger{% endif %}">
+                                    <span class="detail-heading">Status:</span> 
+                                    <span id="status-{{ journey.ride_id }}">
+                                        {% if journey.status == 'done' %}Finished
+                                        {% elif journey.status == 'Canceled' %}Canceled
+                                        {% else %}{{ journey.status }}
+                                        {% endif %}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                         {% endfor %}

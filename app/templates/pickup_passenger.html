@@ -9,6 +9,8 @@
     <input type="hidden" id="user-type" value="passenger">
     <input type="hidden" id="ride-date" value="{{ ride_date }}">
     <input type="hidden" id="current-username" value="{{ current_user.username }}">
+    <input type="hidden" id="ride-status" value="{{ ride.status }}">
+
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
     <!-- Leaflet Map -->
@@ -36,4 +38,33 @@
         </div>
     </div>
 </div>
+
+<!-- Journey Finished Banner -->
+<div id="journeyFinishedBanner" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    padding-top: 20%;
+    z-index: 9999;
+">
+    <p><strong id="journeyBannerText"></strong></p>
+</div>
+
+<!-- Rating Modal -->
+<div id="ratingModal" class="modal modal-pickup" style="display: none;">
+    <div class="modal-content">
+      <span id="closeRatingModal" class="close">&times;</span>
+      <h4 class="modal-title">Rate Your Driver</h4>
+      <div id="starContainer" style="font-size: 2rem; margin: 15px 0;"></div>
+      <button id="submitRatingBtn" class="btn btn-green mt-3">Submit</button>
+    </div>
+</div>
+
 {% endblock %}
