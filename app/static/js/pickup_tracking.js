@@ -16,7 +16,39 @@ document.addEventListener("DOMContentLoaded", function () {
     const dismissed = new Set();
     const reminderMap = {}; // username -> location
     let modalActive = false;
-    let journeyStarted = false;
+    let rideStatus = document.getElementById("ride-status")?.value || "unknown";
+    let journeyStarted = (rideStatus === "ongoing");
+    if (journeyStarted) {
+        const finishBtn = document.getElementById("finishJourneyBtn");
+        if (finishBtn) {
+            finishBtn.style.display = "inline-block";
+        }
+    }
+    let journeyFinished = (rideStatus === "finished" || rideStatus === "completed");
+    if (journeyFinished) {
+        const banner = document.getElementById("journeyFinishedBanner");
+        const text = document.getElementById("journeyBannerText");
+    
+        if (userType === "driver") {
+            text.innerText = "Journey finished. Thank you for driving with Catch My Ride.";
+        } else {
+            text.innerText = "Journey finished. Thank you for riding with Catch My Ride. Please rate your driver.";
+    
+            // Add Rate Button (passenger only)
+            const rateBtn = document.createElement("button");
+            rateBtn.innerText = "Rate Driver";
+            rateBtn.className = "btn btn-light mt-4";
+            rateBtn.style.fontSize = "1.2rem";
+    
+            rateBtn.onclick = function () {
+                showRatingModal(rideId, rideDate); // defined globally outside DOMContentLoaded
+            };
+    
+            banner.appendChild(rateBtn);
+        }
+    
+        banner.style.display = "block";
+    }
 
     // Helper: calculate distance between two lat/lon in meters
     function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
@@ -83,9 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    /**
-     * Fetch pickup location and show on map
-     */
+    // Fetch pickup location and show on map
     fetch(`/api/get_pickup_location/${rideId}`)
         .then(response => response.json())
         .then(data => {
@@ -120,6 +150,13 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             document.getElementById("status-message").innerText = data.message || "Journey started!";
             journeyStarted = true;
+            document.getElementById("ride-status").value = "ongoing";
+
+            // Show the finish button
+            const finishBtn = document.getElementById("finishJourneyBtn");
+            if (finishBtn) {
+                finishBtn.style.display = "inline-block";
+            }
         })
         .catch(err => {
             alert("Something went wrong.");
@@ -129,9 +166,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let rideDateInput = document.getElementById("ride-date");
     rideDate = rideDateInput ? rideDateInput.value : null;
-    /**
-     * Function to fetch and display both driver & passenger live locations
-     */
+    
+    // Function to fetch and display both driver & passenger live locations
     function fetchLiveLocations() {
         markerClusterGroup.clearLayers();
         const endpoint = rideDate 
@@ -161,7 +197,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             distance <= 100 &&
                             !modalActive &&
                             !dismissedPassengers.has(username) &&
-                            !startedPassengers.has(username)
+                            !startedPassengers.has(username) &&
+                            !journeyStarted
                         ) {
                             modalActive = true;
 
@@ -302,7 +339,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
     
                 // Show modal if driver and passenger are nearby (driver only)
-                if (data.nearby && userType === "driver" && !journeyStarted) {
+                const rideStatus = document.getElementById("ride-status")?.value;
+                journeyStarted = (rideStatus === "ongoing");
+                if (data.nearby && userType === "driver" && !journeyStarted && !journeyFinished) {
                     const modal = document.getElementById("startJourneyModal");
                     const closeBtn = document.getElementById("closeModalBtn");
                     const startBtn = document.getElementById("startJourneyBtn");
@@ -439,7 +478,6 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error("Error fetching live locations:", error));
     }
-    
 
     // Leaflet map rendering issue
     setTimeout(() => {
@@ -464,7 +502,37 @@ document.addEventListener("DOMContentLoaded", function () {
             fetchLiveLocations();
         }, 10000);
     }
+
+    // Finish Journey Button Handler
+    const finishBtn = document.getElementById("finishJourneyBtn");
+    if (finishBtn) {
+        finishBtn.addEventListener("click", () => {
+            fetch("/api/finish_journey", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ride_id: rideId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("ride-status").value = "completed";
+                journeyFinished = true;
     
+                // Show banner instead of reloading
+                const banner = document.getElementById("journeyFinishedBanner");
+                const text = document.getElementById("journeyBannerText");
+                if (userType === "driver") {
+                    text.innerText = "Journey finished. Thank you for driving with Catch My Ride.";
+                } else {
+                    text.innerText = "Journey finished. Thank you for riding with Catch My Ride. Please rate your driver.";
+                }
+                banner.style.display = "block";
+    
+                // Optionally hide finish button
+                finishBtn.style.display = "none";
+            })
+            .catch(err => console.error("Error finishing journey:", err));
+        });
+    }
 
     // Tab Switching in dashboard
     let upcomingBtn = document.getElementById("showUpcoming");
@@ -490,3 +558,84 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+function showRatingModal(rideId, rideDate) {
+    const modal = document.getElementById("ratingModal");
+    const starContainer = document.getElementById("starContainer");
+    const submitBtn = document.getElementById("submitRatingBtn");
+    const closeBtn = document.getElementById("closeRatingModal");
+
+    modal.style.display = "block";
+    starContainer.innerHTML = "";
+
+    let selectedRating = 0;
+
+    // Create 5 stars
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement("span");
+        star.innerHTML = "&#9733;"; // ★
+        star.style.fontSize = "2rem";
+        star.style.cursor = "pointer";
+        star.style.color = "#ccc";
+        star.style.margin = "0 5px";
+
+        star.addEventListener("mouseover", () => {
+            for (let j = 0; j < i; j++) {
+                starContainer.children[j].style.color = "gold";
+            }
+            for (let j = i; j < 5; j++) {
+                starContainer.children[j].style.color = "#ccc";
+            }
+        });
+
+        star.addEventListener("click", () => {
+            selectedRating = i;
+        });
+
+        starContainer.appendChild(star);
+    }
+
+    // Submit rating
+    submitBtn.onclick = () => {
+        if (selectedRating === 0) {
+            alert("Please select a rating before submitting.");
+            return;
+        }
+    
+        fetch("/api/submit_rating", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ride_id: rideId,
+                ride_date: rideDate,
+                rating: selectedRating
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error); // Show error message if already rated
+                return;
+            }
+            
+            alert(data.message || "Thanks for your rating!");
+            modal.style.display = "none";
+    
+            // Redirect to dashboard
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            }
+        })
+        .catch(err => {
+            console.error("Error submitting rating:", err);
+            alert("Something went wrong. Please try again.");
+        });
+    };
+
+    // Close modal
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.style.display = "none";
+        };
+    }
+}

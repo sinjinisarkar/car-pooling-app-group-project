@@ -64,7 +64,6 @@ function getSelectedDates() {
 
 // Handle form submission for booking
 function handleBookingSubmit(event) {
-    console.log("handleBookingSubmit triggered!");
 
     if (event.target.id !== "bookingForm") {
         console.warn("Form ID does not match 'bookingForm'. Event ignored.");

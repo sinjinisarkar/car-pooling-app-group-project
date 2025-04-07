@@ -4,11 +4,12 @@
 
 {% block content %}
 
+<!-- image banner -->
 <div class="banner">
     <img src="https://res.cloudinary.com/dpar2oaev/image/upload/v1741282825/E1FD0525-DB3E-4588-8A14-CA40127C0635_dv3xcq.png" alt="Banner" class="banner-image">
 </div>
 
-<!-- Separate Search Container for Better Positioning -->
+<!-- search banner -->
 <div class="search-container-banner">
     <div class="banner-search">
         <input type="text" id="bannerSearchFrom" placeholder="Leaving from" class="form-control" autocomplete="off">
@@ -29,25 +30,25 @@
     </div>
 </div>
 
-<!-- Ride Options -->
+<!-- site function options -->
 <br><br> 
 <div class="container text-center my-4 mt-5 btn-container">
     <a href="{{ url_for('view_journeys') }}" class="btn btn-base btn-one btn-lg">Find a Ride</a>
 
     {% if current_user.is_authenticated %}
-        <!-- If user is logged in, go to publish ride page -->
+        <!-- if user is logged in, go to publish ride page -->
         <a href="{{ url_for('publish_ride_view') }}" class="btn btn-base btn-one btn-lg">Publish a Ride</a>
     {% else %}
-        <!-- If user is NOT logged in, open the login modal -->
+        <!-- if user is not logged in, open the login modal -->
         <a href="{{ url_for('login') }}" class="btn btn-base btn-one btn-lg" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Publish a Ride</a>
     {% endif %}
 </div>
 <hr>
 
-
-<!-- Featured Rides -->
+<!-- featured Rides: remove this section in final draft -->
 <br>
 <div class="container text-center my-4">
     <h2>Featured Rides / Popular Routes</h2>
 </div>
+
 {% endblock %}

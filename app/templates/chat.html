@@ -1,53 +1,58 @@
 {% extends 'base.html' %}
 
+{% block title %}Chat{% endblock %}
+
 {% block content %}
+
 <div class="container mt-5">
-    <h3>Chat with {{ 'Driver' if booking.user_id == user.id else 'Passenger' }} for Ride #{{ booking.ride_id }}</h3>
-    <div class="card shadow-sm">
-        <div class="card-body" id="chat-box" style="height: 400px; overflow-y: auto;">
-            <!-- Messages will load here -->
-        </div>
-        <div class="card-footer">
-            <form id="chat-form">
-                <div class="chat-input-group d-flex">
-                    <input type="text" id="message-input" class="form-control chat-input" placeholder="Type a message..." autocomplete="off">
-                    <button class="btn btn-send" type="submit">Send</button>
-                </div>
-                <!-- Edit Proposal Button -->
-                <button type="button" class="btn btn-base btn-one btn-block mt-2" id="openProposalModal">Propose a Booking Edit</button>
-            </form>
-        </div>
-    </div>
+		<h3>Chat with {{ 'Driver' if booking.user_id == user.id else 'Passenger' }} for Ride #{{ booking.ride_id }}</h3>
+		<div class="card shadow-sm">
+				<div class="card-body" id="chat-box" style="height: 400px; overflow-y: auto;">
+					<!-- Messages will load here -->
+				</div>
+				<div class="card-footer">
+						<form id="chat-form">
+								<div class="chat-input-group d-flex">
+										<input type="text" id="message-input" class="form-control chat-input" placeholder="Type a message..." autocomplete="off">
+										<button class="btn btn-send" type="submit">Send</button>
+								</div>
+								<!-- Edit Proposal Button -->
+								<button type="button" class="btn btn-base btn-one btn-block mt-2" id="openProposalModal">Propose a Booking Edit</button>
+						</form>
+				</div>
+		</div>
 </div>
+
 <!-- Proposal Modal -->
 <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="proposalForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="proposalModalLabel">Propose Booking Edit</h5>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label for="newPickup">New Pickup Point</label>
-              <input type="text" class="form-control" id="newPickup" placeholder="Enter new pickup location">
-            </div>
-            <div class="form-group">
-              <label for="newTime">New Time</label>
-              <input type="time" class="form-control" id="newTime">
-            </div>
-            <div class="form-group">
-              <label for="newCost">New Cost</label>
-              <input type="number" class="form-control" id="newCost" min="0" step="0.01" placeholder="Enter new cost">
-            </div>
-            <small class="text-muted">Leave a field empty if you don't want to propose a change for it.</small>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Send Proposal</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form id="proposalForm">
+					<div class="modal-header">
+						<h5 class="modal-title" id="proposalModalLabel">Propose Booking Edit</h5>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="newPickup">New Pickup Point</label>
+							<input type="text" class="form-control" id="newPickup" placeholder="Enter new pickup location">
+						</div>
+						<div class="form-group">
+							<label for="newTime">New Time</label>
+							<input type="time" class="form-control" id="newTime">
+						</div>
+						<div class="form-group">
+							<label for="newCost">New Cost</label>
+							<input type="number" class="form-control" id="newCost" min="0" step="0.01" placeholder="Enter new cost">
+						</div>
+						<small class="text-muted">Leave a field empty if you don't want to propose a change for it.</small>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Send Proposal</button>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 {% endblock %}

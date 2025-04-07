@@ -8,15 +8,15 @@
     
         <meta name="current-user" content="{{ user.username }}">
     
-        <title>{% block title %} CatchMyRide {% endblock %}</title>
+        <title>{% block title %} CatchMyRide Management {% endblock %}</title>
     
         <!-- Local and Bootstrap CSS -->
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" crossorigin="anonymous">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         
-        <!-- Font Awesome -->
+        <!-- icons from Font Awesome (open source) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-        <!-- icons from Boxicons (open source)-->
+        <!-- icons from Boxicons (open source) -->
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     
         <!-- Shrikhand font from google fonts -->
@@ -43,7 +43,7 @@
     <div class="container-fluid px-5 mt-5">
         <div class="row">
 
-            <!-- Sidebar -->
+            <!-- sidebar -->
             <div class="col-md-3 mb-3">
                 <div class="sidebar-box">
                     <div class="list-group">
@@ -57,10 +57,11 @@
                 </div>
             </div>
 
-            <!-- Main content -->
+            <!-- main content -->
             <div class="col-md-9">
                 {% block content %}{% endblock %}
             </div>
+            
         </div>
     </div>
 

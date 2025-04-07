@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
+
+{% block title %}Pickup Driver View{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
     <h2><strong>Pickup Location</strong></h2>
     <h3>Driver's View</h3>
@@ -9,15 +13,19 @@
     <input type="hidden" id="user-type" value="driver">
     <input type="hidden" id="ride-date" value="{{ ride_date }}">
     <input type="hidden" id="current-username" value="{{ current_user.username }}">
+    <input type="hidden" id="ride-status" value="{{ ride.status }}">
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
-    <!-- Leaflet Map -->
+    <!-- leaflet map -->
     <div id="map" style="height: 400px;"></div>
 
-    <!-- Reminder stack for individual passenger alerts -->
+    <!-- finish journey button -->
+    <button id="finishJourneyBtn" class="btn btn-danger mt-3" style="display: none;">Finish Journey</button>
+
+    <!-- reminder stack for individual passenger alerts -->
     <div id="reminder-container" style="position: fixed; top: 70px; right: 20px; z-index: 9999;"></div>
     
-    <!-- Ride Details Card -->
+    <!-- ride details card -->
     <div class="card mt-4 shadow-sm">
         <div class="card-body">
             <h4 class="card-title">Ride Details</h4>
@@ -41,7 +49,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- modal -->
     <div id="startJourneyModal" class="modal modal-pickup" style="display:none;">
         <div class="modal-content">
             <span id="closeModalBtn" class="close" >&times;</span>
@@ -52,5 +60,22 @@
     </div>
 </div>
 
+<!-- journey finished banner -->
+<div id="journeyFinishedBanner" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    padding-top: 20%;
+    z-index: 9999;
+">
+    <p><strong id="journeyBannerText"></strong></p>
+</div>
 
 {% endblock %}

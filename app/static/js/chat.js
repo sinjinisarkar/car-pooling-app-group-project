@@ -1,4 +1,3 @@
-
 // Notification Logic
 let dismissedMessageIds = new Set();
 function checkForNewMessages() {

@@ -17,13 +17,13 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message); // ✅ "Platform fee updated successfully."
+                alert(data.message); 
             } else {
-                alert("Error: " + data.message); // ❌ validation or input error
+                alert("Error: " + data.message); // validation or input error
             }
         })
         .catch(() => {
-            alert("Something went wrong while updating the platform fee ❌");
+            alert("Something went wrong while updating the platform fee");
         });
     });
 });

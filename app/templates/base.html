@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
-    <!-- Font Awesome -->
+    <!-- icons from Font Awesome (open source) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- icons from Boxicons (open source)-->
+    <!-- icons from Boxicons (open source) -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <!-- Shrikhand font from google fonts -->
@@ -40,17 +40,14 @@
 <body class="{% block body_class %}{% endblock %}">
 
     <div class="flex-wrapper">
-    <!-- Navbar -->
+    <!-- navbar -->
     <nav class="navbar">
         <div class="container navbar-container d-flex align-items-baseline justify-content-between">
-            <!-- Navbar Brand -->
             <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
                 CatchMyRide <i class='bx bxs-car logo-icon'></i><i class='bx bx-wind logo-icon' ></i>
             </a>
 
-            
-
-            <!-- Profile Dropdown -->
+            <!-- profile dropdown: login/signup, dashboard, manager dashboard, logout -->
             <div class="dropdown">
                 {% if user.is_authenticated %}
                     <button class="btn btn-base btn-profile dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -87,14 +84,11 @@
         </div>
     </nav>
 
-
-    <!-- Main Content Block -->
     <main>
         {% block content %}{% endblock %}
     </main>
 
-
-    <!-- Login Modal -->
+    <!-- login modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -118,15 +112,14 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Forgot Password Link -->
+                        <!-- forgot password link -->
                         <div class="text-right">
                             <p class="text-center mt-3">
                                 <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
                             </p>
                         </div>
-                        <!-- Hidden input to store the redirect path -->
+                        <!-- hidden input to store the redirect path -->
                         <input type="hidden" id="loginRedirectInput" name="redirect" value="">
-                        
                         <button type="submit" class="btn btn-base btn-one btn-block">Log In</button>
                     </form>
                     <div class="text-center mt-3">
@@ -141,7 +134,7 @@
         </div>
     </div>
 
-    <!-- Signup Modal -->
+    <!-- signup modal -->
     <div class="modal fade" id="signupModal" tabindex="-1" role="dialog" aria-labelledby="signupModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -194,7 +187,7 @@
         </div>
     </div>
 
-    <!-- Search Modal -->
+    <!-- search modal -->
     <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -203,7 +196,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!--  Search Fields -->
+                    <!-- search fields -->
                     <div class="mb-3">
                         <label for="searchFrom" class="form-label">Leaving from</label>
                         <input type="text" id="searchFrom" class="form-control" placeholder="Enter starting location">
@@ -229,22 +222,20 @@
                             <option value="4">8</option>
                         </select>
                     </div>
-                    <!-- Search Button -->
+                    <!-- search button and search stores -->
                     <button id="searchButton" class="btn btn-primary w-100">Search</button>
-
-                    <!-- Search Results (Dynamically Inserted Here) -->
                     <div id="searchResults" class="mt-3"></div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Chat Notification Stack -->
+    <!-- chat notifications stack -->
     <div id="chat-notification-stack" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
-        <!-- Individual notifications will be injected here by chat.js -->
+        <!-- individual notifications will be injected here by chat.js -->
     </div>
     
-    <!-- Footer -->
+    <!-- footer -->
     <br>
     <footer class="bg-dark text-white text-center py-3 mt-5">
         <div class="container">
@@ -256,7 +247,6 @@
             </div>
         </div>
     </footer>
-    
 
     <!-- jQuery, Popper.js, Bootstrap JS, Flatpickr, Chart JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

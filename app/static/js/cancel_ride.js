@@ -1,10 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".cancel-btn").forEach(button => {
         button.addEventListener("click", function () {
+
             const bookingId = this.dataset.bookingId;
             const price = parseFloat(this.dataset.price);
-            const rideDate = new Date(this.dataset.date);
+            const datePart = this.dataset.date;     // e.g., "2025-04-05"
+            const timePart = this.dataset.time;     // e.g., "22:15"
+            const rideDate = new Date(`${datePart}T${timePart}`);
             const now = new Date();
+            console.log("now is: ", now)
+            console.log("ride date is: ", rideDate)
             const timeDifference = (rideDate - now) / (1000 * 60); // Minutes difference
 
             let refundMessage = "";

@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Auth.js loaded!");
-
+    
     // Function to validate password strength
     function validatePassword(password) {
         const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;

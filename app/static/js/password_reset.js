@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("password_reset.js loaded!");
-
     // Function to show popup messages
     function showPopup(message) {
         alert(message); 

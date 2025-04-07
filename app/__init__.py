@@ -22,8 +22,6 @@ mail = Mail(app)
 
 login_manager.login_view = "login"  # Redirects to login page if user isn't logged in
 
-
-
 # Import models and views inside app context
 with app.app_context():
     from app import models, views
