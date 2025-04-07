@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
+
+{% block title %}Pickup Passenger View{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
     <h2><strong>Pickup Location</strong></h2>
     <h3>Passenger's View</h3>
@@ -9,12 +13,14 @@
     <input type="hidden" id="user-type" value="passenger">
     <input type="hidden" id="ride-date" value="{{ ride_date }}">
     <input type="hidden" id="current-username" value="{{ current_user.username }}">
+    <input type="hidden" id="ride-status" value="{{ ride.status }}">
+
     <p id="status-message" class="alert alert-info">Tracking your location...</p>
 
-    <!-- Leaflet Map -->
+    <!-- leaflet map -->
     <div id="map" style="height: 400px;"></div>
 
-     <!-- Ride Details Card -->
+     <!-- ride details card -->
      <div class="card mt-4 shadow-sm">
         <div class="card-body">
             <h4 class="card-title">Ride Details</h4>
@@ -26,7 +32,7 @@
         </div>
     </div>
 
-    <!-- Adjust Pickup Modal -->
+    <!-- adjust pickup modal -->
     <div id="adjustPickupModal" class="modal modal-pickup" style="display: none;">
         <div class="modal-content">
             <span id="closeAdjustModal" class="close">&times;</span>
@@ -36,4 +42,33 @@
         </div>
     </div>
 </div>
+
+<!-- journey finished banner -->
+<div id="journeyFinishedBanner" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    padding-top: 20%;
+    z-index: 9999;
+">
+    <p><strong id="journeyBannerText"></strong></p>
+</div>
+
+<!-- rating modal -->
+<div id="ratingModal" class="modal modal-pickup" style="display: none;">
+    <div class="modal-content">
+      <span id="closeRatingModal" class="close">&times;</span>
+      <h4 class="modal-title">Rate Your Driver</h4>
+      <div id="starContainer" style="font-size: 2rem; margin: 15px 0;"></div>
+      <button id="submitRatingBtn" class="btn btn-green mt-3">Submit</button>
+    </div>
+</div>
+
 {% endblock %}

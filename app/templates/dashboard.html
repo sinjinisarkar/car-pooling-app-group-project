@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
+
 {% block title %} User Dashboard {% endblock %}
 
 {% block content %}
+
 <div class="containe-fluid px-5 mt-4">
     <h2 class="mb-4 text-center">Welcome, {{ user.username }}!</h2>
     <br>
     <div class="row">
 
-        <!-- Sidebar -->
+        <!-- left column: sidebar -->
         <div class="col-md-3 mb-3">
             <div class="sidebar-box">
                 <div class="list-group">
@@ -19,10 +21,10 @@
             </div>
         </div>
         
-        <!-- Content Area -->
+        <!-- right column: content area -->
         <div class="col-md-9">
 
-            <!-- Upcoming Journeys Section -->
+            <!-- upcoming journeys section -->
             <div id="upcomingSection" class="mb-4">
                 <h4>Upcoming Journeys</h4>
                 {% if upcoming_journeys %}
@@ -57,17 +59,17 @@
                                                 View Pickup Location
                                             </a>
                                         {% endif %}
-                                        <!-- Chat Button -->
+                                        <!-- chat button -->
                                         <a href="{{ url_for('chat_view', booking_id=journey.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
                                             Chat with driver
                                         </a>
                                         {% if journey.edit_details.pickup or journey.edit_details.time or journey.edit_details.cost %}
-                                            <!-- Modal Trigger -->
+                                            <!-- modal button -->
                                             <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModal{{ journey.booking_id }}">
                                                 View Booking Changes
                                             </button>
 
-                                            <!-- Modal -->
+                                            <!-- modal -->
                                             <div class="modal fade" id="editModal{{ journey.booking_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ journey.booking_id }}" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
@@ -97,18 +99,18 @@
                         No upcoming journeys booked. Wanna find a ride? <a href="{{ url_for('view_journeys') }}">Book here.</a>
                     </p>
                 {% endif %}
-                <!-- Toggle Inactive Bookings Button -->
+                <!-- toggle inactive bookings button -->
                 <div class="text-center mt-4">
                     <button class="btn btn-base btn-one btn-block" id="toggleInactive">Show Inactive Bookings</button>
                 </div>
             </div>
 
-            <!-- Inactive Bookings Section (Initially Hidden) -->
+            <!-- inactive bookings section hidden -->
             <div id="inactiveSection" class="mb-4" style="display: none;">
                 <h4>Inactive Bookings</h4>
                 {% if inactive_journeys %}
                 <p class="text-muted mb-4">
-                    These bookings have been cancelled. To rebook, head to <a href="{{ url_for('view_journeys') }}">Find a Ride</a> to check availability.
+                    These bookings have been either finished or cancelled. To rebook, head to <a href="{{ url_for('view_journeys') }}">Find a Ride</a> to check availability.
                 </p>
                     <div class="row">
                         {% for journey in inactive_journeys %}
@@ -119,7 +121,15 @@
                                 <p class="detail-item"><span class="detail-heading">Seats Booked:</span> {{ journey.seats_booked }}</p>
                                 <p class="detail-item"><span class="detail-heading">Time:</span> {{ journey.time }}</p>
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ journey.price }}</p>
-                                <p class="detail-item text-danger"><span class="detail-heading">Status:</span> {{ journey.status }}</p>
+                                <p class="detail-item {% if journey.status == 'done' %}text-success{% elif journey.status == 'Canceled' %}text-danger{% endif %}">
+                                    <span class="detail-heading">Status:</span> 
+                                    <span id="status-{{ journey.ride_id }}">
+                                        {% if journey.status == 'done' %}Finished
+                                        {% elif journey.status == 'Canceled' %}Canceled
+                                        {% else %}{{ journey.status }}
+                                        {% endif %}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                         {% endfor %}
@@ -129,14 +139,14 @@
                 {% endif %}
             </div>
             
-            <!-- Published Rides Section -->
+            <!-- published rides section -->
             <div id="publishedSection" class="mb-4" style="display: none;">
                 <h4>Your Published Rides</h4>
                 <p class="text-muted mb-4">
                     Here's all the rides you've published! Select 'View Passengers' in the Commuting Rides section to see everyone who's booked your ride!
                 </p>
                 <br>
-                <!-- One-Time Journeys -->
+                <!-- one time journeys -->
                 <h5>One-Time Journeys</h5>
                 {% if published_rides.one_time %}
                     <div class="row">
@@ -149,13 +159,11 @@
                                 <p class="detail-item"><span class="detail-heading">Price:</span> £{{ ride.price }}</p>
                                
                                 <div class="text-center mt-3">
-
-                                    <!-- Button to trigger modal -->
+                                    <!-- modal button -->
                                     <button class="btn btn-base btn-one btn-block mt-3 mb-2" data-bs-toggle="modal" data-bs-target="#chatModal{{ ride.ride_id }}">
                                         Chat with Passengers
                                     </button>
-
-                                    <!-- Modal for chatting with passengers -->
+                                    <!-- chat options modal -->
                                     <div class="modal fade" id="chatModal{{ ride.ride_id }}" tabindex="-1" aria-labelledby="chatModalLabel{{ ride.ride_id }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-scrollable">
                                             <div class="modal-content">
@@ -179,20 +187,17 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                     <!-- Track Button -->
+                                     <!-- track button -->
                                     <a href="{{ url_for('view_pickup', ride_id=ride.ride_id) }}" class="btn btn-base btn-one btn-block mb-2">
                                         Track Passengers
                                     </a>
-                                
-                                    <!-- Single "View Booking Changes" Button -->
+                                    <!-- view booking changes button for all passengers -->
                                     <button class="btn btn-base btn-one btn-block mb-2" data-bs-toggle="modal" data-bs-target="#editModalOneTime{{ ride.ride_id }}">
                                         View Booking Changes
                                     </button>
-                                    
                                 </div>
-                                
-                                <!-- Modal for Combined Edit Changes -->
+
+                                <!-- modal for all combined edit changes -->
                                 <div class="modal fade" id="editModalOneTime{{ ride.ride_id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-scrollable">
                                         <div class="modal-content">
@@ -234,7 +239,7 @@
                     <p class="text-muted">No one-time journeys published.</p>
                 {% endif %}
                 
-                <!-- Commuting Journeys -->
+                <!-- commuting journeys -->
                 <h5 class="mt-4">Commuting Journeys</h5>
                 {% if published_rides.commuting %}
                     <div class="row">
@@ -267,7 +272,7 @@
                             </div>
                         </div>
                         
-                        <!-- Passenger Modals for Each Date -->
+                        <!-- passenger modals for each date -->
                         {% for date, passengers in ride.dates.items() %}
                         <div class="modal fade" id="passengerModalCommute{{ ride.ride_id }}_{{ date }}" tabindex="-1" aria-labelledby="passengerModalLabelCommute{{ ride.ride_id }}_{{ date }}" aria-hidden="true">
                             <div class="modal-dialog">
@@ -280,7 +285,7 @@
                                             <a href="{{ url_for('view_pickup_commute', ride_id=ride.ride_id, date=date) }}" class="btn btn-base btn-one btn-block mb-3">
                                                 Track Pickup
                                             </a>
-                                            <!-- View All Booking Changes Button -->
+                                            <!-- view all booking changes button -->
                                             <button class="btn btn-base btn-one btn-block mb-3" data-bs-toggle="modal" data-bs-target="#combinedChangesModal{{ ride.ride_id }}_{{ date }}">
                                                 View Booking Changes
                                             </button>
@@ -296,7 +301,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Combined Modal: All Booking Changes for this date -->
+                        <!-- combined modal: all booking changes for this date -->
                         <div class="modal fade" id="combinedChangesModal{{ ride.ride_id }}_{{ date }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-scrollable">
                                 <div class="modal-content">
@@ -333,7 +338,7 @@
                 {% endif %}
             </div>
 
-            <!-- Your Saved Cards Section -->
+            <!-- saved cards section -->
             <div id="savedCardsSection" class="mb-4" style="display: none;">
                 <h4>Your Saved Cards</h4><br>
                 {% if user.saved_cards %}
@@ -349,14 +354,11 @@
                     <p class="text-muted">No saved cards.</p>
                 {% endif %}
             </div>
-
             
-            <!-- Earnings Section -->
+            <!-- driver earnings section -->
             <div id="earningsSection" class="mb-4" style="display: none;">
-
                 {% if earnings_data %}
-
-                    <!-- Earnings Highlight Block -->
+                    <!-- earnings highlight block -->
                     <div class="text-center mb-5">
                         <h4>Wowie! You've earned a total of
                             <br><span id="totalEarnings" data-total="{{ total_earnings }}" class="earnings-number">
@@ -365,7 +367,6 @@
                         with CatchMyRide!</h4>
                     </div>
                     <hr>
-
                     <h4>Your Weekly Earnings</h4>
                     <!-- graphical view -->
                     <p class="text-muted">Here's a graphical view of your net earnings (after 0.5% platform fee), grouped by week:</p>
@@ -376,7 +377,6 @@
                                 data-dates='{{ earnings_data|map(attribute=2)|list|tojson }}'>
                         </canvas>
                     </div>
-
                     <!-- detailed table view of driver earnings -->
                     <p class="text-muted">Here's the full table for all your earnings per week so far:</p>
                     <div class="table-responsive">
@@ -399,7 +399,6 @@
                             </tbody>
                         </table>
                     </div>
-
                 {% else %}
                     <p class="text-muted">No earnings to show yet.</p>
                 {% endif %}
@@ -408,4 +407,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -75,6 +75,7 @@ class publish_ride(db.Model):
     recurrence_dates = db.Column(db.String(255), nullable=True)  
     commute_times = db.Column(db.String(255), nullable=True)  # Stores commute time slots
     is_available = db.Column(db.Boolean, default=True)
+    status = db.Column(db.String(20), default="Booked")
 
     def __repr__(self):
         return f"<Published Ride {self.from_location} to {self.to_location}>"
@@ -177,6 +178,20 @@ class EditProposal(db.Model):
     proposed_cost = db.Column(db.Float)
     status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# Table for rating
+class RideRating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ride_date = db.Column(db.Date, nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('ride_id', 'passenger_id', 'ride_date', name='unique_rating_per_day'),
+    )
 
 
 # Table for management view

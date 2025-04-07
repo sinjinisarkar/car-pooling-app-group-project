@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+    
     const showUpcoming = document.getElementById("showUpcoming");
     const showPublished = document.getElementById("showPublished");
     const showSavedCards = document.getElementById("showSavedCards");

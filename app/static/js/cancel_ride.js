@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".cancel-btn").forEach(button => {
         button.addEventListener("click", function () {
+
             const bookingId = this.dataset.bookingId;
             const price = parseFloat(this.dataset.price);
             const datePart = this.dataset.date;     // e.g., "2025-04-05"

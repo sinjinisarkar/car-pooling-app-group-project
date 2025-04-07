@@ -11,7 +11,7 @@ def manager_required(f):
             return redirect(url_for('login'))
         if not current_user.is_manager:
             flash("Access restricted to managers only.", "warning")
-            return redirect(url_for('home'))  # Or wherever is appropriate
+            return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
 
