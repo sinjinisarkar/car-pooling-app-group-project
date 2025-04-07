@@ -170,22 +170,10 @@ def test_book_commuting_redirects_to_payment(client, setup_commuting_ride):
 
     assert response.status_code == 302  # Check that it redirects
     redirected_url = response.headers["Location"]
-    
+
     # Check redirection to the correct payment page
-    assert f"/payment_page/{ride_id}/2/16.0" in redirected_url
-    assert "selected_dates=2025-12-01" in redirected_url
+    assert f"/payment/{ride_id}/2/16.0" in redirected_url
+    assert "selected_date=2025-12-01" in redirected_url
     assert "email=test@example.com" in redirected_url
 
-# # Tests for booking - still yet to decide
-# def test_book_commuting_duplicate_booking(client, setup_commuting_ride):
-#     """User shouldn't be able to book the same ride on same date twice."""
-#     ride_id = setup_commuting_ride
-#     booking_data = {
-#         "selected_dates": ["2025-12-01"],
-#         "seats": "1",
-#         "email": "repeat@booking.com"
-#     }
-#     client.post(f"/book_commuting/{ride_id}", data=booking_data)
-#     response = client.post(f"/book_commuting/{ride_id}", data=booking_data, follow_redirects=True)
-#     assert b"already booked" in response.data.lower() or response.status_code in (400, 409)
 

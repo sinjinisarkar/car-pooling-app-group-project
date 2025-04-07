@@ -141,7 +141,7 @@ def test_book_onetime_past_date(client, setup_onetime_ride):
     }, follow_redirects=True)
     assert b"invalid date" in response.data.lower() or response.status_code in (400, 422)
 
-# Test for redirecting to the payment page once one-time booking isconfirmed
+# Test for redirecting to the payment page once one-time booking is confirmed
 def test_book_onetime_redirects_to_payment(client, setup_onetime_ride):
     ride_id, date = setup_onetime_ride
     response = client.post(

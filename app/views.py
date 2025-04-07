@@ -519,6 +519,7 @@ def payment_page(ride_id, seats, total_price):
     )
 
 
+# Route for process payemnt
 @app.route("/process_payment", methods=["POST"])
 @login_required  
 def process_payment():
@@ -563,9 +564,13 @@ def process_payment():
             cardholder_name = data.get("cardholder_name")
             save_card = data.get("save_card", False)
 
+            # Validation messages for testing
             if not card_number or not expiry or not cardholder_name:
                 return jsonify({"success": False, "message": "Card details missing."}), 400
 
+            if len(card_number) != 16 or not card_number.isdigit():
+                return "Invalid card number", 400
+            
             # Save the card if requested
             if save_card:
                 new_card = SavedCard(
@@ -680,6 +685,7 @@ def resend_booking_confirmation(booking_id):
 
     return jsonify({"success": True, "message": "Booking confirmation email resent!"})
 
+
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
@@ -739,6 +745,7 @@ If you did not request this, please ignore this email. The link expires in 10 mi
         return jsonify({"success": False, "message": "No account found with that email address."}), 404
 
 
+# Route to reset password
 @app.route('/reset-password/<token>/<int:user_id>', methods=['GET', 'POST'])
 def reset_password(token, user_id):
     if request.method == 'GET':
@@ -777,6 +784,7 @@ def reset_password(token, user_id):
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
 
+# Route for the user dashboard
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -954,6 +962,7 @@ def get_week_dates(year, week_num):
     return start, end
 
 
+# Route for deleting a saved card 
 @app.route("/delete_saved_card/<int:card_id>", methods=["DELETE"])
 @login_required
 def delete_saved_card(card_id):
@@ -968,6 +977,7 @@ def delete_saved_card(card_id):
     return jsonify({"success": True, "message": "Card deleted successfully"})
 
 
+# Route for cancelling a booking 
 @app.route("/cancel_booking/<int:booking_id>", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):
@@ -1027,6 +1037,7 @@ def cancel_booking(booking_id):
     return jsonify({"success": True, "message": f"Booking successfully canceled. Refund: £{refund_amount}"}), 200
 
 
+# Route for searching a journey
 @app.route('/filter_journeys', methods=['GET'])
 def filter_journeys():
     from_location = request.args.get("from", "").strip()
@@ -1104,7 +1115,6 @@ def filter_journeys():
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
 
 
-# ID 14 and 15 routes:
 # Store live locations in memory
 live_locations = {}
 
@@ -1144,12 +1154,14 @@ def view_pickup(ride_id):
     else:
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
 
+
 # API to get pickup location for a ride
 @app.route('/api/get_pickup_location/<int:ride_id>', methods=['GET'])
 @login_required
 def get_pickup_location(ride_id):
     ride = publish_ride.query.get_or_404(ride_id)
     return jsonify({"from_location": ride.from_location}), 200
+
 
 # Passenger Updates Their Location
 @app.route('/api/track_passenger_location', methods=['POST'])
@@ -1174,6 +1186,7 @@ def track_passenger_location():
 
     return jsonify({"message": "Passenger location updated"}), 200
 
+
 # Driver Updates Their Location
 @app.route('/api/track_driver_location', methods=['POST'])
 @login_required
@@ -1191,6 +1204,7 @@ def track_driver_location():
     live_locations[key] = (lat, lon)
 
     return jsonify({"message": "Driver location updated"}), 200
+
 
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
@@ -1224,6 +1238,7 @@ def get_live_locations(ride_id):
         "nearby": nearby
     })
     
+
 # API to track if passenger reached pickup point
 @app.route('/api/check_arrival', methods=['POST'])
 @login_required
@@ -1262,6 +1277,7 @@ def get_coordinates_from_address(address):
             return lat, lon
     return None, None
 
+
 # Route for Journey Status
 @app.route("/api/start_journey", methods=["POST"])
 @login_required
@@ -1277,6 +1293,7 @@ def start_journey():
     ride.status = "ongoing"  
     db.session.commit()
     return jsonify({"message": "Journey started!"}), 200
+
 
 @app.route('/api/update_passenger_pickup_location', methods=['POST'])
 @login_required
@@ -1295,6 +1312,7 @@ def update_passenger_pickup_location():
     key = f"passenger_{ride_id}_{ride_date}" if ride_date else f"passenger_{ride_id}"
     live_locations[key] = (lat, lon)
     return jsonify({"message": "Pickup location updated."}), 200
+
 
 # Route for the commuting journeys
 @app.route('/view_pickup_commute/<int:ride_id>/<date>', methods=['GET'])
@@ -1341,7 +1359,8 @@ def view_pickup_commute(ride_id, date):
         )
 
     return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
-    
+
+
 @app.route('/api/get_commute_live_locations/<int:ride_id>/<string:ride_date>', methods=['GET'])
 @login_required
 def get_commute_live_locations(ride_id, ride_date):
@@ -1414,6 +1433,7 @@ def send_message():
 
     return jsonify(new_msg.to_dict()), 200
 
+
 # Route to get messages 
 @app.route('/get_messages/<int:booking_id>')
 @login_required
@@ -1453,6 +1473,7 @@ def get_messages(booking_id):
 
     return jsonify(combined)
 
+
 # Route to check for new messages
 @app.route('/check_new_messages')
 @login_required
@@ -1483,6 +1504,7 @@ def check_new_messages():
 
     return jsonify({"new": True, "messages": messages_data})
 
+
 # Route to check if the messae is seen
 @app.route('/mark_message_seen/<int:message_id>', methods=['POST'])
 @login_required
@@ -1492,6 +1514,7 @@ def mark_message_seen(message_id):
         msg.seen_by_receiver = True
         db.session.commit()
     return jsonify(success=True)
+
 
 # Route to handle edit proposals
 @app.route('/propose_edit', methods=['POST'])
@@ -1520,6 +1543,7 @@ def propose_edit():
     db.session.commit()
 
     return jsonify({"success": True})
+
 
 # Route to respond to the proposals 
 @app.route('/respond_proposal', methods=['POST'])
@@ -1551,12 +1575,6 @@ def respond_proposal():
 
     db.session.commit()
     return jsonify({"success": True})
-
-
-
-
-
-
 
 
 
