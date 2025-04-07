@@ -1611,18 +1611,27 @@ def configure_fee():
 def finish_journey():
     data = request.json
     ride_id = data.get("ride_id")
+    ride_date = data.get("ride_date")
 
     ride = publish_ride.query.get_or_404(ride_id)
 
-    # Only driver can finish
     if ride.driver_id != current_user.id:
         return jsonify({"error": "Only the driver can finish the journey"}), 403
 
-    # Update status to finished
-    ride.status = "finished"
-    db.session.commit()
+    if ride_date:
+        # It's a commuting ride → update only this day's instance
+        booking = book_ride.query.filter_by(ride_id=ride_id, date=ride_date).first()
+        if not booking:
+            return jsonify({"error": "Booking not found for this date"}), 404
+        
+        booking.status = "done"
+    else:
+        # One-time ride
+        ride.status = "finished"
 
+    db.session.commit()
     return jsonify({"message": "Journey successfully finished."}), 200
+    
 
 @app.route('/api/submit_rating', methods=['POST'])
 @login_required

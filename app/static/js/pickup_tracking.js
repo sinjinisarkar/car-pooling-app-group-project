@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dismissed = new Set();
     const reminderMap = {}; // username -> location
     let modalActive = false;
-    let rideStatus = document.getElementById("ride-status").value;
+    let rideStatus = document.getElementById("ride-status")?.value || "unknown";
     let journeyStarted = (rideStatus === "ongoing");
     if (journeyStarted) {
         const finishBtn = document.getElementById("finishJourneyBtn");
