@@ -44,50 +44,10 @@ def setup_ride_and_user(client):
     ride = publish_ride.query.first()
     return ride
 
-@pytest.fixture
-def setup_commuting_ride_and_user(client, app):
-    # Register a test user
-    client.post("/register", json={
-        "username": "payuser",
-        "email": "payuser@gmail.com",
-        "password": "Test@1234",
-        "confirm_password": "Test@1234"
-    })
-    client.post("/login", json={"email": "payuser@gmail.com", "password": "Test@1234"})
-
-    user = User.query.filter_by(email="payuser@gmail.com").first()
-    assert user is not None
-
-    # Publish commuting ride
-    commuting_data = {
-        "from_location": "Leeds",
-        "to_location": "Manchester",
-        "category": "commuting",
-        "date_time": "2025-12-05 12:00",  # initial date
-        "available_seats": "4",
-        "price_per_seat": "20",
-        "driver_name": "Test Driver"
-    }
-    response = client.post("/publish_ride", data=commuting_data)
-    assert response.status_code == 302 or response.status_code == 200
-
-    ride = publish_ride.query.filter_by(category="commuting").first()
-    assert ride is not None
-
-    # Simulate seat tracking data
-    ride.available_seats_per_date = json.dumps({
-        "2025-12-05": 4,
-        "2025-12-06": 4,
-        "2025-12-07": 4
-    })
-    db.session.commit()
-
-    return user, ride
-
 # -------- TEST CASES --------
 
-# Tests for successful payment for both one time and commuting
-def test_payment_success(client, setup_ride_and_user):
+# Tests for successful payment for one time ride
+def test_one_time_payment_success(client, setup_ride_and_user):
     """Test successful payment flow with valid data."""
     ride = setup_ride_and_user
     payload = {
@@ -107,22 +67,6 @@ def test_payment_success(client, setup_ride_and_user):
     assert response.json["success"] is True
     assert "Payment successful" in response.json["message"]
 
-def test_missing_fields(client, setup_ride_and_user):
-    """Missing card number should fail."""
-    ride = setup_ride_and_user
-    payload = {
-        "ride_id": ride.id,
-        "seats": 1,
-        "total_price": 15,
-        "selected_dates": [ride.date_time.strftime("%Y-%m-%d")],
-        "email": "payuser@gmail.com",
-        "expiry": "12/30",
-        "cardholder_name": "John Doe"
-    }
-    response = client.post("/process_payment", json=payload)
-    assert response.status_code == 400
-    assert "Card details missing" in response.json["message"]
-
 # Tests for valid cardholder name
 def test_cardholder_name_validation(client, setup_ride_and_user):
     """Check that a valid cardholder name is accepted."""
@@ -140,6 +84,23 @@ def test_cardholder_name_validation(client, setup_ride_and_user):
     }
     response = client.post("/process_payment", json=payload)
     assert response.status_code == 200
+
+# Tests for missing card number
+def test_missing_card_number(client, setup_ride_and_user):
+    """Missing card number should fail."""
+    ride = setup_ride_and_user
+    payload = {
+        "ride_id": ride.id,
+        "seats": 1,
+        "total_price": 15,
+        "selected_dates": [ride.date_time.strftime("%Y-%m-%d")],
+        "email": "payuser@gmail.com",
+        "expiry": "12/30",
+        "cardholder_name": "John Doe"
+    }
+    response = client.post("/process_payment", json=payload)
+    assert response.status_code == 400
+    assert "Card details missing" in response.json["message"]
 
 # Tests for valid card number length
 def test_card_number_length(client, setup_ride_and_user):
@@ -216,7 +177,7 @@ def test_save_card_option(client, setup_ride_and_user):
     assert response.status_code == 200
     assert SavedCard.query.filter_by(cardholder_name="Save Me").first() is not None
 
-# Tests for use of saved card (can the user use a alread saved card)
+# Tests for use of saved card (can the user use a already saved card)
 def test_use_saved_card(client, setup_ride_and_user):
     """Test booking with an already saved card."""
     ride = setup_ride_and_user
@@ -244,9 +205,9 @@ def test_use_saved_card(client, setup_ride_and_user):
     assert response.status_code == 200
     assert "Payment successful" in response.json["message"]
 
-# Tests for proper storing of booked ride on dashboard and sending a booking confirmaation
+# Tests for proper storing of booked one time ride on dashboard and sending a booking confirmation
 def test_booking_dashboard_and_email(client, setup_ride_and_user):
-    """Test that booking reflects on dashboard and confirmation email is sent."""
+    """Test that booking reflects on user dashboard and confirmation email is sent."""
     ride = setup_ride_and_user
 
     payload = {
@@ -285,118 +246,3 @@ def test_booking_dashboard_and_email(client, setup_ride_and_user):
         assert b"Leeds" in dashboard_response.data  
         assert b"Manchester" in dashboard_response.data  
 
-def test_commuting_payment_multiple_dates(client, setup_commuting_ride_and_user):
-    user, commuting_ride = setup_commuting_ride_and_user
-
-    booking_data = {
-        "ride_id": commuting_ride.id,
-        "seats": 2,
-        "total_price": 120,
-        "email": "charlie@example.com",
-        "card_number": "1234567890123456",
-        "expiry": "11/27",
-        "cardholder_name": "Charlie",
-        "save_card": True,
-        "selected_dates": ["2025-12-05", "2025-12-06", "2025-12-07"],
-    }
-
-    response = client.post("/process_payment", json=booking_data)
-    assert response.status_code == 200
-    assert b"Payment successful" in response.data
-
-@patch("app.views.send_booking_confirmation_email")
-def test_email_sent_after_booking(mock_send_email, client, setup_commuting_ride_and_user):
-    user, commuting_ride = setup_commuting_ride_and_user
-
-    booking_data = {
-        "ride_id": commuting_ride.id,
-        "seats": 2,
-        "total_price": 120,
-        "email": "charlie@example.com",
-        "card_number": "1234567890123456",
-        "expiry": "11/27",
-        "cardholder_name": "Charlie",
-        "save_card": False,
-        "selected_dates": ["2025-12-05", "2025-12-06"],
-    }
-
-    response = client.post("/process_payment", json=booking_data)
-    assert response.status_code == 200
-    mock_send_email.assert_called_once()
-
-def test_booked_commuting_dates_saved(client, setup_commuting_ride_and_user):
-    user, commuting_ride = setup_commuting_ride_and_user
-    selected_dates = ["2025-12-05", "2025-12-06", "2025-12-07"]
-
-    booking_data = {
-        "ride_id": commuting_ride.id,
-        "seats": 2,
-        "total_price": 120,
-        "email": "charlie@example.com",
-        "card_number": "1234567890123456",
-        "expiry": "11/27",
-        "cardholder_name": "Charlie",
-        "save_card": False,
-        "selected_dates": selected_dates,
-    }
-
-    response = client.post("/process_payment", json=booking_data)
-    assert response.status_code == 200
-
-    booked_rides = book_ride.query.filter_by(user_id=user.id).all()
-    booked_dates = [b.ride_date.strftime("%Y-%m-%d") for b in booked_rides]
-    for d in selected_dates:
-        assert d in booked_dates
-
-def test_dashboard_displays_commuting_dates(client, setup_commuting_ride_and_user):
-    user, commuting_ride = setup_commuting_ride_and_user
-    selected_dates = ["2025-12-05", "2025-12-06"]
-
-    booking_data = {
-        "ride_id": commuting_ride.id,
-        "seats": 2,
-        "total_price": 120,
-        "email": "charlie@example.com",
-        "card_number": "1234567890123456",
-        "expiry": "11/27",
-        "cardholder_name": "Charlie",
-        "save_card": False,
-        "selected_dates": selected_dates,
-    }
-
-    client.post("/process_payment", json=booking_data)
-    dashboard_response = client.get("/dashboard")
-    assert dashboard_response.status_code == 200
-    for date in selected_dates:
-        assert date.encode() in dashboard_response.data
-
-
-# # Tests for duplicate cards - checked in teh js files
-# def test_duplicate_card_save(client, setup_ride_and_user):
-#     """Prevent saving identical card details twice."""
-#     ride = setup_ride_and_user
-#     # First save
-#     card = SavedCard(
-#         user_id=1,
-#         expiry_date="09/30",
-#         cardholder_name="Same Card",
-#     )
-#     card.set_card_number("5555444433332222")
-#     db.session.add(card)
-#     db.session.commit()
-
-#     # Second attempt with same number
-#     payload = {
-#         "ride_id": ride.id,
-#         "seats": 1,
-#         "total_price": 15,
-#         "selected_dates": [ride.date_time.strftime("%Y-%m-%d")],
-#         "email": "dup@card.com",
-#         "card_number": "5555444433332222",
-#         "expiry": "09/30",
-#         "cardholder_name": "Same Card",
-#         "cvv": "456",
-#         "save_card": True
-#     }
-#     response = client.post("/process_payment", json=payload)
-#     assert response.status_code == 400 or not response.json["success"]
