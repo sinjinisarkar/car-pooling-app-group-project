@@ -51,7 +51,16 @@ function checkForNewMessages() {
         })
         .catch(error => console.error('Error checking new messages:', error));
 }
-setInterval(checkForNewMessages, 10000);
+// no messages will be checked when the user is not logged in
+fetch('/api/is_logged_in')
+  .then(res => res.json())
+  .then(data => {
+    if (data.logged_in) {
+      setInterval(checkForNewMessages, 10000);
+    }
+  })
+  .catch(err => console.error('Login check failed:', err));
+
 
 // Event listener to see if the user opens the chat then the notification wont be shown again
 document.addEventListener("click", function (e) {
