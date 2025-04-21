@@ -1338,6 +1338,8 @@ def get_commute_live_locations(ride_id, ride_date):
 
 
 # ID 17: chat option between driver and passenger
+
+# route to check if the user is not logged in for chat polling
 @app.route('/api/is_logged_in')
 def is_logged_in():
     return jsonify({"logged_in": current_user.is_authenticated})
