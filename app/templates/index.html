@@ -30,25 +30,42 @@
     </div>
 </div>
 
-<!-- site function options -->
-<br><br> 
-<div class="container text-center my-4 mt-5 btn-container">
-    <a href="{{ url_for('view_journeys') }}" class="btn btn-base btn-one btn-lg">Find a Ride</a>
 
-    {% if current_user.is_authenticated %}
-        <!-- if user is logged in, go to publish ride page -->
-        <a href="{{ url_for('publish_ride_view') }}" class="btn btn-base btn-one btn-lg">Publish a Ride</a>
-    {% else %}
-        <!-- if user is not logged in, open the login modal -->
-        <a href="{{ url_for('login') }}" class="btn btn-base btn-one btn-lg" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Publish a Ride</a>
-    {% endif %}
+<!-- site function section with info columns -->
+<br><br>
+<div class="container my-5">
+    <div class="row text-center align-items-stretch">
+        <!-- Find a Ride -->
+        <div class="col-md-4 mb-4">
+            <div class="info-column h-100 text-center p-4">
+                <h4>Looking to carpool?</h4>
+                <p>Browse available rides and filter by time, location, or number of seats. Quick and easy booking at your fingertips.</p>
+                <br>
+                <a href="{{ url_for('view_journeys') }}" class="btn btn-base btn-one btn-block mt-2">Find a Ride</a>
+            </div>
+        </div>
+        <!-- Middle Info Column -->
+        <div class="col-md-4 mb-4">
+            <div class="info-column h-100 text-center p-4">
+                <h4>Why CatchMyRide?</h4><br>
+                <p>Save money, reduce emissions, and build your carpool community. Whether you're commuting or heading out on a weekend trip, we've got you covered.</p>
+            </div>
+        </div>
+        <!-- Publish a Ride -->
+        <div class="col-md-4 mb-4">
+            <div class="info-column h-100 text-center p-4">
+                <h4>Have extra space?</h4>
+                <p>Offer your ride to others and earn back travel costs. Set your price, timing, and pick-up location.</p>
+                <br>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('publish_ride_view') }}" class="btn btn-base btn-one btn-block mt-2">Publish a Ride</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-base btn-one btn-block mt-2" data-bs-target="#loginModal" data-bs-toggle="modal" data-bs-dismiss="modal">Publish a Ride</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
-<hr>
 
-<!-- featured Rides: remove this section in final draft -->
-<br>
-<div class="container text-center my-4">
-    <h2>Featured Rides / Popular Routes</h2>
-</div>
 
 {% endblock %}
