@@ -699,6 +699,7 @@ a:active {
     transform: translateY(2px);
 }
 
+/* ---------------------------------------- Rating styling ---------------------------------------- */
 
 #ratingModal {
     z-index: 10000;
