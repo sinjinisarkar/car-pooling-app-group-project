@@ -666,26 +666,6 @@ def send_booking_confirmation_email(email, ride, seats, total_price, selected_da
     except Exception as e:
         print(f"Error sending email: {e}")
 
-
-# Route to resend email from the dashboard if the user wants
-@app.route("/resend_booking_confirmation/<int:booking_id>", methods=["POST"])
-@login_required
-def resend_booking_confirmation(booking_id):
-    """ Allows users to resend the booking confirmation email """
-    booking = book_ride.query.get_or_404(booking_id)
-
-    if booking.user_id != current_user.id:
-        return jsonify({"success": False, "message": "Unauthorized"}), 403
-
-    ride = publish_ride.query.get(booking.ride_id)
-    if not ride:
-        return jsonify({"success": False, "message": "Ride not found"}), 404
-
-    send_booking_confirmation_email(booking.confirmation_email, ride, booking.seats_selected, booking.total_price, [str(booking.ride_date)])
-
-    return jsonify({"success": True, "message": "Booking confirmation email resent!"})
-
-
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
@@ -958,6 +938,7 @@ def dashboard():
                             earnings_data=earnings_list,
                             total_earnings=total_earnings)
 
+
 # helper function for /dashboard to get week start and end dates
 def get_week_dates(year, week_num):
     start = datetime.strptime(f'{year}-W{int(week_num):02d}-1', "%Y-W%W-%w").date()
@@ -1139,21 +1120,35 @@ def view_pickup(ride_id):
     if is_passenger and not is_driver:
         return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
                                driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None)
+                               passenger_name=passenger.username if passenger else None, ride_status=booking.status)
 
     elif is_driver and not is_passenger:
-        # Handle one-time ride: get all passengers
-        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id, status="Booked").all()
+        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id).all()
         passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
 
-        return render_template("pickup_driver.html", ride_id=ride_id, ride=ride, ride_status=ride.status, 
+        # Default to "Booked"
+        ride_status = "Booked"
+
+        # Safely prioritize the most accurate status
+        for pb in passenger_bookings:
+            if pb.status == "done":
+                ride_status = "done"
+                break
+            elif pb.status == "ongoing" and ride_status != "done":
+                ride_status = "ongoing"
+                # but only if no "done" detected
+
+        print("Final ride_status being passed:", ride_status)
+
+        return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
+                            ride_status=ride_status,
                             driver_name=driver.username if driver else "Unknown",
                             passenger_names=passenger_names)
 
     elif is_passenger and is_driver:
         return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
                                driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None)
+                               passenger_name=passenger.username if passenger else None, ride_status=booking.status)
 
     else:
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
@@ -1268,6 +1263,7 @@ def check_arrival():
     else:
         return jsonify({"arrived": False, "message": "Keep moving towards the pickup location."})
 
+
 # Helper Function to Get Coordinates (Uses OpenStreetMap Nominatim)
 def get_coordinates_from_address(address):
     url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
@@ -1286,15 +1282,41 @@ def get_coordinates_from_address(address):
 @app.route("/api/start_journey", methods=["POST"])
 @login_required
 def start_journey():
-    data = request.json
+    data = request.get_json()
     ride_id = data.get("ride_id")
+    ride_date_str = data.get("ride_date")
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride ID"}), 400
 
     ride = publish_ride.query.get_or_404(ride_id)
 
     if ride.driver_id != current_user.id:
         return jsonify({"error": "Only the driver can start the journey"}), 403
 
-    ride.status = "ongoing"  
+    # One-time ride: no date needed
+    if ride.category == "one-time":
+        bookings = book_ride.query.filter_by(
+            ride_id=ride_id
+        ).all()
+    else:
+        # Commuting ride: ride_date is required
+        if not ride_date_str:
+            return jsonify({"error": "Missing ride date for commuting ride"}), 400
+
+        try:
+            ride_date = datetime.strptime(ride_date_str, "%Y-%m-%d").date()
+        except:
+            return jsonify({"error": "Invalid date format"}), 400
+
+        bookings = book_ride.query.filter(
+            book_ride.ride_id == ride_id,
+            db.func.date(book_ride.ride_date) == ride_date
+        ).all()
+
+    for booking in bookings:
+        booking.status = "ongoing"
+
     db.session.commit()
     return jsonify({"message": "Journey started!"}), 200
 
@@ -1331,38 +1353,55 @@ def view_pickup_commute(ride_id, date):
     except ValueError:
         return "<h3><strong>Invalid date format</strong></h3>", 400
 
-    # Is current user a passenger for this date?
-    is_passenger = book_ride.query.filter(
+    # Check if user is a passenger for this date
+    booking = book_ride.query.filter(
         book_ride.ride_id == ride_id,
         book_ride.user_id == current_user.id,
         db.func.date(book_ride.ride_date) == ride_date_obj
-    ).first() is not None
+    ).first()
 
-    # Is current user the driver?
+    is_passenger = booking is not None
     is_driver = ride.driver_id == current_user.id
 
-    passenger_names = []
+    # Detect ride status
     if is_driver:
-        # Get all passengers who booked for this date
+        # For drivers: determine status based on bookings
         bookings = book_ride.query.filter(
             book_ride.ride_id == ride_id,
             db.func.date(book_ride.ride_date) == ride_date_obj
         ).all()
 
+        ride_status = "Booked"  # default status
+        for b in bookings:
+            if b.status == "ongoing":
+                ride_status = "ongoing"
+                break
+            elif b.status == "done":
+                ride_status = "done"
+    elif is_passenger:
+        ride_status = booking.status if booking else "Booked" # directly from passenger's booking
+    else:
+        return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
+
+    # For displaying multiple passenger names (for driver view)
+    passenger_names = []
+    if is_driver:
+        bookings = book_ride.query.filter(
+            book_ride.ride_id == ride_id,
+            db.func.date(book_ride.ride_date) == ride_date_obj
+        ).all()
         passenger_names = [User.query.get(b.user_id).username for b in bookings]
 
-    if is_driver or is_passenger:
-        template = "pickup_driver.html" if is_driver else "pickup_passenger.html"
-        return render_template(
-            template,
-            ride_id=ride_id,
-            ride_date=date,
-            ride=ride,
-            driver_name=driver.username,
-            passenger_names=passenger_names
-        )
-
-    return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
+    template = "pickup_driver.html" if is_driver else "pickup_passenger.html"
+    return render_template(
+        template,
+        ride_id=ride_id,
+        ride_date=date,
+        ride=ride,
+        driver_name=driver.username,
+        passenger_names=passenger_names,
+        ride_status=ride_status  
+    )
 
 
 @app.route('/api/get_commute_live_locations/<int:ride_id>/<string:ride_date>', methods=['GET'])
@@ -1403,12 +1442,13 @@ def get_commute_live_locations(ride_id, ride_date):
 
 
 # ID 17: chat option between driver and passenger
-
 # route to check if the user is not logged in for chat polling
 @app.route('/api/is_logged_in')
 def is_logged_in():
     return jsonify({"logged_in": current_user.is_authenticated})
 
+
+# Route to view the chat
 @app.route('/chat/<int:booking_id>')
 @login_required
 def chat_view(booking_id):
@@ -1598,9 +1638,10 @@ def make_manager():
             db.session.commit()
             print(f"{user.email} is now a manager ")
         else:
-            print("User not found ❌")
+            print("User not found")
 
 
+# Route for the manager dashboard
 @app.route('/manager/dashboard')
 @login_required
 @manager_required
@@ -1647,6 +1688,7 @@ def manager_dashboard():
     )
 
 
+# Route to configure fee 
 @app.route("/manager/configure_fee", methods=["GET", "POST"])
 @login_required
 @manager_required
@@ -1679,30 +1721,42 @@ def configure_fee():
 @app.route("/api/finish_journey", methods=["POST"])
 @login_required
 def finish_journey():
-    data = request.json
+    data = request.get_json()
     ride_id = data.get("ride_id")
-    ride_date = data.get("ride_date")
+    ride_date_str = data.get("ride_date")  # Optional for one-time
+
+    if not ride_id:
+        return jsonify({"error": "Missing ride ID"}), 400
 
     ride = publish_ride.query.get_or_404(ride_id)
 
     if ride.driver_id != current_user.id:
         return jsonify({"error": "Only the driver can finish the journey"}), 403
 
-    if ride_date:
-        # It's a commuting ride → update only this day's instance
-        booking = book_ride.query.filter_by(ride_id=ride_id, date=ride_date).first()
-        if not booking:
-            return jsonify({"error": "Booking not found for this date"}), 404
-        
-        booking.status = "done"
+    if ride.category == "commuting":
+        if not ride_date_str:
+            return jsonify({"error": "Missing ride date for commuting ride"}), 400
+        try:
+            ride_date = datetime.strptime(ride_date_str, "%Y-%m-%d").date()
+        except:
+            return jsonify({"error": "Invalid date format"}), 400
+
+        # Update only bookings for this date
+        bookings = book_ride.query.filter(
+            book_ride.ride_id == ride_id,
+            db.func.date(book_ride.ride_date) == ride_date
+        ).all()
     else:
-        # One-time ride
-        ride.status = "finished"
+        bookings = book_ride.query.filter_by(ride_id=ride_id).all()
+
+    for booking in bookings:
+        booking.status = "done"
 
     db.session.commit()
-    return jsonify({"message": "Journey successfully finished."}), 200
-    
+    return jsonify({"message": "Journey marked as finished."}), 200
 
+
+# Route to submit rating
 @app.route('/api/submit_rating', methods=['POST'])
 @login_required
 def submit_rating():
@@ -1739,20 +1793,25 @@ def submit_rating():
         print("Booking:", booking)
 
         # Check if already rated
-        existing_query = RideRating.query.filter_by(ride_id=ride_id, passenger_id=user_id)
         if ride.category == "commuting":
-            existing_query = existing_query.filter_by(ride_date=ride_date)
+            existing = RideRating.query.filter_by(
+                ride_id=ride_id,
+                passenger_id=user_id,
+                ride_date=ride_date
+            ).first()
+        else:
+            existing = RideRating.query.filter_by(
+                ride_id=ride_id,
+                passenger_id=user_id
+            ).first()
 
-        existing = existing_query.first()
         if existing:
-            if booking and booking.status != "done":
-                print("Booking status is not 'done'. Updating to 'done' now.")
-                booking.status = "done"
-                db.session.commit()
-                return jsonify({"message": "Ride already rated, but status updated.", "redirect_url": url_for("dashboard")})
-            else:
-                print("Already done or no booking found.")
-                return jsonify({"message": "You already rated this ride.", "redirect_url": url_for("dashboard")})
+            print("You already rated this ride.")
+            return jsonify({
+                "message": "You already rated this ride.",
+                "redirect_url": url_for("dashboard")
+            })
+
 
         # Add new rating
         rating_entry = RideRating(
@@ -1776,3 +1835,30 @@ def submit_rating():
 
     except Exception as e:
         return jsonify({"error": "Server error occurred."}), 500
+
+
+# Route to check the ride status (booked, ongoing and done)
+@app.route('/api/ride_status', methods=['POST'])
+@login_required
+def check_ride_status():
+    data = request.get_json()
+    ride_id = data.get('ride_id')
+    ride_date_str = data.get('ride_date')
+    
+    if not ride_id:
+        return jsonify({'error': 'Missing ride_id'}), 400
+
+    ride = publish_ride.query.get_or_404(ride_id)
+
+    if ride.category == "commuting":
+        if not ride_date_str:
+            return jsonify({'error': 'Missing ride_date for commuting'}), 400
+        ride_date = datetime.strptime(ride_date_str, '%Y-%m-%d').date()
+        booking = book_ride.query.filter_by(user_id=current_user.id, ride_id=ride_id).filter(db.func.date(book_ride.ride_date) == ride_date).first()
+    else:
+        booking = book_ride.query.filter_by(user_id=current_user.id, ride_id=ride_id).first()
+
+    if not booking:
+        return jsonify({'status': 'none'}), 200
+
+    return jsonify({'status': booking.status}), 200

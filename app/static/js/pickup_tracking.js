@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
     let currentUsername = document.getElementById("current-username")?.value;
-    let rideDate = document.getElementById("ride-date")?.value;  // chaining to avoid error for one-time rides
+    let rideDate = document.getElementById("ride-date")?.value || null;  // chaining to avoid error for one-time rides
     let map = L.map("map", {
         maxZoom: 18  
     }).setView([51.505, -0.09], 13);
@@ -18,37 +18,48 @@ document.addEventListener("DOMContentLoaded", function () {
     let modalActive = false;
     let rideStatus = document.getElementById("ride-status")?.value || "unknown";
     let journeyStarted = (rideStatus === "ongoing");
-    if (journeyStarted) {
+    let journeyFinished = (rideStatus === "finished" || rideStatus === "completed" || rideStatus === "done");
+    if (journeyStarted && !journeyFinished) {
         const finishBtn = document.getElementById("finishJourneyBtn");
         if (finishBtn) {
             finishBtn.style.display = "inline-block";
         }
     }
-    let journeyFinished = (rideStatus === "finished" || rideStatus === "completed");
+
     if (journeyFinished) {
         const banner = document.getElementById("journeyFinishedBanner");
         const text = document.getElementById("journeyBannerText");
-    
+
         if (userType === "driver") {
             text.innerText = "Journey finished. Thank you for driving with Catch My Ride.";
         } else {
             text.innerText = "Journey finished. Thank you for riding with Catch My Ride. Please rate your driver.";
-    
+
             // Add Rate Button (passenger only)
             const rateBtn = document.createElement("button");
             rateBtn.innerText = "Rate Driver";
             rateBtn.className = "btn btn-light mt-4";
             rateBtn.style.fontSize = "1.2rem";
-    
+
             rateBtn.onclick = function () {
-                showRatingModal(rideId, rideDate); // defined globally outside DOMContentLoaded
+                showRatingModal(rideId, rideDate);
             };
-    
-            banner.appendChild(rateBtn);
+
+            if (!banner.querySelector(".rate-btn")) {
+                rateBtn.classList.add("rate-btn"); 
+                banner.appendChild(rateBtn);
+            }
         }
-    
+
         banner.style.display = "block";
+
+        // Ensure finish button is hidden if journey is done
+        const finishBtn = document.getElementById("finishJourneyBtn");
+        if (finishBtn) {
+            finishBtn.style.display = "none";
+        }
     }
+
 
     // Helper: calculate distance between two lat/lon in meters
     function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
@@ -141,10 +152,11 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // helper function for fetchLiveLocations()
     function startJourney() {
+    
         fetch("/api/start_journey", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ride_id: rideId })
+            body: JSON.stringify({ ride_id: rideId, ride_date: rideDate })
         })
         .then(res => res.json())
         .then(data => {
@@ -227,16 +239,28 @@ document.addEventListener("DOMContentLoaded", function () {
                                 // On click, start journey for that passenger
                                 reminderBar.addEventListener("click", () => {
                                     startedPassengers.add(username);
+                                    if (startedPassengers.size === usernames.length) {
+                                        const finishBtn = document.getElementById("finishJourneyBtn");
+                                        if (finishBtn) finishBtn.style.display = "inline-block";
+                                        journeyStarted = true;
+                                    }
+                                    
                                     reminderBar.remove();
+                                    console.log("Sending to /api/start_journey:", {
+                                        ride_id: rideId,
+                                        ride_date: rideDate
+                                    });
+                                    
 
                                     fetch("/api/start_journey", {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ ride_id: rideId })
+                                        body: JSON.stringify({ ride_id: rideId, ride_date: rideDate })
                                     })
                                     .then(res => res.json())
                                     .then(data => {
-                                        document.getElementById("status-message").innerText = data.message;
+                                        document.getElementById("status-message").innerText = data.message || "Location updated.";
+
                                     });
                                 });
                             };
@@ -246,17 +270,24 @@ document.addEventListener("DOMContentLoaded", function () {
                                 startedPassengers.add(username);
                                 modal.style.display = "none";
                                 modalActive = false;
-                                journeyStarted = true;
+                                // journeyStarted = true;
+                                console.log("Sending to /api/start_journey:", {
+                                    ride_id: rideId,
+                                    ride_date: rideDate
+                                });
 
                                 fetch("/api/start_journey", {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ ride_id: rideId })
+                                    body: JSON.stringify({ ride_id: rideId, ride_date: rideDate })
                                 })
                                 .then(res => res.json())
                                 .then(data => {
-                                    document.getElementById("status-message").innerText = data.message;
-                                    document.getElementById("multi-reminder").style.display = "none";
+                                    document.getElementById("status-message").innerText = data.message || "Location updated.";
+                                    const multiReminder = document.getElementById("multi-reminder");
+                                    if (multiReminder) {
+                                        multiReminder.style.display = "none";
+                                    }
                                 });
                             };
                         }
@@ -492,7 +523,41 @@ document.addEventListener("DOMContentLoaded", function () {
             updateLocation("passenger");
             fetchLiveLocations();
         }, 10000);
-    } else if (userType === "driver") {
+    
+        // 👇 NEW: Poll for journey status to trigger rating banner
+        setInterval(() => {
+            fetch('/api/ride_status', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ride_id: rideId, ride_date: rideDate })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "done" && !journeyFinished) {
+                    journeyFinished = true;
+                    document.getElementById("ride-status").value = "done";
+                    const banner = document.getElementById("journeyFinishedBanner");
+                    const text = document.getElementById("journeyBannerText");
+                    text.innerText = "Journey finished. Thank you for riding with Catch My Ride. Please rate your driver.";
+    
+                    const rateBtn = document.createElement("button");
+                    rateBtn.innerText = "Rate Driver";
+                    rateBtn.className = "btn btn-light mt-4 rate-btn";
+                    rateBtn.style.fontSize = "1.2rem";
+                    rateBtn.onclick = function () {
+                        showRatingModal(rideId, rideDate);
+                    };
+    
+                    if (!banner.querySelector(".rate-btn")) {
+                        banner.appendChild(rateBtn);
+                    }
+    
+                    banner.style.display = "block";
+                }
+            });
+        }, 5000); // check every 5 seconds
+    }
+     else if (userType === "driver") {
         console.log("Driver detected");
         updateLocation("driver");
         setTimeout(fetchLiveLocations, 1500); // Delay to allow backend to store location
@@ -510,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch("/api/finish_journey", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ride_id: rideId })
+                body: JSON.stringify({ ride_id: rideId, ride_date: rideDate })
             })
             .then(res => res.json())
             .then(data => {

@@ -43,10 +43,20 @@
     <!-- navbar -->
     <nav class="navbar">
         <div class="container navbar-container d-flex align-items-baseline justify-content-between">
-            <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
+           <!-- <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
                 CatchMyRide <i class='bx bxs-car logo-icon'></i><i class='bx bx-wind logo-icon' ></i>
-            </a>
+            </a> -->
 
+            <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
+                <img src="https://res.cloudinary.com/dpar2oaev/image/upload/v1745328859/330533dc-5ec6-4b41-a5c8-143db92afdf2.png" 
+                     alt="CatchMyRide Logo" 
+                     class="logo-img">
+            </a>
+            
+
+
+
+            
             <!-- profile dropdown: login/signup, dashboard, manager dashboard, logout -->
             <div class="dropdown">
                 {% if user.is_authenticated %}
