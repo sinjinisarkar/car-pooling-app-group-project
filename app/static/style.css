@@ -69,15 +69,11 @@ a:active {
     padding: 10px 0;
 }
 
-.navbar-logo,
-.navbar-logo:hover {
-    color: #1f1d21;
-    font-family: "Shrikhand", serif;
-    font-size: 2rem;
-}
-
-.logo-icon {
-    font-size: 2rem;
+.logo-img {
+    height: 100px;        
+    max-height: 70px;
+    object-fit: contain;
+    margin-left: 10px;
 }
 
 /* ---------------------------------------- Modal styling ---------------------------------------- */
@@ -244,7 +240,7 @@ a:active {
     padding: 25px;
     background-color: white;
     transition: all 0.4s ease-in-out;
-    box-shadow: 0 0 0 rgba(133, 91, 190, 0); /* start transparent */
+    box-shadow: 0 0 0 rgba(133, 91, 190, 0); 
 }
 
 .info-column:hover {
