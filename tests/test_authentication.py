@@ -6,6 +6,8 @@ import pytest
 from app import app, db
 from app.models import User
 
+# ---------------------- FIXTURES ----------------------
+
 # Common test data
 DATA = {
     "username": "user123",
@@ -22,6 +24,8 @@ def client():
         yield client
         db.session.remove()
         db.drop_all()
+
+# -------------------- TEST CASES --------------------
 
 # -------------------------------
 # REGISTER TESTS

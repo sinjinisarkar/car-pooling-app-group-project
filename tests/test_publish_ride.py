@@ -6,6 +6,8 @@ import pytest
 from app import app, db
 from app.models import User, publish_ride
 
+# ---------------------- FIXTURES ----------------------
+
 # Sample user data
 DATA = {
     "username": "user123",
@@ -33,6 +35,8 @@ def register_and_login(client):
         "confirm_password": "Password@123"
     })
     client.post("/login", json={"email": "driver@gmail.com", "password": "Password@123"})
+
+# -------------------- TEST CASES --------------------
 
 # -------------------------------
 # ONE-TIME RIDE PIBLISHING TESTS

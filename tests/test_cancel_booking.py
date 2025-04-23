@@ -9,6 +9,8 @@ from app.models import User, publish_ride, book_ride, Payment
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 
+# ---------------------- FIXTURES ----------------------
+
 @pytest.fixture
 def client():
     with app.test_client() as client:
@@ -74,6 +76,8 @@ def setup_ride_and_booking(client):
         db.session.commit()
 
     return booking, payment
+    
+# -------------------- TEST CASES --------------------
 
 # Test 1: Valid cancellation of a booked ride
 def test_cancel_booking_valid(client, setup_ride_and_booking):

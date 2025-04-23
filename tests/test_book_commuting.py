@@ -7,7 +7,7 @@ import pytest
 from app import app, db
 from app.models import User, publish_ride
 
-# -------- FIXTURES --------
+# ---------------------- FIXTURES ----------------------
 
 @pytest.fixture
 def client():
@@ -50,9 +50,9 @@ def setup_commuting_ride(client):
         ride = publish_ride.query.first()
         return ride.id
 
-# -------- TEST CASES --------
+# -------------------- TEST CASES --------------------
 
-# Tests for a valid commuting ride
+# Test 1: Verifies for a valid commuting ride
 def test_book_commuting_loads(client, setup_commuting_ride):
     """Booking page loads for commuting ride."""
     ride_id = setup_commuting_ride
@@ -60,7 +60,7 @@ def test_book_commuting_loads(client, setup_commuting_ride):
     assert response.status_code == 200
     assert b"commuting" in response.data.lower()
 
-# Tests for missing date field
+# Test 2: Verifies for missing date field
 def test_book_commuting_missing_dates(client, setup_commuting_ride):
     """No dates selected for commuting ride."""
     ride_id = setup_commuting_ride
@@ -70,7 +70,7 @@ def test_book_commuting_missing_dates(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"required fields" in response.data.lower()
 
-# Tests for booking a commuting ride with invalid date format
+# Test 3: Verifies for booking a commuting ride with invalid date format
 def test_book_commuting_invalid_date_format(client, setup_commuting_ride):
     """Invalid date format should be rejected."""
     ride_id = setup_commuting_ride
@@ -81,7 +81,7 @@ def test_book_commuting_invalid_date_format(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"invalid date" in response.data.lower() or response.status_code == 400
 
-# Tests for seat number is not an integer
+# Test 4: Verifies for seat number is not an integer
 def test_book_commuting_invalid_seat_number(client, setup_commuting_ride):
     """Non-integer seat input should fail."""
     ride_id = setup_commuting_ride
@@ -92,7 +92,7 @@ def test_book_commuting_invalid_seat_number(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"invalid seat number" in response.data.lower()
 
-# Tests for 0 and negative seat numbers
+# Test 5: Verifies for 0 and negative seat numbers
 def test_book_commuting_zero_or_negative_seats(client, setup_commuting_ride):
     """Zero or negative seats are invalid."""
     ride_id = setup_commuting_ride
@@ -104,7 +104,7 @@ def test_book_commuting_zero_or_negative_seats(client, setup_commuting_ride):
         }, follow_redirects=True)
         assert b"invalid" in response.data.lower()
 
-# Tests for missing email field for booking confirmation
+# Test 6: Verifies for missing email field for booking confirmation
 def test_book_commuting_missing_email(client, setup_commuting_ride):
     """Missing email input."""
     ride_id = setup_commuting_ride
@@ -114,7 +114,7 @@ def test_book_commuting_missing_email(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"email" in response.data.lower()
 
-# Tests for correct email format for booking confirmation
+# Test 7: Verifies for correct email format for booking confirmation
 def test_book_commuting_invalid_email_format(client, setup_commuting_ride):
     """Email format should be validated."""
     ride_id = setup_commuting_ride
@@ -125,7 +125,7 @@ def test_book_commuting_invalid_email_format(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"invalid email" in response.data.lower() or response.status_code in (400, 422)
 
-# Tests for overbooking of ride
+# Test 8: Verifies for overbooking of ride
 def test_book_commuting_exceeds_available(client, setup_commuting_ride):
     """Overbooking should trigger error."""
     ride_id = setup_commuting_ride
@@ -136,7 +136,7 @@ def test_book_commuting_exceeds_available(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"not enough seats" in response.data.lower()
 
-# Tests for booking a ride by an authenticated user (logged out user)
+# Test 9: Verifies for booking a ride by an authenticated user (logged out user)
 def test_book_commuting_unauthenticated(client, setup_commuting_ride):
     """Should not allow booking if logged out."""
     ride_id = setup_commuting_ride
@@ -145,7 +145,7 @@ def test_book_commuting_unauthenticated(client, setup_commuting_ride):
     assert response.status_code == 302  # Redirects to login page
     assert "/login" in response.headers["Location"]  # Confirm redirection
 
-# Tests for booking commuting rides with past dates (should be rejected if validated)
+# Test 10: Verifies for booking commuting rides with past dates (should be rejected if validated)
 def test_book_commuting_past_date(client, setup_commuting_ride):
     """Booking a commuting ride with a past date should not be allowed (if validated)."""
     ride_id = setup_commuting_ride
@@ -156,7 +156,7 @@ def test_book_commuting_past_date(client, setup_commuting_ride):
     }, follow_redirects=True)
     assert b"invalid date" in response.data.lower() or response.status_code in (400, 422)
 
-# Test for successful redirection to payment page for valid commuting ride booking
+# Test 11: Verifies for successful redirection to payment page for valid commuting ride booking
 def test_book_commuting_redirects_to_payment(client, setup_commuting_ride):
     """Valid booking should redirect to payment page."""
     ride_id = setup_commuting_ride

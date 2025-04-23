@@ -10,7 +10,7 @@ import pytest
 from app import app, db
 from app.models import User, publish_ride, SavedCard, book_ride
 
-# -------- FIXTURES --------
+# ---------------------- FIXTURES ----------------------
 
 @pytest.fixture
 def client():
@@ -44,9 +44,9 @@ def setup_ride_and_user(client):
     ride = publish_ride.query.first()
     return ride
 
-# -------- TEST CASES --------
+# -------------------- TEST CASES --------------------
 
-# Tests for successful payment for one time ride
+# Test 1: Verifies the payment process works for a valid one-time ride booking
 def test_one_time_payment_success(client, setup_ride_and_user):
     """Test successful payment flow with valid data."""
     ride = setup_ride_and_user
@@ -67,7 +67,7 @@ def test_one_time_payment_success(client, setup_ride_and_user):
     assert response.json["success"] is True
     assert "Payment successful" in response.json["message"]
 
-# Tests for valid cardholder name
+# Test 2: Verifies that a valid cardholder name is accepted
 def test_cardholder_name_validation(client, setup_ride_and_user):
     """Check that a valid cardholder name is accepted."""
     ride = setup_ride_and_user
@@ -85,7 +85,7 @@ def test_cardholder_name_validation(client, setup_ride_and_user):
     response = client.post("/process_payment", json=payload)
     assert response.status_code == 200
 
-# Tests for missing card number
+# Test 3: Verifies that a valid cardholder number is accepted
 def test_missing_card_number(client, setup_ride_and_user):
     """Missing card number should fail."""
     ride = setup_ride_and_user
@@ -102,7 +102,7 @@ def test_missing_card_number(client, setup_ride_and_user):
     assert response.status_code == 400
     assert "Card details missing" in response.json["message"]
 
-# Tests for valid card number length
+# Test 4: Verifies for valid card number length
 def test_card_number_length(client, setup_ride_and_user):
     """Test invalid card number length."""
     ride = setup_ride_and_user
@@ -121,7 +121,7 @@ def test_card_number_length(client, setup_ride_and_user):
         response = client.post("/process_payment", json=payload)
         assert response.status_code == 400 or not response.json["success"]
 
-# Test for expiry date and its foramt
+# Test 5: Verfies for expiry date and its foramt
 def test_valid_expiry_date(client, setup_ride_and_user):
     """Ensure expiry date is accepted if formatted correctly."""
     ride = setup_ride_and_user
@@ -139,7 +139,7 @@ def test_valid_expiry_date(client, setup_ride_and_user):
     response = client.post("/process_payment", json=payload)
     assert response.status_code == 200
 
-# Tests for valid CVV 
+# Tests 6: Verfires for valid CVV 
 def test_valid_cvv_length(client, setup_ride_and_user):
     """Test valid CVV length (3 digits)."""
     ride = setup_ride_and_user
@@ -157,7 +157,7 @@ def test_valid_cvv_length(client, setup_ride_and_user):
     response = client.post("/process_payment", json=payload)
     assert response.status_code == 200
 
-# Tests for if card is saving when requested
+# Tests 7: Verifies for if card is saving when requested
 def test_save_card_option(client, setup_ride_and_user):
     """Check that card is saved when requested."""
     ride = setup_ride_and_user
@@ -177,7 +177,7 @@ def test_save_card_option(client, setup_ride_and_user):
     assert response.status_code == 200
     assert SavedCard.query.filter_by(cardholder_name="Save Me").first() is not None
 
-# Tests for use of saved card (can the user use a already saved card)
+# Tests 8: Verifies for use of saved card (can the user use a already saved card)
 def test_use_saved_card(client, setup_ride_and_user):
     """Test booking with an already saved card."""
     ride = setup_ride_and_user
@@ -205,7 +205,7 @@ def test_use_saved_card(client, setup_ride_and_user):
     assert response.status_code == 200
     assert "Payment successful" in response.json["message"]
 
-# Tests for proper storing of booked one time ride on dashboard and sending a booking confirmation
+# Tests 9: Verifies for proper storing of booked one time ride on dashboard and sending a booking confirmation
 def test_booking_dashboard_and_email(client, setup_ride_and_user):
     """Test that booking reflects on user dashboard and confirmation email is sent."""
     ride = setup_ride_and_user
@@ -245,4 +245,3 @@ def test_booking_dashboard_and_email(client, setup_ride_and_user):
         assert dashboard_response.status_code == 200
         assert b"Leeds" in dashboard_response.data  
         assert b"Manchester" in dashboard_response.data  
-

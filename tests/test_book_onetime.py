@@ -8,7 +8,7 @@ import pytest
 from app import app, db
 from app.models import User, publish_ride
 
-# -------- FIXTURES --------
+# ---------------------- FIXTURES ----------------------
 
 @pytest.fixture
 def client():
@@ -45,9 +45,9 @@ def setup_onetime_ride(client):
         ride = publish_ride.query.first()
         return ride.id, "2025-12-01"
 
-# -------- TEST CASES --------
+# -------------------- TEST CASES --------------------
 
-# Tests for a valid one time ride 
+# Test 1: Verifies for a valid one time ride 
 def test_book_onetime_valid(client, setup_onetime_ride):
     """Booking a valid one-time ride loads the page."""
     ride_id, date = setup_onetime_ride
@@ -55,7 +55,7 @@ def test_book_onetime_valid(client, setup_onetime_ride):
     assert response.status_code == 200
     assert b"seats" in response.data
 
-# Tests for missing date field 
+# Test 2: Verifies for missing date field 
 def test_book_onetime_missing_date(client, setup_onetime_ride):
     """No date is selected while booking."""
     ride_id, _ = setup_onetime_ride
@@ -65,7 +65,7 @@ def test_book_onetime_missing_date(client, setup_onetime_ride):
     }, follow_redirects=True)
     assert b"date" in response.data.lower()
 
-# Tests for seat number is not an integer
+# Test 3: Verifies for seat number is not an integer
 def test_book_onetime_invalid_seat_number(client, setup_onetime_ride):
     """Seat number is not an integer."""
     ride_id, date = setup_onetime_ride
@@ -77,7 +77,7 @@ def test_book_onetime_invalid_seat_number(client, setup_onetime_ride):
     assert response.status_code == 400
     assert response.get_json()["error"].lower() == "invalid seat number"
 
-# Tests for booking more seats than available
+# Test 4: Verifies for booking more seats than available
 def test_book_onetime_exceeds_available(client, setup_onetime_ride):
     """Booking more seats than available should fail."""
     ride_id, date = setup_onetime_ride
@@ -89,7 +89,7 @@ def test_book_onetime_exceeds_available(client, setup_onetime_ride):
     assert response.status_code == 400
     assert "not enough" in response.get_json()["error"].lower()
 
-# Tests for neative seat numbers 
+# Test 5: Verifies for neative seat numbers 
 def test_book_onetime_negative_seats(client, setup_onetime_ride):
     """Negative seat value is invalid."""
     ride_id, date = setup_onetime_ride
@@ -100,7 +100,7 @@ def test_book_onetime_negative_seats(client, setup_onetime_ride):
     }, follow_redirects=True)
     assert response.status_code in (302, 400, 404) 
 
-# Tests for 0 seats avaiable - cannot book
+# Test 6: Verifies for 0 seats avaiable - cannot book
 def test_book_onetime_zero_seats(client, setup_onetime_ride):
     """Zero seat is invalid."""
     ride_id, date = setup_onetime_ride
@@ -112,7 +112,7 @@ def test_book_onetime_zero_seats(client, setup_onetime_ride):
     assert response.status_code == 400
     assert b"Invalid seat number" in response.data
 
-# Tests for missing email for booking confirmation
+# Test 7: Verifies for missing email for booking confirmation
 def test_book_onetime_missing_email(client, setup_onetime_ride):
     """Missing email should trigger error."""
     ride_id, date = setup_onetime_ride
@@ -122,7 +122,7 @@ def test_book_onetime_missing_email(client, setup_onetime_ride):
     }, follow_redirects=True)
     assert b"email" in response.data.lower()
 
-# Tests for booking of ride by an unauthenticated user (logged out user)
+# Test 8: Verifies for booking of ride by an unauthenticated user (logged out user)
 def test_book_onetime_unauthenticated(client, setup_onetime_ride):
     """Unauthenticated user should not access booking page."""
     ride_id, date = setup_onetime_ride
@@ -130,7 +130,7 @@ def test_book_onetime_unauthenticated(client, setup_onetime_ride):
     response = client.get(f"/book_onetime/{ride_id}?selected_date={date}")
     assert response.status_code == 302
 
-# Tests for booking a one-time ride with a past date (should be rejected if validated)
+# Test 9: Verifies for booking a one-time ride with a past date (should be rejected if validated)
 def test_book_onetime_past_date(client, setup_onetime_ride):
     """Booking a one-time ride with a past date should not be allowed (if validated)."""
     ride_id, _ = setup_onetime_ride
@@ -141,7 +141,7 @@ def test_book_onetime_past_date(client, setup_onetime_ride):
     }, follow_redirects=True)
     assert b"invalid date" in response.data.lower() or response.status_code in (400, 422)
 
-# Test for redirecting to the payment page once one-time booking is confirmed
+# Test 10: Verfies for redirecting to the payment page once one-time booking is confirmed
 def test_book_onetime_redirects_to_payment(client, setup_onetime_ride):
     ride_id, date = setup_onetime_ride
     response = client.post(

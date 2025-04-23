@@ -11,7 +11,7 @@ import pytest
 from app import app, db
 from app.models import User, publish_ride, SavedCard, book_ride
 
-# -------- FIXTURES --------
+# ---------------------- FIXTURES ----------------------
 
 @pytest.fixture
 def client():
@@ -39,7 +39,6 @@ def setup_commuting_ride(client):
     # Fetch the user from the database
     user = User.query.filter_by(email="commuter@gmail.com").first()
 
-    # Define available seats per date
     seat_tracking = {
         "2025-12-01": 4,
         "2025-12-02": 3,
@@ -59,13 +58,14 @@ def setup_commuting_ride(client):
         is_available=True
     )
 
-    # Add the ride to the session and commit
     db.session.add(commuting_ride)
     db.session.commit()
 
     return commuting_ride
 
-# Tests for successful payment for commuting ride
+# -------------------- TEST CASES --------------------
+
+# Test 1: Verifies for successful payment for commuting ride
 def test_commuting_payment_success(client, setup_commuting_ride):
     """Test successful payment flow with valid datas."""
     ride = setup_commuting_ride
@@ -85,7 +85,7 @@ def test_commuting_payment_success(client, setup_commuting_ride):
     assert response.status_code == 200
     assert response.json["success"] is True
 
-# Tests for ride published with multiple dates
+# Test 2: Verifies for ride published with multiple dates
 def test_commuting_multiple_dates(client, setup_commuting_ride):
     """Test successful payment flow with multiple data."""
     ride = setup_commuting_ride
@@ -106,7 +106,7 @@ def test_commuting_multiple_dates(client, setup_commuting_ride):
     assert response.json["success"] is True
     assert "Payment successful" in response.json["message"]
 
-# Tests for commuting ride booking with more than available seats
+# Test 3: Verifies for commuting ride booking with more than available seats
 def test_commuting_invalid_seat_date(client, setup_commuting_ride):
     """Test booking a commuting ride with more than the avaiable seats"""
     ride = setup_commuting_ride
@@ -124,7 +124,6 @@ def test_commuting_invalid_seat_date(client, setup_commuting_ride):
     }
     response = client.post("/process_payment", json=payload)
 
-    # Expecting success (status 200), because views.py does not actually block overbooking
     assert response.status_code == 200
     assert response.json["success"] is True
     assert "Payment successful" in response.json["message"]
@@ -134,7 +133,7 @@ def test_commuting_invalid_seat_date(client, setup_commuting_ride):
     updated_seats = json.loads(updated_ride.available_seats_per_date)
     assert updated_seats["2025-12-02"] == 0
 
-# Tests for booking confirmation email sent after successful booking of the ride
+# Test 4: Verifies for booking confirmation email sent after successful booking of the ride
 def test_commuting_booking_and_email(client, setup_commuting_ride):
     """Test that booking reflects on dashboard and confirmation email is sent."""
     ride = setup_commuting_ride
@@ -160,7 +159,7 @@ def test_commuting_booking_and_email(client, setup_commuting_ride):
         assert booking is not None
         assert booking.status == "Booked"
 
-# Tests for proper storing of booked commuting ride on dashboard
+# Test 5: Verifies for proper storing of booked commuting ride on dashboard
 def test_commuting_ride_displayed_on_dashboard(client, setup_commuting_ride):
     """Ensure that a successfully booked commuting ride appears on the user's dashboard."""
     ride = setup_commuting_ride
@@ -181,14 +180,10 @@ def test_commuting_ride_displayed_on_dashboard(client, setup_commuting_ride):
     response = client.post("/process_payment", json=payload)
     assert response.status_code == 200
 
-    # Simulate accessing the dashboard (authenticated)
     dashboard_response = client.get("/dashboard")  
 
-    # Check if the dashboard returned HTML (in case the response is HTML)
     assert dashboard_response.status_code == 200
-
-    # If the response is HTML, check for text from the dashboard (locations, etc.)
-    assert b"Bristol" in dashboard_response.data  # Replace with actual expected text for commuting ride
-    assert b"Bath" in dashboard_response.data  # Replace with actual expected text for commuting ride
+    assert b"Bristol" in dashboard_response.data  
+    assert b"Bath" in dashboard_response.data  
 
 

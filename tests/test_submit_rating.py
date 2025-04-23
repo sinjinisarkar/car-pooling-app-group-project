@@ -118,19 +118,14 @@ def test_rating_missing_data(client):
     res = client.post("/api/submit_rating", json={"ride_id": ride.id})  # Missing rating
     assert res.status_code == 400
 
-# def test_rating_invalid_ride_id(client):
-#     """Tests rating submission for a non-existent ride."""
-#     user, _, _ = setup_ride()
-#     login_as(client, user.id)
-#     res = client.post("/api/submit_rating", json={"ride_id": 999999, "rating": 4})
-#     assert res.status_code == 404 or res.status_code == 400
-
+# Test 5: User cannot rate without being logged in
 def test_rating_without_login(client):
     """Tests rating submission without being logged in."""
     _, ride, _ = setup_ride()
     res = client.post("/api/submit_rating", json={"ride_id": ride.id, "rating": 4})
     assert res.status_code in [302, 401]  # Redirect to login or unauthorized
 
+# Test 6: Commuting ride rating fails if ride_date is missing
 def test_commuting_rating_missing_ride_date(client):
     """Tests that commuting ride rating fails if ride_date is missing."""
     user, ride, booking = setup_ride(is_commuting=True)

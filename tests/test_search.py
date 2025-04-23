@@ -7,6 +7,8 @@ from app import app, db
 from app.models import User
 from werkzeug.security import generate_password_hash
 
+# ---------------------- FIXTURES ----------------------
+
 @pytest.fixture
 def client():
     with app.test_client() as client:
@@ -25,6 +27,8 @@ def register_and_login_user(client):
         "confirm_password": "Test@1234"
     })
     client.post("/login", json={"email": "user123@gmail.com", "password": "Test@1234"})
+
+# -------------------- TEST CASES --------------------
 
 # Test 1: Empty search fields
 def test_search_empty_fields(client):

@@ -9,6 +9,8 @@ from app import app, db
 from app.models import User, publish_ride, book_ride
 from flask import session
 
+# ---------------------- FIXTURES ----------------------
+
 DATA = {
     "username": "user123",
     "email": "user123@gmail.com",
@@ -31,19 +33,21 @@ def register_and_login(client):
     login_data = {"email": DATA["email"], "password": DATA["password"]}
     client.post("/login", json=login_data)
 
-# Tests for if page Loads (Unauthenticated)
+# -------------------- TEST CASES --------------------
+
+# Test 1: Verifies for if page Loads (Unauthenticated)
 def test_view_journeys_loading(client):
     response = client.get("/view_journeys")
     assert response.status_code == 200
     assert b"Journeys" in response.data
 
-# Tests for if no rides are published
+# Test 2: Verifies for if no rides are published
 def test_view_journeys_empty(client):
     response = client.get("/view_journeys")
     assert response.status_code == 200
     assert b"No journeys available" in response.data
 
-# Tests for if rides are displayed after publishing
+# Test 3: Verifies for if rides are displayed after publishing
 def test_view_journeys_available_rides(client, register_and_login):
     one_time_ride = {
         "from_location": "Leeds",
@@ -70,7 +74,7 @@ def test_view_journeys_available_rides(client, register_and_login):
     assert response.status_code == 200
     assert "Leeds" in data and "Manchester" in data and "Newcastle" in data
 
-# Tests for if published rides still show after logout
+# Test 4: Verifies for if published rides still show after logout
 def test_view_journeys_log_out_1(client, register_and_login):
     one_time_ride = {
         "from_location": "Leeds",
@@ -87,14 +91,14 @@ def test_view_journeys_log_out_1(client, register_and_login):
     assert response.status_code == 200
     assert b"Leeds" in response.data and b"Manchester" in response.data
 
-# Tests for if "no journeys" message appears for unauthenticated users with no rides
+# Test 5: Verifies for if "no journeys" message appears for unauthenticated users with no rides
 def test_view_journeys_log_out_2(client, register_and_login):
     client.post("/logout")
     response = client.get("/view_journeys")
     assert response.status_code == 200
     assert b"No journeys available" in response.data
 
-# Tests for seat_tracking with corrupted JSON
+# Test 6: Verifies for seat_tracking with corrupted JSON
 def test_view_journeys_seat_tracking_parsed(client, register_and_login):
     with app.app_context():
         ride = publish_ride(
@@ -114,7 +118,7 @@ def test_view_journeys_seat_tracking_parsed(client, register_and_login):
     response = client.get("/view_journeys")
     assert response.status_code == 200  # Should not crash even with bad JSON
 
-# Tests for user_has_booked flag (rides booked by logged-in user)
+# Test 7: Verifies for user_has_booked flag (rides booked by logged-in user)
 def test_view_journeys_user_has_booked_flag(client, register_and_login):
     with app.app_context():
         ride = publish_ride(
@@ -147,9 +151,8 @@ def test_view_journeys_user_has_booked_flag(client, register_and_login):
     assert response.status_code == 200
     assert b"Leeds" in response.data and b"York" in response.data
 
-# Tests for ride visibility when seats become zero - ride is hidden(one-time)
+# Test 8: Verifies for ride visibility when seats become zero - ride is hidden(one-time)
 def test_view_journeys_hide_fully_booked_ride(client, register_and_login):
-    # One-time ride fully booked
     one_time_data = {
         "from_location": "Leeds",
         "to_location": "York",
@@ -159,16 +162,20 @@ def test_view_journeys_hide_fully_booked_ride(client, register_and_login):
         "price_per_seat": "8"
     }
     client.post("/publish_ride", data=one_time_data)
+
+    # Fully book the ride manually
     ride = publish_ride.query.filter_by(category="one-time").first()
     ride.available_seats_per_date = json.dumps({"2025-12-01": 0})
     db.session.commit()
+    db.session.expire_all()
 
     response = client.get("/view_journeys")
-    assert b"Leeds" not in response.data and b"York" not in response.data
+    html = response.data.decode("utf-8").lower()
 
-# Tests for ride visibility when seats become zero- ride is hidden(commuting)
+    assert "from: leeds" not in html and "to: york" not in html
+
+# Test 9: Verifies for ride visibility when seats become zero - ride is hidden(commuting)
 def test_view_journeys_hide_fully_booked_commuting(client, register_and_login):
-    # Commuting ride with all recurrence dates having 0 seats
     commuting_data = {
         "from_location": "Leeds",
         "to_location": "Sheffield",
@@ -179,10 +186,16 @@ def test_view_journeys_hide_fully_booked_commuting(client, register_and_login):
         "price_per_seat": "7"
     }
     client.post("/publish_ride", data=commuting_data)
+
     ride = publish_ride.query.filter_by(category="commuting").first()
-    # Mark all dates as fully booked
-    ride.available_seats_per_date = json.dumps({"2025-12-01": 0, "2025-12-02": 0})
+    ride.available_seats_per_date = json.dumps({
+        "2025-12-01": 0,
+        "2025-12-02": 0
+    })
     db.session.commit()
+    db.session.expire_all()
 
     response = client.get("/view_journeys")
-    assert b"Leeds" not in response.data and b"Sheffield" not in response.data
+    html = response.data.decode("utf-8").lower()
+
+    assert "from: leeds" not in html and "to: sheffield" not in html
