@@ -70,6 +70,10 @@ def register():
     # Checks if the 'username' is empty
     if not data.get('username'):
         return jsonify({"error": "Username is required"}), 400
+
+    # Checks for username duplication
+    if User.query.filter_by(username=username).first():
+        return jsonify({"message": "Username already exists"}), 400
     
     # Check if 'email' is empty 
     if not data.get('email'):
@@ -140,11 +144,31 @@ def load_user(user_id):
 @login_required
 def publish_ride_view():
     if request.method == 'POST':
-        from_location = request.form['from_location']
-        to_location = request.form['to_location']
-        category = request.form['category']
+        from_location = request.form.get('from_location')
+        to_location = request.form.get('to_location')
+        category = request.form.get('category')
         driver_name = current_user.username
-        price_per_seat = float(request.form['price_per_seat'])
+        price_input = request.form.get('price_per_seat')
+        if not price_input:
+            flash("Price per seat is required.", "danger")
+            return redirect(url_for('publish_ride_view'))
+        
+        try:
+            price_per_seat = float(price_input)
+        except ValueError:
+            flash("Invalid price format.", "danger")
+            return redirect(url_for('publish_ride_view'))
+
+         # Validation messages for testing
+        if not from_location or not to_location or not category or not request.form.get('price_per_seat'):
+            return jsonify({"error": "All fields are required."}), 400
+
+        if price_per_seat < 1:
+            return jsonify({"error": "Price per seat must be at least 1."}), 400
+
+        available_seats = int(request.form.get('available_seats', 0))
+        if available_seats < 1:
+            return jsonify({"error": "Available seats must be at least 1."}), 400
         
         # Initialize variables
         date_time = None
@@ -302,17 +326,26 @@ def book_onetime(ride_id):
     if request.method == 'POST':
         num_seats = request.form.get('seats')
         confirmation_email = request.form.get('email')
+
+        # Validation messages for testing 
         if not num_seats:
-            flash("Please enter the number of seats.", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": "Number of seats is required"}), 400
         try:
             num_seats = int(num_seats)
+
         except ValueError:
-            flash("Invalid seat number!", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": "Invalid seat number"}), 400
+
+        if num_seats < 1:
+            return jsonify({"error": "Invalid seat number"}), 400
+        
+        if not confirmation_email:
+            return jsonify({"error": "Email is required"}), 400
+        
+
         if selected_date not in seat_tracking or seat_tracking[selected_date] < num_seats:
-            flash(f"Not enough seats available on {selected_date}.", "danger")
-            return redirect(url_for('book_onetime', ride_id=ride_id))
+            return jsonify({"error": f"Not enough seats available on {selected_date}"}), 400
+        
         total_price = num_seats * ride.price_per_seat
         # Redirect to Payment Page with selected_date included
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_dates=selected_date, email=confirmation_email))
@@ -363,15 +396,28 @@ def book_commuting(ride_id):
         num_seats = request.form.get('seats')
         selected_dates = request.form.getlist("selected_dates")
         confirmation_email = request.form.get('email')
-        
+
+        # Validation messages for testing
         if not num_seats or not selected_dates:
-            flash("Please enter all required fields.", "danger")
-            return redirect(url_for('book_commuting', ride_id=ride_id))
+            return jsonify({"error": "Required fields are missing"}), 400
         try:
             num_seats = int(num_seats)
         except ValueError:
-            flash("Invalid seat number!", "danger")
-            return redirect(url_for('book_commuting', ride_id=ride_id))
+            return jsonify({"error": "Invalid seat number"}), 400
+        if num_seats < 1:
+            return jsonify({"error": "Invalid seat number"}), 400
+
+        if not confirmation_email:
+            return jsonify({"error": "Email is required"}), 400
+        
+        if not confirmation_email or not re.match(r"[^@]+@[^@]+\.[^@]+", confirmation_email):
+            return jsonify({"error": "Invalid email format"}), 400
+        
+        # Check seat availability for each date
+        for date in selected_dates:
+            if seat_tracking.get(date.strip(), 0) < num_seats:
+                return jsonify({"error": f"Not enough seats available on {date}"}), 400
+                
         total_price=request.form.get('total_price')
         
         return redirect(url_for('payment_page', ride_id=ride.id, seats=num_seats, total_price=total_price, selected_date=",".join(selected_dates), email=confirmation_email))
@@ -473,6 +519,7 @@ def payment_page(ride_id, seats, total_price):
     )
 
 
+# Route for process payemnt
 @app.route("/process_payment", methods=["POST"])
 @login_required  
 def process_payment():
@@ -517,9 +564,13 @@ def process_payment():
             cardholder_name = data.get("cardholder_name")
             save_card = data.get("save_card", False)
 
+            # Validation messages for testing
             if not card_number or not expiry or not cardholder_name:
                 return jsonify({"success": False, "message": "Card details missing."}), 400
 
+            if len(card_number) != 16 or not card_number.isdigit():
+                return "Invalid card number", 400
+            
             # Save the card if requested
             if save_card:
                 new_card = SavedCard(
@@ -674,6 +725,7 @@ If you did not request this, please ignore this email. The link expires in 10 mi
         return jsonify({"success": False, "message": "No account found with that email address."}), 404
 
 
+# Route to reset password
 @app.route('/reset-password/<token>/<int:user_id>', methods=['GET', 'POST'])
 def reset_password(token, user_id):
     if request.method == 'GET':
@@ -712,6 +764,7 @@ def reset_password(token, user_id):
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
 
+# Route for the user dashboard
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -893,6 +946,7 @@ def get_week_dates(year, week_num):
     return start, end
 
 
+# Route for deleting a saved card 
 @app.route("/delete_saved_card/<int:card_id>", methods=["DELETE"])
 @login_required
 def delete_saved_card(card_id):
@@ -907,6 +961,7 @@ def delete_saved_card(card_id):
     return jsonify({"success": True, "message": "Card deleted successfully"})
 
 
+# Route for cancelling a booking 
 @app.route("/cancel_booking/<int:booking_id>", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):
@@ -967,6 +1022,7 @@ def cancel_booking(booking_id):
     return jsonify({"success": True, "message": f"Booking successfully canceled. Refund: £{refund_amount}"}), 200
 
 
+# Route for searching a journey
 @app.route('/filter_journeys', methods=['GET'])
 def filter_journeys():
     from_location = request.args.get("from", "").strip()
@@ -1044,7 +1100,6 @@ def filter_journeys():
     return render_template('view_journeys.html', journeys=journeys, user=current_user)
 
 
-# ID 14 and 15 routes:
 # Store live locations in memory
 live_locations = {}
 
@@ -1613,7 +1668,7 @@ def manager_dashboard():
     for week_str, amount in sorted(weekly_earnings.items()):
         year, week_num = week_str.split("-W")
         start_date, end_date = get_week_dates(year, week_num)
-        date_range = f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
+        date_range = f"{start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}"
         weekly_earnings_list.append((week_str, round(amount, 2), date_range))
 
     # Extract for chart.js
@@ -1707,7 +1762,7 @@ def finish_journey():
 def submit_rating():
     try:
         data = request.json
-        print("📨 Incoming rating submission:", data)
+        print("Incoming rating submission:", data)
 
         ride_id = data.get("ride_id")
         rating = data.get("rating")
