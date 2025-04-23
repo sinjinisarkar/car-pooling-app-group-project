@@ -1668,7 +1668,7 @@ def manager_dashboard():
     for week_str, amount in sorted(weekly_earnings.items()):
         year, week_num = week_str.split("-W")
         start_date, end_date = get_week_dates(year, week_num)
-        date_range = f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
+        date_range = f"{start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}"
         weekly_earnings_list.append((week_str, round(amount, 2), date_range))
 
     # Extract for chart.js
@@ -1762,7 +1762,7 @@ def finish_journey():
 def submit_rating():
     try:
         data = request.json
-        print("📨 Incoming rating submission:", data)
+        print("Incoming rating submission:", data)
 
         ride_id = data.get("ride_id")
         rating = data.get("rating")
