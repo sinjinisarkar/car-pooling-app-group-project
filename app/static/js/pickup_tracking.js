@@ -584,6 +584,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 const text = document.getElementById("journeyBannerText");
                 if (userType === "driver") {
                     text.innerText = "Journey finished. Thank you for driving with Catch My Ride.";
+
+                    // Redirect to dashboard after 5 seconds
+                    setTimeout(() => {
+                        window.location.href = "/dashboard";
+                    }, 5000);
                 } else {
                     text.innerText = "Journey finished. Thank you for riding with Catch My Ride. Please rate your driver.";
                 }
