@@ -63,7 +63,8 @@
                                         <a href="{{ url_for('chat_view', booking_id=journey.booking_id) }}" class="btn btn-base btn-one btn-chat mt-2 btn-block">
                                             Chat with driver
                                         </a>
-                                        {% if journey.edit_details.pickup or journey.edit_details.time or journey.edit_details.cost %}
+                                        
+                                        {% if journey.accepted_proposals and journey.accepted_proposals|length > 0 %}
                                             <!-- modal button -->
                                             <button class="btn btn-base btn-one btn-chat mt-2 btn-block" data-bs-toggle="modal" data-bs-target="#editModal{{ journey.booking_id }}">
                                                 View Booking Changes
@@ -71,21 +72,28 @@
 
                                             <!-- modal -->
                                             <div class="modal fade" id="editModal{{ journey.booking_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ journey.booking_id }}" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="editModalLabel{{ journey.booking_id }}">Updated Ride Details</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editModalLabel{{ journey.booking_id }}">Accepted Booking Changes</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                            {% for proposal in journey.accepted_proposals %}
+                                                                <div class="mb-3 border-bottom pb-2">
+                                                                    {% if proposal.timestamp %}<p class="mb-1 text-muted"><em>Accepted on {{ proposal.timestamp }}</em></p>{% endif %}
+                                                                    {% if proposal.pickup %}<p><strong>Pickup:</strong> {{ proposal.pickup }}</p>{% endif %}
+                                                                    {% if proposal.time %}<p><strong>Time:</strong> {{ proposal.time }}</p>{% endif %}
+                                                                    {% if proposal.cost is not none %}<p><strong>Cost:</strong> £{{ proposal.cost }}</p>{% endif %}
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="modal-body">
-                                                    {% if journey.edit_details.pickup %}<p><strong>Pickup Point:</strong> {{ journey.edit_details.pickup }}</p>{% endif %}
-                                                    {% if journey.edit_details.time %}<p><strong>Time:</strong> {{ journey.edit_details.time }}</p>{% endif %}
-                                                    {% if journey.edit_details.cost %}<p><strong>Cost:</strong> £{{ journey.edit_details.cost }}</p>{% endif %}
-                                                </div>
-                                                </div>
-                                            </div>
                                             </div>
                                         {% endif %}
+
+
                                     {% else %}
                                         <span class="text-muted">Canceled</span>
                                     {% endif %}
@@ -202,26 +210,32 @@
                                     <div class="modal-dialog modal-dialog-scrollable">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }} on {{ ride.date }}</h5>
+                                                <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
-                                            <div class="modal-body">
+                                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                                                 {% set ns = namespace(has_changes=false) %}
                                                 {% for passenger in ride.passengers %}
-                                                    {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                                    {% if passenger.accepted_proposals and passenger.accepted_proposals | length > 0 %}
+
                                                         {% set ns.has_changes = true %}
                                                         <div class="mb-3 border-bottom pb-2">
                                                             <strong>{{ passenger.name }}</strong><br>
-                                                            {% if passenger.edit_details.pickup %}
-                                                                <p><strong>Pickup:</strong> {{ passenger.edit_details.pickup }}</p>
-                                                            {% endif %}
-                                                            {% if passenger.edit_details.time %}
-                                                                <p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>
-                                                            {% endif %}
-                                                            {% if passenger.edit_details.cost %}
-                                                                <p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>
-                                                            {% endif %}
+                                                            {% for proposal in passenger.accepted_proposals %}
+                                                                <p class="mb-1 text-muted"><em>Accepted on {{ proposal.timestamp }}</em></p>
+                                                                {% if proposal.pickup %}
+                                                                    <p><strong>Pickup:</strong> {{ proposal.pickup }}</p>
+                                                                {% endif %}
+                                                                {% if proposal.time %}
+                                                                    <p><strong>Time:</strong> {{ proposal.time }}</p>
+                                                                {% endif %}
+                                                                {% if proposal.cost is not none %}
+                                                                    <p><strong>Cost:</strong> £{{ proposal.cost }}</p>
+                                                                {% endif %}
+                                                                <hr>
+                                                            {% endfor %}
                                                         </div>
+                                                    
                                                     {% endif %}
                                                 {% endfor %}
                                                 {% if not ns.has_changes %}
@@ -306,20 +320,32 @@
                             <div class="modal-dialog modal-dialog-scrollable">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }} on {{ date }}</h5>
+                                        <h5 class="modal-title">Booking Changes for {{ ride.from.split(',')[0] }} → {{ ride.to.split(',')[0] }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <div class="modal-body">
+                                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                                         {% set ns = namespace(has_changes=false) %}
                                         {% for passenger in passengers %}
-                                            {% if passenger.edit_details.pickup or passenger.edit_details.time or passenger.edit_details.cost %}
+                                            {% if passenger.accepted_proposals and passenger.accepted_proposals | length > 0 %}
+
                                                 {% set ns.has_changes = true %}
                                                 <div class="mb-3 border-bottom pb-2">
                                                     <strong>{{ passenger.name }}</strong><br>
-                                                    {% if passenger.edit_details.pickup %}<p><strong>Pickup:</strong> {{ passenger.edit_details.pickup }}</p>{% endif %}
-                                                    {% if passenger.edit_details.time %}<p><strong>Time:</strong> {{ passenger.edit_details.time }}</p>{% endif %}
-                                                    {% if passenger.edit_details.cost %}<p><strong>Cost:</strong> £{{ passenger.edit_details.cost }}</p>{% endif %}
+                                                    {% for proposal in passenger.accepted_proposals %}
+                                                        <p class="mb-1 text-muted"><em>Accepted on {{ proposal.timestamp }}</em></p>
+                                                        {% if proposal.pickup %}
+                                                            <p><strong>Pickup:</strong> {{ proposal.pickup }}</p>
+                                                        {% endif %}
+                                                        {% if proposal.time %}
+                                                            <p><strong>Time:</strong> {{ proposal.time }}</p>
+                                                        {% endif %}
+                                                        {% if proposal.cost is not none %}
+                                                            <p><strong>Cost:</strong> £{{ proposal.cost }}</p>
+                                                        {% endif %}
+                                                        <hr>
+                                                    {% endfor %}
                                                 </div>
+                                            
                                             {% endif %}
                                         {% endfor %}
 

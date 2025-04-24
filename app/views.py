@@ -777,6 +777,7 @@ def reset_password(token, user_id):
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
 
+
 # Route for the user dashboard
 @app.route('/dashboard')
 @login_required
@@ -792,17 +793,20 @@ def dashboard():
             is_inactive = booking.status in ["Canceled", "done"]
             price_per_seat = ride.price_per_seat
 
-            # Check for accepted proposal
-            latest_accepted_proposal = EditProposal.query.filter_by(
-                booking_id=booking.id, status="accepted"
-            ).order_by(EditProposal.timestamp.desc()).first()
+            # # Check for accepted proposal
+            # latest_accepted_proposal = EditProposal.query.filter_by(
+            #     booking_id=booking.id, status="accepted"
+            # ).order_by(EditProposal.timestamp.desc()).first()
 
-            # Store changes if any for modal
-            edit_details = {
-                "pickup": latest_accepted_proposal.proposed_pickup if latest_accepted_proposal else None,
-                "time": latest_accepted_proposal.proposed_time if latest_accepted_proposal else None,
-                "cost": latest_accepted_proposal.proposed_cost if latest_accepted_proposal else None
-            }
+            # # Store changes if any for modal
+            # edit_details = {
+            #     "pickup": latest_accepted_proposal.proposed_pickup if latest_accepted_proposal else None,
+            #     "time": latest_accepted_proposal.proposed_time if latest_accepted_proposal else None,
+            #     "cost": latest_accepted_proposal.proposed_cost if latest_accepted_proposal else None
+            # }
+
+            # Store all accepted proposals for this booking
+
 
             journey_data = {
                 "booking_id": booking.id,
@@ -818,9 +822,21 @@ def dashboard():
                 "seats_booked": booking.seats_selected,
                 "category": ride.category
             }
-            
-            journey_data["edit_details"] = edit_details
 
+            accepted_proposals = [
+                {
+                    "pickup": p.proposed_pickup,
+                    "time": p.proposed_time,
+                    "cost": p.proposed_cost,
+                    "timestamp": p.timestamp.strftime('%Y-%m-%d %H:%M')
+                }
+                for p in EditProposal.query.filter_by(
+                    booking_id=booking.id, status="accepted"
+                ).order_by(EditProposal.timestamp.desc()).all()
+            ]
+
+            journey_data["accepted_proposals"] = accepted_proposals
+            
             if is_inactive:
                 inactive_journeys.append(journey_data)
             else:
@@ -847,20 +863,18 @@ def dashboard():
                         "name": User.query.get(passenger.user_id).username,
                         "email": passenger.confirmation_email,
                         "booking_id": passenger.id,
-                        "edit_details": {
-                            "pickup": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
-                            "time": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
-                            "cost": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
-                        }
+                        "accepted_proposals": [
+                            {
+                                "pickup": p.proposed_pickup,
+                                "time": p.proposed_time,
+                                "cost": p.proposed_cost,
+                                "timestamp": p.timestamp.strftime('%Y-%m-%d %H:%M')
+                            }
+                            for p in EditProposal.query.filter_by(
+                                booking_id=passenger.id, status="accepted"
+                            ).order_by(EditProposal.timestamp.desc()).all()
+                        ]
+
                     }
                     for passenger in book_ride.query.filter_by(ride_id=ride.id).filter(book_ride.status != "Canceled").all()
                 ]
@@ -891,20 +905,18 @@ def dashboard():
                         "name": User.query.get(passenger.user_id).username,
                         "email": passenger.confirmation_email,
                         "booking_id": passenger.id,
-                        "edit_details": {
-                            "pickup": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_pickup if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
-                            "time": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_time if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None),
-                            "cost": (EditProposal.query
-                                .filter_by(booking_id=passenger.id, status="accepted")
-                                .order_by(EditProposal.timestamp.desc())
-                                .first().proposed_cost if EditProposal.query.filter_by(booking_id=passenger.id, status="accepted").first() else None)
-                        }
+                        "accepted_proposals": [
+                            {
+                                "pickup": p.proposed_pickup,
+                                "time": p.proposed_time,
+                                "cost": p.proposed_cost,
+                                "timestamp": p.timestamp.strftime('%Y-%m-%d %H:%M')
+                            }
+                            for p in EditProposal.query.filter_by(
+                                booking_id=passenger.id, status="accepted"
+                            ).order_by(EditProposal.timestamp.desc()).all()
+                        ]
+
                     }
                     for passenger in passengers
                 ]
@@ -1652,6 +1664,11 @@ def respond_proposal():
             booking.time = proposal.proposed_time
         if proposal.proposed_cost is not None:
             booking.cost = proposal.proposed_cost
+            # Update payment as well
+            payment = Payment.query.filter_by(book_ride_id=booking.id).first()
+            if payment:
+                payment.amount = proposal.proposed_cost * booking.seats_selected
+
     elif action == "reject":
         proposal.status = "rejected"
     else:
