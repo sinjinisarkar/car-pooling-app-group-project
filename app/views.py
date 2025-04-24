@@ -582,18 +582,31 @@ def process_payment():
                 db.session.add(new_card)
                 db.session.commit()
 
+        # get current UK time (timezone-aware)
+        london = pytz.timezone("Europe/London")
+        aware_now = datetime.now(london)
+        now = aware_now.replace(tzinfo=None)
+
         for selected_date in selected_dates:
+            # get ride date time to store in book_ride table correctly
+            if ride.commute_times:
+                ride_time_str = ride.commute_times
+                datetime_str = f"{selected_date} {ride_time_str}"
+                ride_datetime = london.localize(datetime.strptime(datetime_str, "%Y-%m-%d %H:%M"))
+            elif ride.date_time:
+                ride_time = ride.date_time.time()
+                datetime_obj = datetime.strptime(selected_date, "%Y-%m-%d")
+                ride_datetime = london.localize(datetime.combine(datetime_obj, ride_time))
+            else:
+                return jsonify({"success": False, "message": "Unable to determine ride time"}), 400
+            print(f"ride_datetime is {ride_datetime}")
+            # check seat availability
             if selected_date in seat_tracking:
                 seat_tracking[selected_date] -= seats
                 seat_tracking[selected_date] = max(0, seat_tracking[selected_date])
             else:
                 print(f"Warning: Ride date {selected_date} not found in seat tracking")
                 return jsonify({"success": False, "message": f"No available seats on {selected_date}"}), 400
-            
-            # get current UK time (timezone-aware)
-            london = pytz.timezone("Europe/London")
-            aware_now = datetime.now(london)
-            now = aware_now.replace(tzinfo=None)
             
             # Save the booking
             new_booking = book_ride(
@@ -603,7 +616,7 @@ def process_payment():
                 total_price=total_price,
                 seats_selected=seats,
                 confirmation_email=confirmation_email,
-                ride_date=datetime.strptime(selected_date, "%Y-%m-%d").date(),
+                ride_date=ride_datetime,
             )
             db.session.add(new_booking)
             db.session.commit()
@@ -981,7 +994,6 @@ def cancel_booking(booking_id):
     payment = Payment.query.filter_by(book_ride_id=booking.id).first()
 
     ride_time = booking.ride_date
-    print(f"ride time is {ride_time} and now is {now}")
     time_difference = (ride_time - now).total_seconds() / 60  # Convert to minutes
 
     # Find associated payment
