@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("pickup_tracking.js loaded");
     let rideId = document.getElementById("ride-id").value; // Get ride ID from HTML
     let userType = document.getElementById("user-type").value; // "passenger" or "driver"
     let currentUsername = document.getElementById("current-username")?.value;
@@ -97,7 +96,6 @@ document.addEventListener("DOMContentLoaded", function () {
      * Function to send live location to backend (for both passenger & driver)
      */
     function updateLocation(role) {
-        console.log(`Updating location for role: ${role}`); // 👈 Add this
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
                 let lat = position.coords.latitude;
@@ -339,7 +337,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         allMarkers.push(marker);
                     }
                 }
-                
 
                 // Add driver marker to allMarkers array if it exists
                 if (driverMarker) {
@@ -517,14 +514,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (userType === "passenger") {
         updateLocation("passenger");
-        setTimeout(fetchLiveLocations, 1500); // Delay to allow backend to store location
+        setTimeout(fetchLiveLocations, 1500); 
     
         setInterval(() => {
             updateLocation("passenger");
             fetchLiveLocations();
         }, 10000);
     
-        // 👇 NEW: Poll for journey status to trigger rating banner
+        // Polling for journey status to trigger rating banner
         setInterval(() => {
             fetch('/api/ride_status', {
                 method: "POST",
