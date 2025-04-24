@@ -13,7 +13,7 @@
 <form id="platformFeeForm" class="custom-form" data-url="{{ url_for('configure_fee') }}">
     <div class="form-group">
         <label for="fee">Platform Fee (as a decimal, e.g., 0.05 for 5%)</label>
-        <input type="number" step="0.1" min="0" max="1" class="form-control" name="fee" id="fee" value="{{ current_fee }}" required>
+        <input type="number" step="0.001" min="0" max="1" class="form-control" name="fee" id="fee" value="{{ current_fee }}" required>
     </div>
     <div class="text-center mt-5">
         <button type="submit" class="btn btn-base btn-one mt-3">Update Fee</button>
