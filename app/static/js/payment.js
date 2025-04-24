@@ -108,6 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                alert("Booking confirmation email sent!");
                 alert("Payment successful! Redirecting...");
                 window.location.href = data.redirect_url;
             } else {
