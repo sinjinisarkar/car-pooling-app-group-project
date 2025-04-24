@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="container mt-5">
-		<h3>Chat with {{ 'Driver' if booking.user_id == user.id else 'Passenger' }} for Ride #{{ booking.ride_id }}</h3>
+	<h3> Chat with {% if booking.user_id == user.id %} Driver: {{ driver_name }} {% else %} Passenger: {{ passenger_name }} {% endif %} | Ride: {{ ride_title }}</h3>
 		<div class="card shadow-sm">
 				<div class="card-body" id="chat-box" style="height: 400px; overflow-y: auto;">
 					<!-- Messages will load here -->

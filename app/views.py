@@ -1501,7 +1501,16 @@ def chat_view(booking_id):
     booking = book_ride.query.get_or_404(booking_id)
     if current_user.id not in [booking.user_id, booking.ride.driver_id]:
         return "Unauthorized", 403
-    return render_template("chat.html", booking=booking)
+
+    passenger = User.query.get(booking.user_id)
+    driver = User.query.get(booking.ride.driver_id)
+
+    ride_title = f"{booking.ride.from_location.split(',')[0]} → {booking.ride.to_location.split(',')[0]}"
+
+    
+    return render_template("chat.html", booking=booking, driver_name=driver.username if driver else "Unknown",
+                            passenger_name=passenger.username if passenger else "Unknown", ride_title=ride_title)
+
 
 
 # Route to send message 
