@@ -3,7 +3,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app, db, mail
-from app.models import User, publish_ride, book_ride, saved_ride, Payment, SavedCard, ChatMessage, EditProposal, PlatformSetting, RideRating
+from app.models import User, publish_ride, book_ride, Payment, SavedCard, ChatMessage, EditProposal, PlatformSetting, RideRating
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
