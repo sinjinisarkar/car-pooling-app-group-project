@@ -1118,9 +1118,11 @@ def view_pickup(ride_id):
         passenger = User.query.get(booking.user_id)
 
     if is_passenger and not is_driver:
+        ride_date = booking.ride_date.strftime("%Y-%m-%d") if booking.ride_date else "N/A"
         return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
                                driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None, ride_status=booking.status)
+                               passenger_name=passenger.username if passenger else None,
+                               ride_status=booking.status, ride_date=ride_date)
 
     elif is_driver and not is_passenger:
         passenger_bookings = book_ride.query.filter_by(ride_id=ride_id).all()
@@ -1140,15 +1142,34 @@ def view_pickup(ride_id):
 
         print("Final ride_status being passed:", ride_status)
 
+        # To extract date for one-time
+        ride_date = ride.date_time.strftime("%Y-%m-%d") if ride.date_time else "N/A"
+
         return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
                             ride_status=ride_status,
                             driver_name=driver.username if driver else "Unknown",
-                            passenger_names=passenger_names)
+                            passenger_names=passenger_names,  ride_date=ride_date)
 
     elif is_passenger and is_driver:
-        return render_template("pickup_passenger.html", ride_id=ride_id, ride=ride,
-                               driver_name=driver.username if driver else "Unknown",
-                               passenger_name=passenger.username if passenger else None, ride_status=booking.status)
+        # Edge case: Treat it like a driver only since a driver wouldn’t need to track themselves
+        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id).all()
+        passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
+        
+        ride_status = "Booked"
+        for pb in passenger_bookings:
+            if pb.status == "done":
+                ride_status = "done"
+                break
+            elif pb.status == "ongoing":
+                ride_status = "ongoing"
+
+        ride_date = booking.ride_date.strftime("%Y-%m-%d") if booking.ride_date else "N/A"
+
+        return render_template("pickup_driver.html", ride_id=ride_id, ride=ride,
+                            ride_status=ride_status,
+                            driver_name=driver.username if driver else "Unknown",
+                            passenger_names=passenger_names,
+                            ride_date=ride_date)
 
     else:
         return "<h3><strong>Unauthorized access to this ride</strong></h3>", 403
