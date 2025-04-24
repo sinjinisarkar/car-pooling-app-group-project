@@ -7,7 +7,7 @@ from app.models import User, publish_ride, book_ride, saved_ride, Payment, Saved
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, not_
 from flask_mail import Message
 from geopy.distance import geodesic
 from collections import defaultdict
@@ -1125,7 +1125,7 @@ def view_pickup(ride_id):
                                ride_status=booking.status, ride_date=ride_date)
 
     elif is_driver and not is_passenger:
-        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id).all()
+        passenger_bookings = book_ride.query.filter(book_ride.ride_id == ride_id, not_(book_ride.status == 'Canceled')).all()
         passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
 
         # Default to "Booked"
@@ -1152,7 +1152,7 @@ def view_pickup(ride_id):
 
     elif is_passenger and is_driver:
         # Edge case: Treat it like a driver only since a driver wouldn’t need to track themselves
-        passenger_bookings = book_ride.query.filter_by(ride_id=ride_id).all()
+        passenger_bookings = book_ride.query.filter(book_ride.ride_id == ride_id, not_(book_ride.status == 'Canceled')).all()
         passenger_names = [User.query.get(pb.user_id).username for pb in passenger_bookings]
         
         ride_status = "Booked"
@@ -1409,7 +1409,8 @@ def view_pickup_commute(ride_id, date):
     if is_driver:
         bookings = book_ride.query.filter(
             book_ride.ride_id == ride_id,
-            db.func.date(book_ride.ride_date) == ride_date_obj
+            db.func.date(book_ride.ride_date) == ride_date_obj,
+            not_(book_ride.status == "Canceled")
         ).all()
         passenger_names = [User.query.get(b.user_id).username for b in bookings]
 
