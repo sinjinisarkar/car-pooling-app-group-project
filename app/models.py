@@ -99,17 +99,6 @@ class book_ride(db.Model):
         return f"<Booking for {self.ride.from_location} to {self.ride.to_location}>"
 
 
-# Table for saved journey for easy rebooking for a commuting ride
-class saved_ride(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    ride_id = db.Column(db.Integer, db.ForeignKey('publish_ride.id'), nullable=False)
-    recurrence_days = db.Column(db.String(100), nullable=True)
-    
-    user = db.relationship('User', backref='saved_rides')
-    ride = db.relationship('publish_ride', backref='saved_rides')
-
-
 # Table for payment of the booked journeys
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
