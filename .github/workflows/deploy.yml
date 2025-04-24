@@ -40,9 +40,3 @@ jobs:
         mkdir -p coverage_report
         pytest --cov=app --cov-report=html:coverage_report tests/
       continue-on-error: true
-
-    - name: Upload HTML Coverage Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-report
-        path: coverage_report
