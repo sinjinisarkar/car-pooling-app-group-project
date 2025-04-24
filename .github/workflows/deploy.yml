@@ -30,4 +30,19 @@ jobs:
     - name: Run tests
       run: |
         pytest tests/ --maxfail=3 --disable-warnings --tb=short
-    
+
+    - name: Run Tests with Coverage
+      run: |
+        pytest --cov=app --cov-report=term-missing --maxfail=3 --disable-warnings --tb=short tests/
+
+    - name: Generate HTML Coverage Report
+      run: |
+        mkdir -p coverage_report
+        pytest --cov=app --cov-report=html:coverage_report tests/
+      continue-on-error: true
+
+    - name: Upload HTML Coverage Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage_report
