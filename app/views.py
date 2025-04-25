@@ -769,10 +769,15 @@ def reset_password(token, user_id):
         if not user:
             return redirect(url_for('index', expired_reset=True))
 
-        if new_password:
-            user.set_password(new_password)
-            db.session.commit()
-            return jsonify({"success": True, "message": "Your password has been updated! You can now log in."})
+        # Strong password validation (same as registration)
+        if not new_password or len(new_password) < 8 or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", new_password):
+            return jsonify({"success": False, "message": "Password must be at least 8 characters long and contain at least one special character."}), 400
+
+        # Save new password
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Your password has been updated! You can now log in."})
+
 
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
