@@ -1,13 +1,13 @@
 # CatchMyRide WebApp
 
-###### Team Members:
+## Team Members:
 - Aristaa Singh [sc23as2]
 - Sinjini Sarkar [sc23ss2]
 - Sreeja Tulluru [sc23sct]
 - Adhiraj Kumar [sc23ak4]
-- Aqeel Jindal [sc23aj2] (Never active in the team from Sprint 2 meetings onwards)
+- Aqeel Jindal [sc23aj2] (inactive from Sprint 2 onwards)
 
-###### About The Project:
+## About The Project:
 
 CatchMyRide is a web-based carpooling platform that allows users to book and offer rides for both commuting and one-time journeys.
 
@@ -15,10 +15,10 @@ During registration, users are able to act as both drivers and passengers from t
 
 Users can search for rides, negotiate pick-up points, and track their bookings. The system also supports features such as booking management, real-time chat with ride providers, and journey ratings, enhancing the overall user experience. Additionally, a Manager Portal is available to oversee the system, configure booking and platform fees, and monitor app revenue, including details of rides that have been published, booked, or cancelled.
 
-For a more detailed description of project features, usability, and user flows, please refer to the GitHub Wiki [#https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki/].
+For a more detailed description of project features, usability, and user flows, please refer to the GitHub Wiki [https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki/].
 
 
-###### Main Features Of the Project 
+## Main Features Of the Project 
 - User registration and login (single account for both drivers and passengers)
 - Publish a ride (as a driver) or book a ride (as a passenger)
 - Search for rides based on:
@@ -33,7 +33,7 @@ For a more detailed description of project features, usability, and user flows, 
 - Manager portal for system management, revenue tracking, and customer support
 
 
-###### Tools and Framework
+## Tools and Framework
 - Frontend: HTML, CSS, Bootstrap, JavaScript (for responsiveness and interactivity)
 - Backend: Python Flask
 - Database: SQLite
@@ -42,7 +42,7 @@ For a more detailed description of project features, usability, and user flows, 
 - API tools - OpenStreetMap API for map integration and location services
 
 
-###### Technical Design Overview 
+## Technical Design Overview 
 CatchMyRide follows a client-server architecture based on Python Flask for the backend and SQLite for persistent data storage.
 
 Core database models include:
@@ -53,7 +53,7 @@ Core database models include:
 - And others supporting user journeys and financial transactions.
 
 
-###### Project Setup Instructions
+## Project Setup Instructions
 - To get started with running this Flask webapp, the user needs to first set up a Python Flask environment. To make this easier, we have provided a simple script just for this purpose, which on being run:
   1. Removes any existing (or broken!) flask virtual environments in your codespace.  
   2. Creates a new python3 virtual environment 'flask' and installs Flask and all required dependencies automatically from requirements.txt.  
@@ -86,26 +86,26 @@ To generate a coverage report:
   pytest --cov=app tests/ 
 
 ``` 
-- Testing Strategy
+- Testing Strategy:
 We employed unit testing and integration testing using Pytest.
 The tests cover models, routes, form validations, and database operations.
 Coverage reports were generated to measure the extent of code tested, targeting over 80% code coverage.
 - For a more detailed description of the testing approach, please refer to the Testing Analysis page on GitHub Wiki: [Testing Analysis](https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki/Testing-Analysis).
 
 
-###### Version Control and Git Workflow
+## Version Control and Git Workflow
 - We used GitHub for version control, following a feature branch workflow.
 - Almost every new feature was developed in a separate branch, with regular commits made throughout development.
 - Pull requests were created for code reviews and merging into the main branch to maintain clean project history. This was mainly done when we wanted to close a feature on the Kanban Board. 
 
 
-###### Project Management and Issue Tracking
+## Project Management and Issue Tracking
 - Project management was handled through GitHub Issues and a Project Board (Kanban-style).
 - Tasks, bugs, and milestones were created as issues, labeled appropriately, and assigned to team members.
 - Progress was tracked through the board across different sprints, ensuring timely sprint planning and reviews.
 
 
-###### Accessibility Considerations
+## Accessibility Considerations
 CatchMyRide was built with accessibility in mind:
 - High-contrast color palettes and readable fonts were selected to meet WCAG 2.1 guidelines.
 - Semantic HTML and ARIA attributes enhance screen reader compatibility.
@@ -114,7 +114,7 @@ CatchMyRide was built with accessibility in mind:
 - For a more detailed description of the Accessibility Considerations, please refer to the Accessibility page on GitHub Wiki [Accessibility](https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki/Accessibility)
 
 
-###### Known Issues and Limitations
+## Known Issues and Limitations
 - Live Location Access:  
   Users must ensure that location services are enabled on their browser/device, as live location tracking relies on browser geolocation APIs for both drivers and passengers.
 - Same Port Requirement for Live Tracking:  
