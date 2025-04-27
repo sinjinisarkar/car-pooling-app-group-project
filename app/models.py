@@ -81,7 +81,7 @@ class publish_ride(db.Model):
         return f"<Published Ride {self.from_location} to {self.to_location}>"
 
 
-# Table booking a journey from avaliable journeys (user/passenger)
+# Table for booking a journey from avaliable journeys (user/passenger)
 class book_ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -117,7 +117,7 @@ class Payment(db.Model):
 cipher = Fernet(app.config["ENCRYPTION_KEY"])
 
 
-# Table to save card
+# Table for save card
 class SavedCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

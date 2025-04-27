@@ -20,8 +20,10 @@ from app.utils import manager_required, get_platform_fee
 def home():
     return render_template('index.html', user=current_user)  
 
+
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 # Redirection to the appropriate booking page from the search functionality when the user hasn't logged in
 # check login status for the search functionality
@@ -31,11 +33,13 @@ def check_login_status():
         return jsonify({"is_logged_in": False, "message": "You need to log in before booking a ride."})
     return jsonify({"is_logged_in": True})
 
+
 @app.before_request
 def check_redirect_after_login():
     if 'redirect_after_login' in session and current_user.is_authenticated:
         redirect_path = session.pop('redirect_after_login')
         return redirect(redirect_path)
+
 
 # check the redirect path
 @app.route('/set_redirect_path', methods=['POST'])
@@ -46,6 +50,7 @@ def set_redirect_path():
         session['redirect_after_login'] = path
         return jsonify({"message": "Redirect path set successfully."}), 200
     return jsonify({"message": "No path provided."}), 400
+
 
 # Route for User Registration (Signup)
 @app.route("/register", methods=["POST"])
@@ -782,7 +787,6 @@ def reset_password(token, user_id):
         return jsonify({"success": False, "message": "Password update failed!"}), 400
 
 
-
 # Route for the user dashboard
 @app.route('/dashboard')
 @login_required
@@ -797,22 +801,6 @@ def dashboard():
         if ride:
             is_inactive = booking.status in ["Canceled", "done"]
             price_per_seat = ride.price_per_seat
-
-            # # Check for accepted proposal
-            # latest_accepted_proposal = EditProposal.query.filter_by(
-            #     booking_id=booking.id, status="accepted"
-            # ).order_by(EditProposal.timestamp.desc()).first()
-
-            # # Store changes if any for modal
-            # edit_details = {
-            #     "pickup": latest_accepted_proposal.proposed_pickup if latest_accepted_proposal else None,
-            #     "time": latest_accepted_proposal.proposed_time if latest_accepted_proposal else None,
-            #     "cost": latest_accepted_proposal.proposed_cost if latest_accepted_proposal else None
-            # }
-
-            # Store all accepted proposals for this booking
-
-
             journey_data = {
                 "booking_id": booking.id,
                 "ride_id": ride.id,
@@ -969,7 +957,7 @@ def dashboard():
                             total_earnings=total_earnings)
 
 
-# helper function for /dashboard to get week start and end dates
+# Helper function for /dashboard to get week start and end dates
 def get_week_dates(year, week_num):
     start = datetime.strptime(f'{year}-W{int(week_num):02d}-1', "%Y-W%W-%w").date()
     end = start + timedelta(days=6)
@@ -1132,6 +1120,7 @@ def filter_journeys():
 # Store live locations in memory
 live_locations = {}
 
+
 @app.route('/view_pickup/<int:ride_id>', methods=['GET'])
 @login_required
 def view_pickup(ride_id):
@@ -1255,6 +1244,7 @@ def track_driver_location():
     return jsonify({"message": "Driver location updated"}), 200
 
 
+# Route to get live location
 @app.route('/api/get_live_locations/<int:ride_id>', methods=['GET'])
 @login_required
 def get_live_locations(ride_id):
@@ -1371,6 +1361,7 @@ def start_journey():
     return jsonify({"message": "Journey started!"}), 200
 
 
+# Route for updating passenger pickup location
 @app.route('/api/update_passenger_pickup_location', methods=['POST'])
 @login_required
 def update_passenger_pickup_location():
@@ -1515,7 +1506,6 @@ def chat_view(booking_id):
     
     return render_template("chat.html", booking=booking, driver_name=driver.username if driver else "Unknown",
                             passenger_name=passenger.username if passenger else "Unknown", ride_title=ride_title)
-
 
 
 # Route to send message 
