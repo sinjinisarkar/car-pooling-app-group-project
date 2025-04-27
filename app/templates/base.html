@@ -43,19 +43,12 @@
     <!-- navbar -->
     <nav class="navbar">
         <div class="container navbar-container d-flex align-items-baseline justify-content-between">
-           <!-- <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
-                CatchMyRide <i class='bx bxs-car logo-icon'></i><i class='bx bx-wind logo-icon' ></i>
-            </a> -->
 
             <a class="navbar-brand navbar-logo" href="/" aria-label="Catch My Ride Logo" title="Go to home page">
                 <img src="https://res.cloudinary.com/dpar2oaev/image/upload/v1745328859/330533dc-5ec6-4b41-a5c8-143db92afdf2.png" 
                      alt="CatchMyRide Logo" 
                      class="logo-img">
             </a>
-            
-
-
-
             
             <!-- profile dropdown: login/signup, dashboard, manager dashboard, logout -->
             <div class="dropdown">
@@ -201,19 +194,50 @@
         <!-- individual notifications will be injected here by chat.js -->
     </div>
     
-    <!-- footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
         <div class="container">
-            <p class="mb-0">
-                CatchMyRide is a student project developed by Team 19 for the COMP2913 Software Engineering Project module at the University of Leeds.
-            </p>
-            <div class="social-links mt-2">
-                <a href="https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki" class="text-white mx-2"><i class="fa-brands fa-github fa-lg"></i></a>
-                <a href="https://www.linkedin.com/school/university-of-leeds/posts/?feedView=all" class="text-white mx-2"><i class="fa-brands fa-linkedin fa-lg"></i></a>
-                <a href="https://www.instagram.com/universityofleeds/" class="text-white mx-2"><i class="fa-brands fa-instagram fa-lg"></i></a>
+            <div class="row">
+                <!-- Logo and Project Information -->
+                <div class="col-md-4 text-center text-md-left">
+                    <img src="https://res.cloudinary.com/dpar2oaev/image/upload/v1745684810/bec59759-833e-4958-9e2d-1e8a0173f6eb.png" alt="CatchMyRide Logo" class="img-fluid mb-3" style="max-width: 150px;">
+                    <p class="mb-2">
+                        CatchMyRide is a student project developed by Team 19 for the COMP2913 Software Engineering Project module at the University of Leeds.
+                    </p>
+                </div>
+
+                <!-- Social Media Links -->
+                <div class="col-md-4 text-center my-3 my-md-0">
+                    <h5>Follow Us</h5>
+                    <div>
+                        <a href="https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki" target="_blank" class="text-white mx-2" aria-label="GitHub">
+                            <i class="fab fa-github fa-2x"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/school/university-of-leeds/posts/?feedView=all" target="_blank" class="text-white mx-2" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin fa-2x"></i>
+                        </a>
+                        <a href="https://www.instagram.com/universityofleeds/" target="_blank" class="text-white mx-2" aria-label="Instagram">
+                            <i class="fab fa-instagram fa-2x"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-md-4 text-center text-md-right">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white">Home</a></li>
+                        <li><a href="https://github.com/COMP2913-24-25/software-engineering-project-team-19/wiki/User-Manual#faqs" target="_blank" class="text-white">FAQs</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <p class="text-muted mb-0">&copy; 2025 CatchMyRide. All Rights Reserved.</p>
             </div>
         </div>
     </footer>
+
 
     <!-- jQuery, Popper.js, Bootstrap JS, Flatpickr, Chart JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
