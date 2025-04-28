@@ -80,7 +80,7 @@ To set up your Flask environment, run the following commands in the terminal:
 You can log in using the following credentials:
 
   - **Username:** Manager
-  - **Gmail:** Manager@gmail.com  
+  - **Gmail:** manager@gmail.com  
   - **Password:** manager@123
 
 - However, if you want to create your own Manager account, follow these steps:  
